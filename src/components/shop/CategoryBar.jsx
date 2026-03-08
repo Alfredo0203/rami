@@ -1,0 +1,48 @@
+import React from 'react';
+import { Shirt, Watch, Home, Smartphone, Dumbbell, Sparkles, Gift, Palette } from 'lucide-react';
+
+const iconMap = {
+  Shirt, Watch, Home, Smartphone, Dumbbell, Sparkles, Gift, Palette
+};
+
+const defaultIcons = [Shirt, Watch, Home, Smartphone, Dumbbell, Sparkles, Gift, Palette];
+
+export default function CategoryBar({ categories, selectedId, onSelect }) {
+  return (
+    <div className="flex gap-3 overflow-x-auto hide-scrollbar py-3 px-4">
+      <button
+        onClick={() => onSelect(null)}
+        className={`flex flex-col items-center gap-1 min-w-[56px] transition-all ${
+          !selectedId ? 'opacity-100' : 'opacity-50'
+        }`}
+      >
+        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+          !selectedId ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' : 'bg-secondary text-secondary-foreground'
+        }`}>
+          <Sparkles className="w-5 h-5" />
+        </div>
+        <span className="text-[10px] font-medium text-foreground">All</span>
+      </button>
+      {categories.map((cat, i) => {
+        const Icon = iconMap[cat.icon] || defaultIcons[i % defaultIcons.length];
+        const isActive = selectedId === cat.id;
+        return (
+          <button
+            key={cat.id}
+            onClick={() => onSelect(cat.id)}
+            className={`flex flex-col items-center gap-1 min-w-[56px] transition-all ${
+              isActive ? 'opacity-100' : 'opacity-50'
+            }`}
+          >
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+              isActive ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' : 'bg-secondary text-secondary-foreground'
+            }`}>
+              <Icon className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-medium text-foreground truncate max-w-[56px]">{cat.name}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
