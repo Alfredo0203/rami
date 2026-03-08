@@ -57,6 +57,7 @@ import Orders from './pages/Orders';
 import OrderDetail from './pages/OrderDetail';
 import Account from './pages/Account';
 import Addresses from './pages/Addresses';
+import Admin from './pages/Admin';
 
 
 export const PAGES = {
@@ -70,6 +71,7 @@ export const PAGES = {
     "OrderDetail": OrderDetail,
     "Account": Account,
     "Addresses": Addresses,
+    "Admin": Admin,
 }
 
 export const pagesConfig = {
