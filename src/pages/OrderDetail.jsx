@@ -19,6 +19,7 @@ export default function OrderDetail() {
   const urlParams = new URLSearchParams(window.location.search);
   const orderId = urlParams.get('id');
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', orderId],
@@ -26,6 +27,17 @@ export default function OrderDetail() {
     select: (data) => data[0],
     enabled: !!orderId,
   });
+
+  // Real-time subscription: update this order when its status changes
+  useEffect(() => {
+    if (!orderId) return;
+    const unsub = base44.entities.Order.subscribe((event) => {
+      if (event.id === orderId) {
+        queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      }
+    });
+    return unsub;
+  }, [orderId, queryClient]);
 
   if (isLoading) {
     return (
