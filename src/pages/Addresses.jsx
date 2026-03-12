@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -14,13 +14,19 @@ export default function Addresses() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [userEmail, setUserEmail] = useState(null);
   const [formData, setFormData] = useState({
     label: 'Home', full_name: '', phone: '', street: '', city: '', state: '', zip_code: '', country: 'United States'
   });
 
+  useEffect(() => {
+    base44.auth.me().then(u => setUserEmail(u?.email)).catch(() => {});
+  }, []);
+
   const { data: addresses = [], isLoading } = useQuery({
-    queryKey: ['addresses'],
-    queryFn: () => base44.entities.Address.list(),
+    queryKey: ['addresses', userEmail],
+    queryFn: () => base44.entities.Address.filter({ created_by: userEmail }),
+    enabled: !!userEmail,
   });
 
   const saveMutation = useMutation({
