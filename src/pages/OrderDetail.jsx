@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import OrderStatusBadge from '../components/shop/OrderStatusBadge';
 import { ArrowLeft, MapPin, CreditCard, Package, Truck, CheckCircle2, Clock, Loader2 } from 'lucide-react';

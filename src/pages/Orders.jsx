@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import BottomNav from '../components/shop/BottomNav';
@@ -13,11 +13,26 @@ import { useScrollRestoration } from '../components/useScrollRestoration';
 export default function Orders() {
   useScrollRestoration();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [userEmail, setUserEmail] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(u => setUserEmail(u?.email)).catch(() => {});
+  }, []);
 
   const { data: orders = [], isLoading } = useQuery({
-    queryKey: ['orders'],
-    queryFn: () => base44.entities.Order.list('-created_date'),
+    queryKey: ['orders', userEmail],
+    queryFn: () => base44.entities.Order.filter({ created_by: userEmail }, '-created_date'),
+    enabled: !!userEmail,
   });
+
+  // Real-time subscription: refresh orders list when any order changes
+  useEffect(() => {
+    const unsub = base44.entities.Order.subscribe(() => {
+      queryClient.invalidateQueries({ queryKey: ['orders', userEmail] });
+    });
+    return unsub;
+  }, [queryClient, userEmail]);
 
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart'],
