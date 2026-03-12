@@ -32,8 +32,9 @@ export default function Checkout() {
   });
 
   const { data: addresses = [], isLoading: loadingAddresses } = useQuery({
-    queryKey: ['addresses'],
-    queryFn: () => base44.entities.Address.list(),
+    queryKey: ['addresses', user?.email],
+    queryFn: () => base44.entities.Address.filter({ created_by: user?.email }),
+    enabled: !!user?.email,
   });
 
   useEffect(() => {
