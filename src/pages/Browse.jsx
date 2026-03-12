@@ -147,23 +147,25 @@ export default function Browse() {
       </div>
 
       {/* Products grid */}
-      <div className="px-3">
-        {isLoading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-muted-foreground text-sm">No products found</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-2.5">
-            {filteredProducts.map((product, i) => (
-              <ProductCard key={product.id} product={product} index={i} />
-            ))}
-          </div>
-        )}
-      </div>
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="px-3">
+          {isLoading ? (
+            <div className="flex justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-muted-foreground text-sm">No products found</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2.5">
+              {filteredProducts.map((product, i) => (
+                <ProductCard key={product.id} product={product} index={i} />
+              ))}
+            </div>
+          )}
+        </div>
+      </PullToRefresh>
 
       <BottomNav cartCount={cartCount} />
     </div>

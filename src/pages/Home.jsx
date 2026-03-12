@@ -54,37 +54,39 @@ export default function Home() {
     <div className="min-h-screen bg-background pb-20">
       <SearchHeader searchQuery={searchQuery} setSearchQuery={setSearchQuery} cartCount={cartCount} />
 
-      <PromoBanner />
+      <PullToRefresh onRefresh={handleRefresh}>
+        <PromoBanner />
 
-      <CategoryBar
-        categories={categories}
-        selectedId={selectedCategory}
-        onSelect={setSelectedCategory}
-      />
+        <CategoryBar
+          categories={categories}
+          selectedId={selectedCategory}
+          onSelect={setSelectedCategory}
+        />
 
-      <div className="px-3">
-        {searchQuery && (
-          <p className="text-xs text-muted-foreground mb-2 px-1">
-            {filteredProducts.length} results for "{searchQuery}"
-          </p>
-        )}
+        <div className="px-3">
+          {searchQuery && (
+            <p className="text-xs text-muted-foreground mb-2 px-1">
+              {filteredProducts.length} results for "{searchQuery}"
+            </p>
+          )}
 
-        {loadingProducts ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-muted-foreground text-sm">No products found</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-2.5">
-            {filteredProducts.map((product, i) => (
-              <ProductCard key={product.id} product={product} index={i} />
-            ))}
-          </div>
-        )}
-      </div>
+          {loadingProducts ? (
+            <div className="flex justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-muted-foreground text-sm">No products found</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2.5">
+              {filteredProducts.map((product, i) => (
+                <ProductCard key={product.id} product={product} index={i} />
+              ))}
+            </div>
+          )}
+        </div>
+      </PullToRefresh>
 
       <BottomNav cartCount={cartCount} />
     </div>
