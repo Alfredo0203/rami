@@ -43,7 +43,12 @@ export default function Home() {
     return filtered;
   }, [products, selectedCategory, searchQuery]);
 
+  const queryClient = useQueryClient();
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['products'] });
+  }, [queryClient]);
 
   return (
     <div className="min-h-screen bg-background pb-20">
