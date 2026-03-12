@@ -4,7 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import BottomNav from '../components/shop/BottomNav';
 import { useQuery } from '@tanstack/react-query';
-import { User, Package, MapPin, Settings, LogOut, ChevronRight, Shield, Loader2 } from 'lucide-react';
+import { User, Package, MapPin, LogOut, ChevronRight, Shield, Loader2, Trash2 } from 'lucide-react';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
+} from '@/components/ui/alert-dialog';
 
 export default function Account() {
   const navigate = useNavigate();

@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import PullToRefresh from '../components/shop/PullToRefresh';
 import SearchHeader from '../components/shop/SearchHeader';
 import CategoryBar from '../components/shop/CategoryBar';
 import PromoBanner from '../components/shop/PromoBanner';
