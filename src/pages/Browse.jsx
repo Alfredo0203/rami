@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { useScrollRestoration } from '@/lib/useScrollRestoration';
+import { useScrollRestoration } from '@/components/useScrollRestoration';
 
 export default function Browse() {
   useScrollRestoration();

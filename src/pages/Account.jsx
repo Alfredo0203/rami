@@ -9,7 +9,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
 } from '@/components/ui/alert-dialog';
-import { useScrollRestoration } from '@/lib/useScrollRestoration';
+import { useScrollRestoration } from '@/components/useScrollRestoration';
 
 export default function Account() {
   useScrollRestoration();
