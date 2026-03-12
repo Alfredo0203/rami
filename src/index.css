@@ -99,8 +99,7 @@
     @apply border-border;
   }
   html, body {
-    overscroll-behavior-y: none;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
   body {
     @apply bg-background text-foreground font-['Inter',sans-serif];
