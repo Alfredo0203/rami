@@ -22,7 +22,7 @@ export default function Layout({ children, currentPageName }) {
   }
 
   return (
-    <div style={{ overflowX: 'hidden' }}>
+    <div style={{ overflowX: 'clip' }}>
       <AnimatePresence mode="popLayout" initial={false} custom={dir}>
         <motion.div
           key={location.pathname + location.search}

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 
 const THRESHOLD = 80;
@@ -7,10 +7,9 @@ export default function PullToRefresh({ onRefresh, children }) {
   const [pullDistance, setPullDistance] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const startYRef = useRef(null);
-  const containerRef = useRef(null);
 
   const handleTouchStart = useCallback((e) => {
-    if (containerRef.current?.scrollTop === 0) {
+    if (window.scrollY === 0) {
       startYRef.current = e.touches[0].clientY;
     }
   }, []);
@@ -18,9 +17,11 @@ export default function PullToRefresh({ onRefresh, children }) {
   const handleTouchMove = useCallback((e) => {
     if (startYRef.current === null || refreshing) return;
     const delta = e.touches[0].clientY - startYRef.current;
-    if (delta > 0 && containerRef.current?.scrollTop === 0) {
-      e.preventDefault();
+    if (delta > 0 && window.scrollY === 0) {
       setPullDistance(Math.min(delta * 0.5, THRESHOLD + 20));
+    } else {
+      startYRef.current = null;
+      setPullDistance(0);
     }
   }, [refreshing]);
 
@@ -36,16 +37,21 @@ export default function PullToRefresh({ onRefresh, children }) {
     startYRef.current = null;
   }, [pullDistance, onRefresh]);
 
+  useEffect(() => {
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: true });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
+
   const indicatorVisible = pullDistance > 10 || refreshing;
 
   return (
-    <div
-      ref={containerRef}
-      className="relative overflow-y-auto h-full"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
+    <div className="relative">
       {indicatorVisible && (
         <div
           className="flex items-center justify-center transition-all duration-200"
