@@ -5,7 +5,7 @@ import { createPageUrl } from '@/utils';
 
 export default function SearchHeader({ searchQuery, setSearchQuery, cartCount = 0 }) {
   return (
-    <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 py-3">
+    <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 safe-area-top">
       <div className="flex items-center gap-3 max-w-lg mx-auto">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

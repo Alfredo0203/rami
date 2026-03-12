@@ -26,7 +26,7 @@ export default function Orders() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 py-3">
+      <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 safe-area-top">
         <h1 className="text-lg font-bold text-foreground">My Orders</h1>
       </div>
 
