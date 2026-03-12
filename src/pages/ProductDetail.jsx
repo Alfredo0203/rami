@@ -36,20 +36,37 @@ export default function ProductDetail() {
         return base44.entities.CartItem.update(existingItem.id, {
           quantity: existingItem.quantity + quantity
         });
-      } else {
-        return base44.entities.CartItem.create({
+      }
+      return base44.entities.CartItem.create({
+        product_id: productId,
+        quantity,
+        product_name: product.name,
+        product_image: product.images?.[0] || '',
+        product_price: product.price,
+      });
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['cart'] });
+      const prev = queryClient.getQueryData(['cart']);
+      queryClient.setQueryData(['cart'], (old = []) => {
+        const existing = old.find(i => i.product_id === productId);
+        if (existing) {
+          return old.map(i => i.product_id === productId ? { ...i, quantity: i.quantity + quantity } : i);
+        }
+        return [...old, {
+          id: `opt-${Date.now()}`,
           product_id: productId,
           quantity,
           product_name: product.name,
           product_image: product.images?.[0] || '',
           product_price: product.price,
-        });
-      }
+        }];
+      });
+      return { prev };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
-      toast.success('Added to cart!');
-    },
+    onError: (_e, _v, ctx) => ctx?.prev && queryClient.setQueryData(['cart'], ctx.prev),
+    onSuccess: () => toast.success('Added to cart!'),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['cart'] }),
   });
 
   if (isLoading) {
@@ -81,7 +98,7 @@ export default function ProductDetail() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Top bar */}
-      <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg flex items-center justify-between px-4 py-3">
+      <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg flex items-center justify-between px-4 safe-area-top">
         <button onClick={() => navigate(-1)} className="p-2 bg-secondary rounded-full">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>

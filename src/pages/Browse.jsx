@@ -9,8 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
+import { useScrollRestoration } from '@/lib/useScrollRestoration';
 
 export default function Browse() {
+  useScrollRestoration();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [priceRange, setPriceRange] = useState([0, 1000]);
@@ -67,8 +69,8 @@ export default function Browse() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Search bar */}
-      <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 py-3">
-        <div className="flex items-center gap-2 max-w-lg mx-auto">
+      <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 safe-area-top">
+        <div className="flex items-center gap-2 max-w-lg mx-auto pt-0">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input

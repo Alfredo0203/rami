@@ -8,8 +8,10 @@ import PromoBanner from '../components/shop/PromoBanner';
 import ProductCard from '../components/shop/ProductCard';
 import BottomNav from '../components/shop/BottomNav';
 import { Loader2 } from 'lucide-react';
+import { useScrollRestoration } from '@/lib/useScrollRestoration';
 
 export default function Home() {
+  useScrollRestoration();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
 

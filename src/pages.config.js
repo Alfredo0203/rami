@@ -58,6 +58,7 @@ import OrderConfirmation from './pages/OrderConfirmation';
 import OrderDetail from './pages/OrderDetail';
 import Orders from './pages/Orders';
 import ProductDetail from './pages/ProductDetail';
+import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
@@ -77,4 +78,5 @@ export const PAGES = {
 export const pagesConfig = {
     mainPage: "Home",
     Pages: PAGES,
+    Layout: __Layout,
 };

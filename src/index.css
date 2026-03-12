@@ -100,6 +100,7 @@
   }
   html, body {
     overscroll-behavior-y: none;
+    overflow-x: hidden;
   }
   body {
     @apply bg-background text-foreground font-['Inter',sans-serif];
@@ -140,6 +141,12 @@ html {
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Safe area top utility for sticky headers */
+.safe-area-top {
+  padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+  padding-bottom: 0.75rem;
 }
 
 /* Sale badge animation */

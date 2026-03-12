@@ -19,17 +19,33 @@ export default function Cart() {
 
   const updateQtyMutation = useMutation({
     mutationFn: async ({ item, newQty }) => {
-      if (newQty <= 0) {
-        return base44.entities.CartItem.delete(item.id);
-      }
+      if (newQty <= 0) return base44.entities.CartItem.delete(item.id);
       return base44.entities.CartItem.update(item.id, { quantity: newQty });
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cart'] }),
+    onMutate: async ({ item, newQty }) => {
+      await queryClient.cancelQueries({ queryKey: ['cart'] });
+      const prev = queryClient.getQueryData(['cart']);
+      queryClient.setQueryData(['cart'], (old = []) =>
+        newQty <= 0
+          ? old.filter(i => i.id !== item.id)
+          : old.map(i => i.id === item.id ? { ...i, quantity: newQty } : i)
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => ctx?.prev && queryClient.setQueryData(['cart'], ctx.prev),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['cart'] }),
   });
 
   const removeMutation = useMutation({
     mutationFn: (item) => base44.entities.CartItem.delete(item.id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cart'] }),
+    onMutate: async (item) => {
+      await queryClient.cancelQueries({ queryKey: ['cart'] });
+      const prev = queryClient.getQueryData(['cart']);
+      queryClient.setQueryData(['cart'], (old = []) => old.filter(i => i.id !== item.id));
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => ctx?.prev && queryClient.setQueryData(['cart'], ctx.prev),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['cart'] }),
   });
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.product_price || 0) * (item.quantity || 0), 0);
@@ -39,7 +55,7 @@ export default function Cart() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 py-3 flex items-center gap-3">
+      <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 safe-area-top flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="p-2 bg-secondary rounded-full">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>

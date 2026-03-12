@@ -9,8 +9,10 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
 } from '@/components/ui/alert-dialog';
+import { useScrollRestoration } from '@/lib/useScrollRestoration';
 
 export default function Account() {
+  useScrollRestoration();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -49,7 +51,7 @@ export default function Account() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Profile header */}
-      <div className="px-4 pt-8 pb-6" style={{ background: 'linear-gradient(135deg, hsl(14 100% 55%), hsl(340 82% 52%))' }}>
+      <div className="px-4 pb-6" style={{ background: 'linear-gradient(135deg, hsl(14 100% 55%), hsl(340 82% 52%))', paddingTop: 'max(2rem, env(safe-area-inset-top, 0px))' }}>
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-primary-foreground/20 backdrop-blur-sm rounded-full flex items-center justify-center">
             <User className="w-8 h-8 text-primary-foreground" />
