@@ -77,7 +77,13 @@ export default function OrderDetail() {
         {/* Tracking */}
         {!isCancelled && (
           <div className="bg-card rounded-xl p-4 shadow-sm">
-            <h2 className="text-sm font-bold text-foreground mb-4">Order Tracking</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-bold text-foreground">Order Tracking</h2>
+              <span className="flex items-center gap-1.5 text-[10px] text-success font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse inline-block" />
+                Live
+              </span>
+            </div>
             <div className="flex items-center justify-between relative">
               <div className="absolute top-4 left-6 right-6 h-0.5 bg-border" />
               <div
