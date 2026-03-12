@@ -8,7 +8,7 @@ import OrderStatusBadge from '../components/shop/OrderStatusBadge';
 import { Package, ChevronRight, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
-import { useScrollRestoration } from '@/components/useScrollRestoration';
+import { useScrollRestoration } from '../components/useScrollRestoration';
 
 export default function Orders() {
   useScrollRestoration();

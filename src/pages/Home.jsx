@@ -8,7 +8,7 @@ import PromoBanner from '../components/shop/PromoBanner';
 import ProductCard from '../components/shop/ProductCard';
 import BottomNav from '../components/shop/BottomNav';
 import { Loader2 } from 'lucide-react';
-import { useScrollRestoration } from '@/components/useScrollRestoration';
+import { useScrollRestoration } from '../components/useScrollRestoration';
 
 export default function Home() {
   useScrollRestoration();
