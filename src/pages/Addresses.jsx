@@ -35,7 +35,7 @@ export default function Addresses() {
       return base44.entities.Address.create(data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['addresses'] });
+      queryClient.invalidateQueries({ queryKey: ['addresses', userEmail] });
       setShowForm(false);
       setEditingId(null);
       setFormData({ label: 'Home', full_name: '', phone: '', street: '', city: '', state: '', zip_code: '', country: 'United States' });
@@ -46,7 +46,7 @@ export default function Addresses() {
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.Address.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['addresses'] });
+      queryClient.invalidateQueries({ queryKey: ['addresses', userEmail] });
       toast.success('Address removed');
     },
   });
