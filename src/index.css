@@ -67,14 +67,52 @@
   --warning: 38 92% 50%;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 0 0% 5%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 14 100% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 90%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 340 82% 52%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 14 100% 55%;
+    --sale: 0 84% 55%;
+    --success: 142 70% 45%;
+    --warning: 38 92% 50%;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
+  }
+  html, body {
+    overscroll-behavior-y: none;
   }
   body {
     @apply bg-background text-foreground font-['Inter',sans-serif];
     -webkit-tap-highlight-color: transparent;
   }
+  button, nav, [role="navigation"], svg {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Custom scrollbar */
