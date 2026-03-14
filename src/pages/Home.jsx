@@ -7,7 +7,6 @@ import CategoryBar from '../components/shop/CategoryBar';
 import PromoBanner from '../components/shop/PromoBanner';
 import ProductCard from '../components/shop/ProductCard';
 import BottomNav from '../components/shop/BottomNav';
-import ExitConfirmDialog from '../components/ExitConfirmDialog';
 import { useBackExitConfirm } from '../components/useBackExitConfirm';
 import { useTranslation } from '../components/i18n/useTranslation';
 import { Loader2, AlertTriangle } from 'lucide-react';
