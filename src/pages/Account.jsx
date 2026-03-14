@@ -87,31 +87,33 @@ export default function Account() {
           <span className="text-sm font-medium text-destructive">Sign Out</span>
         </button>
 
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <button className="w-full flex items-center gap-3 p-4 mt-3 bg-card rounded-xl shadow-sm hover:bg-destructive/5 transition-colors">
-              <Trash2 className="w-5 h-5 text-destructive" />
-              <span className="text-sm font-medium text-destructive">Delete Account</span>
-            </button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Account</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. All your data including orders and addresses will be permanently deleted.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                onClick={() => base44.auth.logout()}
-              >
-                Delete Account
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {user?.role !== 'admin' && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button className="w-full flex items-center gap-3 p-4 mt-3 bg-card rounded-xl shadow-sm hover:bg-destructive/5 transition-colors">
+                <Trash2 className="w-5 h-5 text-destructive" />
+                <span className="text-sm font-medium text-destructive">Delete Account</span>
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Account</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. All your data including orders and addresses will be permanently deleted.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={() => base44.auth.logout()}
+                >
+                  Delete Account
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
 
       <BottomNav cartCount={cartCount} />
