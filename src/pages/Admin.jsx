@@ -183,6 +183,10 @@ export default function Admin() {
             ))
           )}
         </TabsContent>
+
+        <TabsContent value="settings">
+          <AdminSettingsTab currentUser={user} />
+        </TabsContent>
       </Tabs>
 
       {showProductForm && (
