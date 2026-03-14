@@ -1,61 +1,59 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { toast } from 'sonner';
 
 const HOME_PATH = createPageUrl('Home');
 
-/**
- * On the Home page ONLY, intercepts the hardware/browser back button
- * and shows a confirmation dialog before exiting the app.
- *
- * On any other page, does nothing — React Router handles navigation normally.
- */
+// Detects browser language for toast message
+function getExitMessage() {
+  const lang = (navigator.languages?.[0] || navigator.language || 'en').toLowerCase();
+  if (lang.startsWith('es')) return 'Presiona atrás de nuevo para salir';
+  if (lang.startsWith('pt')) return 'Pressione voltar novamente para sair';
+  return 'Press back again to exit';
+}
+
 export function useBackExitConfirm() {
   const location = useLocation();
-  const [showExitDialog, setShowExitDialog] = useState(false);
   const isHome = location.pathname === HOME_PATH || location.pathname === '/';
-  const guardActive = useRef(false);
+  const backPressedOnce = useRef(false);
+  const resetTimer = useRef(null);
 
   useEffect(() => {
-    if (!isHome) {
-      // Not on home — make sure we leave no ghost state
-      guardActive.current = false;
-      return;
-    }
+    if (!isHome) return;
 
-    // Push a sentinel entry so the back press gives us a popstate event
-    // instead of immediately leaving the app.
+    // Push sentinel so first back gives us a popstate event
     window.history.pushState({ exitGuard: true }, '');
-    guardActive.current = true;
 
-    const handlePopState = (e) => {
-      if (!guardActive.current) return;
+    const handlePopState = () => {
+      if (backPressedOnce.current) {
+        // Second press within 2s — exit
+        clearTimeout(resetTimer.current);
+        if (window.navigator?.app?.exitApp) {
+          window.navigator.app.exitApp();
+        } else {
+          try { window.close(); } catch (_) {}
+          setTimeout(() => { window.location.href = 'about:blank'; }, 100);
+        }
+        return;
+      }
 
-      // Re-push so pressing back again still triggers the dialog
+      // First press — show toast and re-push sentinel
+      backPressedOnce.current = true;
       window.history.pushState({ exitGuard: true }, '');
-      setShowExitDialog(true);
+      toast(getExitMessage(), { duration: 2000 });
+
+      // Reset after 2s
+      resetTimer.current = setTimeout(() => {
+        backPressedOnce.current = false;
+      }, 2000);
     };
 
     window.addEventListener('popstate', handlePopState);
-
     return () => {
       window.removeEventListener('popstate', handlePopState);
-      guardActive.current = false;
+      clearTimeout(resetTimer.current);
+      backPressedOnce.current = false;
     };
   }, [isHome]);
-
-  const handleExit = () => {
-    setShowExitDialog(false);
-    // For Capacitor/Cordova native Android
-    if (window.navigator && window.navigator.app && window.navigator.app.exitApp) {
-      window.navigator.app.exitApp();
-      return;
-    }
-    // PWA / browser fallback
-    try { window.close(); } catch (_) {}
-    // Last resort: navigate away
-    setTimeout(() => { window.location.href = 'about:blank'; }, 100);
-  };
-
-  return { showExitDialog, setShowExitDialog, handleExit };
 }
