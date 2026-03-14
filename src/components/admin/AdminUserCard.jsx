@@ -1,0 +1,164 @@
+import React, { useState } from 'react';
+import { base44 } from '@/api/base44Client';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { User, ShieldCheck, ShieldOff, Ban, CheckCircle2, Trash2, ChevronDown, ChevronUp, Package } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+const STATUS_STYLES = {
+  active: 'bg-success/10 text-success',
+  suspended: 'bg-warning/10 text-warning',
+  deactivated: 'bg-destructive/10 text-destructive',
+};
+
+const ROLE_STYLES = {
+  user: 'bg-secondary text-secondary-foreground',
+  admin: 'bg-primary/10 text-primary',
+  super_admin: 'bg-accent/10 text-accent',
+};
+
+export default function AdminUserCard({ targetUser, currentUser, orders = [] }) {
+  const queryClient = useQueryClient();
+  const [expanded, setExpanded] = useState(false);
+  const [reason, setReason] = useState('');
+
+  const isSelf = currentUser?.id === targetUser?.id;
+  const canPromote = currentUser?.role === 'super_admin';
+  const canManageStatus = currentUser?.role === 'admin' || currentUser?.role === 'super_admin';
+  const isSuperAdmin = targetUser?.role === 'super_admin';
+
+  const updateUser = useMutation({
+    mutationFn: (data) => base44.entities.User.update(targetUser.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success('User updated');
+      setReason('');
+    },
+    onError: () => toast.error('Failed to update user'),
+  });
+
+  const userOrders = orders.filter(o => o.customer_email === targetUser.email);
+  const totalSpent = userOrders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + (o.total || 0), 0);
+
+  return (
+    <div className="bg-card rounded-xl shadow-sm overflow-hidden">
+      <div className="p-3 flex items-center gap-3">
+        <div className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center shrink-0">
+          <User className="w-5 h-5 text-muted-foreground" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground truncate">{targetUser.full_name || 'Unknown'}</p>
+          <p className="text-xs text-muted-foreground truncate">{targetUser.email}</p>
+          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${ROLE_STYLES[targetUser.role] || ROLE_STYLES.user}`}>
+              {targetUser.role?.replace('_', ' ')}
+            </span>
+            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${STATUS_STYLES[targetUser.status || 'active']}`}>
+              {targetUser.status || 'active'}
+            </span>
+            {isSelf && <span className="text-[10px] text-muted-foreground">(you)</span>}
+          </div>
+        </div>
+        <button onClick={() => setExpanded(e => !e)} className="p-1.5 bg-secondary rounded-lg">
+          {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </button>
+      </div>
+
+      {expanded && (
+        <div className="border-t border-border px-3 pb-3 space-y-3">
+          {/* Activity summary */}
+          <div className="flex gap-3 pt-2">
+            <div className="flex-1 bg-secondary/50 rounded-lg p-2 text-center">
+              <Package className="w-3.5 h-3.5 text-muted-foreground mx-auto mb-0.5" />
+              <p className="text-sm font-bold text-foreground">{userOrders.length}</p>
+              <p className="text-[10px] text-muted-foreground">Orders</p>
+            </div>
+            <div className="flex-1 bg-secondary/50 rounded-lg p-2 text-center">
+              <p className="text-xs font-bold text-primary">${totalSpent.toFixed(0)}</p>
+              <p className="text-[10px] text-muted-foreground">Total Spent</p>
+            </div>
+          </div>
+
+          {/* Actions — skip for self and super_admins (unless you are super_admin acting on non-super) */}
+          {!isSelf && canManageStatus && !(isSuperAdmin && !canPromote) && (
+            <div className="space-y-2">
+              <input
+                type="text"
+                placeholder="Reason (optional)"
+                value={reason}
+                onChange={e => setReason(e.target.value)}
+                className="w-full text-xs px-3 py-2 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground"
+              />
+              <div className="flex flex-wrap gap-2">
+                {(targetUser.status === 'active' || !targetUser.status) && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs h-7 border-warning text-warning hover:bg-warning/10"
+                    onClick={() => updateUser.mutate({ status: 'suspended', suspension_reason: reason || 'Suspended by admin' })}
+                    disabled={updateUser.isPending}
+                  >
+                    <Ban className="w-3 h-3 mr-1" /> Suspend
+                  </Button>
+                )}
+                {targetUser.status === 'suspended' && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs h-7 border-success text-success hover:bg-success/10"
+                    onClick={() => updateUser.mutate({ status: 'active', suspension_reason: '' })}
+                    disabled={updateUser.isPending}
+                  >
+                    <CheckCircle2 className="w-3 h-3 mr-1" /> Reactivate
+                  </Button>
+                )}
+                {targetUser.status !== 'deactivated' && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs h-7 border-destructive text-destructive hover:bg-destructive/10"
+                    onClick={() => updateUser.mutate({ status: 'deactivated', suspension_reason: reason || 'Deactivated by admin', deactivated_at: new Date().toISOString() })}
+                    disabled={updateUser.isPending}
+                  >
+                    <Trash2 className="w-3 h-3 mr-1" /> Deactivate
+                  </Button>
+                )}
+                {targetUser.status === 'deactivated' && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs h-7 border-success text-success hover:bg-success/10"
+                    onClick={() => updateUser.mutate({ status: 'active', suspension_reason: '', deactivated_at: '' })}
+                    disabled={updateUser.isPending}
+                  >
+                    <CheckCircle2 className="w-3 h-3 mr-1" /> Restore
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Role management — super_admin only */}
+          {!isSelf && canPromote && (
+            <div className="flex flex-wrap gap-2 pt-1 border-t border-border">
+              <p className="w-full text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Role</p>
+              {['user', 'admin', 'super_admin'].map(role => (
+                <Button
+                  key={role}
+                  size="sm"
+                  variant={targetUser.role === role ? 'default' : 'outline'}
+                  className="text-xs h-7"
+                  onClick={() => updateUser.mutate({ role })}
+                  disabled={updateUser.isPending || targetUser.role === role}
+                >
+                  {role === 'super_admin' ? <ShieldCheck className="w-3 h-3 mr-1" /> : <ShieldOff className="w-3 h-3 mr-1" />}
+                  {role.replace('_', ' ')}
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
