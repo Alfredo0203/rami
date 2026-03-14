@@ -97,8 +97,6 @@ const AuthenticatedApp = () => {
 };
 
 
-import { useState } from 'react';
-
 function App() {
   return (
     <QueryClientProvider client={queryClientInstance}>
