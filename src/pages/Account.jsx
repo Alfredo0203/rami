@@ -154,7 +154,7 @@ export default function Account() {
                   <AlertDialogTitle>Deactivate Account</AlertDialogTitle>
                   <AlertDialogDescription asChild>
                     <div className="space-y-3">
-                      <p>Your account will be deactivated and you will be logged out. Your order history is retained for auditing purposes.</p>
+                      <p>Your account will be deactivated and you will be signed out. Your order history is retained for auditing purposes.</p>
                       <p className="font-medium text-foreground">To confirm, enter your email address:</p>
                       <input
                         type="email"
