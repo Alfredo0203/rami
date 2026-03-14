@@ -67,7 +67,7 @@ export default function Home() {
         </div>
         <h1 className="text-lg font-bold text-foreground">Account {userStatus === 'suspended' ? 'Suspended' : 'Deactivated'}</h1>
         <p className="text-sm text-muted-foreground text-center">
-          {currentUser?.suspension_reason || 'Your account access has been restricted. Please contact support.'}
+          {currentUser?.status_reason || 'Your account access has been restricted. Please contact support.'}
         </p>
         <button
           onClick={() => base44.auth.logout()}
