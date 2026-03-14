@@ -60,8 +60,8 @@ export default function Account() {
     try {
       await base44.entities.User.update(user.id, {
         status: 'deactivated',
-        suspension_reason: 'Self-requested account deletion',
-        deactivated_at: new Date().toISOString(),
+        status_reason: 'Self-requested account deactivation',
+        status_changed_at: new Date().toISOString(),
       });
       toast.success('Account deactivated. Your data is retained for auditing.');
       setTimeout(() => base44.auth.logout(), 1500);
