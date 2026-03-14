@@ -96,17 +96,16 @@ const AuthenticatedApp = () => {
 };
 
 
-function App() {
+import { useState } from 'react';
 
+function App() {
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
-      </QueryClientProvider>
-    </AuthProvider>
+    <QueryClientProvider client={queryClientInstance}>
+      <Router>
+        <AuthenticatedApp />
+      </Router>
+      <Toaster />
+    </QueryClientProvider>
   )
 }
 
