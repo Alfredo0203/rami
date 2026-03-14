@@ -4,7 +4,7 @@ import {
   AlertDialogTitle, AlertDialogDescription, AlertDialogFooter,
   AlertDialogAction, AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
-import { useTranslation } from './i18n/useTranslation.js';
+import { useTranslation } from './i18n/useTranslation';
 
 export default function ExitConfirmDialog({ open, onOpenChange, onExit }) {
   const { t } = useTranslation();

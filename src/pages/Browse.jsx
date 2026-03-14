@@ -10,7 +10,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useScrollRestoration } from '../components/useScrollRestoration';
-import { useTranslation } from '../components/i18n/useTranslation.js';
+import { useTranslation } from '../components/i18n/useTranslation';
 
 export default function Browse() {
   useScrollRestoration();

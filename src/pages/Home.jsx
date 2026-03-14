@@ -8,8 +8,8 @@ import PromoBanner from '../components/shop/PromoBanner';
 import ProductCard from '../components/shop/ProductCard';
 import BottomNav from '../components/shop/BottomNav';
 import ExitConfirmDialog from '../components/ExitConfirmDialog';
-import { useBackExitConfirm } from '../components/useBackExitConfirm.js';
-import { useTranslation } from '../components/i18n/useTranslation.js';
+import { useBackExitConfirm } from '../components/useBackExitConfirm';
+import { useTranslation } from '../components/i18n/useTranslation';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { useScrollRestoration } from '../components/useScrollRestoration';
 
