@@ -1,0 +1,68 @@
+const en = {
+  home_title: "Home",
+  browse_title: "Browse",
+  orders_title: "My Orders",
+  account_title: "Account",
+  admin_title: "Admin Panel",
+
+  nav_home: "Home",
+  nav_browse: "Browse",
+  nav_orders: "Orders",
+  nav_account: "Account",
+
+  search_placeholder: "Search products...",
+  search_placeholder_all: "Search all products...",
+  search_results: "{{count}} results for \"{{query}}\"",
+  no_products: "No products found",
+  products_count: "{{count}} products",
+
+  exit_title: "Exit Application",
+  exit_message: "You are about to leave the application. Do you want to exit?",
+  exit_yes: "Yes, Exit",
+  exit_no: "Stay",
+
+  account_suspended: "Suspended Account",
+  account_deactivated: "Deactivated Account",
+  account_restricted: "Your account access has been restricted. Please contact support.",
+  sign_out: "Sign Out",
+  my_orders: "My Orders",
+  my_addresses: "My Addresses",
+  admin_panel: "Admin Panel",
+  deactivate_account: "Deactivate Account",
+  deactivate_title: "Deactivate Account",
+  deactivate_description: "Your account will be deactivated and you will be signed out. Your order history is retained for auditing purposes.",
+  deactivate_confirm_email: "To confirm, enter your email address:",
+  deactivate_confirm_btn: "Confirm Deactivation",
+  cancel: "Cancel",
+
+  orders_empty_title: "No orders yet",
+  orders_empty_subtitle: "Your order history will appear here",
+
+  dev_mode_title: "Under Development",
+  dev_mode_message: "This feature is temporarily unavailable while the application is under development.",
+  dev_mode_go_home: "Go to Home",
+
+  admin_dev_mode: "Development Mode",
+  admin_dev_mode_desc: "When enabled, regular users can only access the Home screen.",
+  admin_settings: "Settings",
+  admin_products: "Products",
+  admin_orders: "Orders",
+  admin_users: "Users",
+  add_product: "Add Product",
+  no_orders: "No orders yet",
+  no_users: "No users found",
+
+  loading: "Loading...",
+  filters: "Filters",
+  category: "Category",
+  all_categories: "All Categories",
+  price_range: "Price Range",
+  apply_filters: "Apply Filters",
+  sort_newest: "Newest",
+  sort_price_low: "Price: Low to High",
+  sort_price_high: "Price: High to Low",
+  sort_rating: "Top Rated",
+  sort_popular: "Best Selling",
+};
+
+export default en;

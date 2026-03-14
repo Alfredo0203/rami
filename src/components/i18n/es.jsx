@@ -1,0 +1,68 @@
+const es = {
+  home_title: "Inicio",
+  browse_title: "Explorar",
+  orders_title: "Mis Pedidos",
+  account_title: "Cuenta",
+  admin_title: "Panel de Administración",
+
+  nav_home: "Inicio",
+  nav_browse: "Explorar",
+  nav_orders: "Pedidos",
+  nav_account: "Cuenta",
+
+  search_placeholder: "Buscar productos...",
+  search_placeholder_all: "Buscar todos los productos...",
+  search_results: "{{count}} resultados para \"{{query}}\"",
+  no_products: "No se encontraron productos",
+  products_count: "{{count}} productos",
+
+  exit_title: "Salir de la Aplicación",
+  exit_message: "Estás a punto de salir de la aplicación. ¿Deseas salir?",
+  exit_yes: "Sí, Salir",
+  exit_no: "Quedarme",
+
+  account_suspended: "Cuenta Suspendida",
+  account_deactivated: "Cuenta Desactivada",
+  account_restricted: "El acceso a tu cuenta ha sido restringido. Por favor contacta soporte.",
+  sign_out: "Cerrar Sesión",
+  my_orders: "Mis Pedidos",
+  my_addresses: "Mis Direcciones",
+  admin_panel: "Panel de Administración",
+  deactivate_account: "Desactivar Cuenta",
+  deactivate_title: "Desactivar Cuenta",
+  deactivate_description: "Tu cuenta será desactivada y cerrarás sesión. Tu historial de pedidos se conserva para auditoría.",
+  deactivate_confirm_email: "Para confirmar, ingresa tu correo electrónico:",
+  deactivate_confirm_btn: "Confirmar Desactivación",
+  cancel: "Cancelar",
+
+  orders_empty_title: "Sin pedidos aún",
+  orders_empty_subtitle: "Tu historial de pedidos aparecerá aquí",
+
+  dev_mode_title: "En Desarrollo",
+  dev_mode_message: "Esta función no está disponible temporalmente mientras la aplicación está en desarrollo.",
+  dev_mode_go_home: "Ir al Inicio",
+
+  admin_dev_mode: "Modo Desarrollo",
+  admin_dev_mode_desc: "Cuando está habilitado, los usuarios regulares solo pueden acceder a la pantalla de inicio.",
+  admin_settings: "Configuración",
+  admin_products: "Productos",
+  admin_orders: "Pedidos",
+  admin_users: "Usuarios",
+  add_product: "Agregar Producto",
+  no_orders: "Sin pedidos aún",
+  no_users: "No se encontraron usuarios",
+
+  loading: "Cargando...",
+  filters: "Filtros",
+  category: "Categoría",
+  all_categories: "Todas las Categorías",
+  price_range: "Rango de Precio",
+  apply_filters: "Aplicar Filtros",
+  sort_newest: "Más Recientes",
+  sort_price_low: "Precio: Menor a Mayor",
+  sort_price_high: "Precio: Mayor a Menor",
+  sort_rating: "Mejor Valorados",
+  sort_popular: "Más Vendidos",
+};
+
+export default es;

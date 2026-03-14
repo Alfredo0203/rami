@@ -1,0 +1,68 @@
+const pt = {
+  home_title: "Início",
+  browse_title: "Explorar",
+  orders_title: "Meus Pedidos",
+  account_title: "Conta",
+  admin_title: "Painel Administrativo",
+
+  nav_home: "Início",
+  nav_browse: "Explorar",
+  nav_orders: "Pedidos",
+  nav_account: "Conta",
+
+  search_placeholder: "Buscar produtos...",
+  search_placeholder_all: "Buscar todos os produtos...",
+  search_results: "{{count}} resultados para \"{{query}}\"",
+  no_products: "Nenhum produto encontrado",
+  products_count: "{{count}} produtos",
+
+  exit_title: "Sair do Aplicativo",
+  exit_message: "Você está prestes a sair do aplicativo. Deseja sair?",
+  exit_yes: "Sim, Sair",
+  exit_no: "Ficar",
+
+  account_suspended: "Conta Suspensa",
+  account_deactivated: "Conta Desativada",
+  account_restricted: "O acesso à sua conta foi restringido. Por favor entre em contato com o suporte.",
+  sign_out: "Sair",
+  my_orders: "Meus Pedidos",
+  my_addresses: "Meus Endereços",
+  admin_panel: "Painel Administrativo",
+  deactivate_account: "Desativar Conta",
+  deactivate_title: "Desativar Conta",
+  deactivate_description: "Sua conta será desativada e você será desconectado. Seu histórico de pedidos é mantido para auditoria.",
+  deactivate_confirm_email: "Para confirmar, insira seu endereço de e-mail:",
+  deactivate_confirm_btn: "Confirmar Desativação",
+  cancel: "Cancelar",
+
+  orders_empty_title: "Sem pedidos ainda",
+  orders_empty_subtitle: "Seu histórico de pedidos aparecerá aqui",
+
+  dev_mode_title: "Em Desenvolvimento",
+  dev_mode_message: "Este recurso está temporariamente indisponível enquanto o aplicativo está em desenvolvimento.",
+  dev_mode_go_home: "Ir para Início",
+
+  admin_dev_mode: "Modo Desenvolvimento",
+  admin_dev_mode_desc: "Quando ativado, usuários regulares só podem acessar a tela inicial.",
+  admin_settings: "Configurações",
+  admin_products: "Produtos",
+  admin_orders: "Pedidos",
+  admin_users: "Usuários",
+  add_product: "Adicionar Produto",
+  no_orders: "Sem pedidos ainda",
+  no_users: "Nenhum usuário encontrado",
+
+  loading: "Carregando...",
+  filters: "Filtros",
+  category: "Categoria",
+  all_categories: "Todas as Categorias",
+  price_range: "Faixa de Preço",
+  apply_filters: "Aplicar Filtros",
+  sort_newest: "Mais Recentes",
+  sort_price_low: "Preço: Menor para Maior",
+  sort_price_high: "Preço: Maior para Menor",
+  sort_rating: "Melhor Avaliados",
+  sort_popular: "Mais Vendidos",
+};
+
+export default pt;
