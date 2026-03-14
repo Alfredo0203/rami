@@ -21,6 +21,7 @@ export default function OrderDetail() {
   const orderId = urlParams.get('id');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [reordering, setReordering] = useState(false);
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', orderId],
