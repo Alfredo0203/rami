@@ -16,7 +16,43 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   : <>{children}</>;
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const navigate = useNavigate();
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(true);
+  const [authError, setAuthError] = useState(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const isAuthenticated = await base44.auth.isAuthenticated();
+        if (!isAuthenticated) {
+          setAuthError({ type: 'auth_required' });
+          // Redirect to login with replace to avoid back button returning to login
+          base44.auth.redirectToLogin('/Home');
+        }
+      } catch (error) {
+        if (error.message?.includes('not registered')) {
+          setAuthError({ type: 'user_not_registered' });
+        } else {
+          setAuthError({ type: 'auth_required' });
+          base44.auth.redirectToLogin('/Home');
+        }
+      } finally {
+        setIsLoadingAuth(false);
+      }
+    };
+
+    const checkPublicSettings = async () => {
+      try {
+        await base44.entities.AppSettings.filter({ key: 'global' });
+      } finally {
+        setIsLoadingPublicSettings(false);
+      }
+    };
+
+    checkAuth();
+    checkPublicSettings();
+  }, [navigate]);
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
