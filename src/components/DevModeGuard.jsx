@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
-import { useTranslation } from './i18n/useTranslation';
+import { useTranslation } from './i18n/useTranslation.js';
 import { Wrench } from 'lucide-react';
 
 const ADMIN_ROLES = ['admin', 'super_admin', 'owner'];
