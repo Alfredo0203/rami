@@ -23,7 +23,7 @@ export default function PromoBanner() {
             <span className="text-primary-foreground/80 text-xs font-semibold uppercase tracking-wider">Flash Sale</span>
           </div>
           <h2 className="text-primary-foreground text-xl font-extrabold">Up to 70% OFF</h2>
-          <p className="text-primary-foreground/70 text-xs mt-0.5">Limited time only — shop now!</p>
+          <p className="text-primary-foreground/70 text-xs mt-0.5">Created by Alfred & Raquel</p>
         </div>
         <div className="bg-primary-foreground/20 backdrop-blur-sm rounded-full p-3">
           <ArrowRight className="w-5 h-5 text-primary-foreground" />
