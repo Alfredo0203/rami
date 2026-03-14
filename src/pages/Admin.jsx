@@ -4,7 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import AdminProductForm from '../components/admin/AdminProductForm';
 import AdminOrderCard from '../components/admin/AdminOrderCard';
-import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, Trash2, Loader2, Eye, EyeOff } from 'lucide-react';
+import AdminUserCard from '../components/admin/AdminUserCard';
+import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, Trash2, Loader2, Eye, EyeOff, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
@@ -18,7 +19,10 @@ export default function Admin() {
   const [editingProduct, setEditingProduct] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => navigate(-1));
+    base44.auth.me().then(u => {
+      if (!u || (u.role !== 'admin' && u.role !== 'super_admin')) { navigate(-1); return; }
+      setUser(u);
+    }).catch(() => navigate(-1));
   }, []);
 
   const { data: products = [], isLoading: loadingProducts } = useQuery({
