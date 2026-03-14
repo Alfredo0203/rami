@@ -97,6 +97,7 @@ export default function Admin() {
         <TabsList className="w-full">
           <TabsTrigger value="products" className="flex-1">Products</TabsTrigger>
           <TabsTrigger value="orders" className="flex-1">Orders</TabsTrigger>
+          <TabsTrigger value="users" className="flex-1">Users</TabsTrigger>
         </TabsList>
 
         <TabsContent value="products" className="space-y-3 mt-3">
