@@ -135,7 +135,11 @@ export default function ProductDetail() {
       </div>
 
       {/* Image gallery */}
-      <div className="relative aspect-square bg-card overflow-hidden">
+      <div
+        className="relative aspect-square bg-card overflow-hidden"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={(e) => handleTouchEnd(e, images)}
+      >
         <AnimatePresence mode="wait">
           <motion.img
             key={currentImage}
