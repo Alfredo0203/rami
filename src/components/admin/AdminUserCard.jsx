@@ -134,7 +134,7 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
                     size="sm"
                     variant="outline"
                     className="text-xs h-7 border-success text-success hover:bg-success/10"
-                    onClick={() => updateUser.mutate({ status: 'active', suspension_reason: '', deactivated_at: '' })}
+                    onClick={() => updateUser.mutate({ status: 'active', status_reason: '', status_changed_at: new Date().toISOString() })}
                     disabled={updateUser.isPending}
                   >
                     <CheckCircle2 className="w-3 h-3 mr-1" /> Restore
