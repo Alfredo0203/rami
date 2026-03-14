@@ -12,7 +12,7 @@ import {
 import { useScrollRestoration } from '../components/useScrollRestoration';
 import { toast } from 'sonner';
 
-const ROLE_LABELS = { user: 'Customer', admin: 'Admin', super_admin: 'Super Admin' };
+const ROLE_LABELS = { user: 'Customer', admin: 'Admin', super_admin: 'Owner' };
 const STATUS_STYLES = {
   active: null,
   suspended: 'bg-warning/10 border border-warning/30 text-warning',
