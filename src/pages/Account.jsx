@@ -151,7 +151,7 @@ export default function Account() {
             <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Account</AlertDialogTitle>
+                  <AlertDialogTitle>Deactivate Account</AlertDialogTitle>
                   <AlertDialogDescription asChild>
                     <div className="space-y-3">
                       <p>Your account will be deactivated and you will be logged out. Your order history is retained for auditing purposes.</p>
