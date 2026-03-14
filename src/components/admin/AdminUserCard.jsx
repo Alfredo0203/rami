@@ -144,11 +144,11 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
             </div>
           )}
 
-          {/* Role management — super_admin only */}
-          {!isSelf && canPromote && (
+          {/* Role management — owners only, cannot assign owner role */}
+          {!isSelf && isOwner && !isSuperAdmin && (
             <div className="flex flex-wrap gap-2 pt-1 border-t border-border">
               <p className="w-full text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Role</p>
-              {['user', 'admin', 'super_admin'].map(role => (
+              {['user', 'admin'].map(role => (
                 <Button
                   key={role}
                   size="sm"
@@ -157,8 +157,8 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
                   onClick={() => updateUser.mutate({ role })}
                   disabled={updateUser.isPending || targetUser.role === role}
                 >
-                  {role === 'super_admin' ? <ShieldCheck className="w-3 h-3 mr-1" /> : <ShieldOff className="w-3 h-3 mr-1" />}
-                  {role.replace('_', ' ')}
+                  <ShieldOff className="w-3 h-3 mr-1" />
+                  {ROLE_LABELS[role]}
                 </Button>
               ))}
             </div>
