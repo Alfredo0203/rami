@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Home, Search, ShoppingBag, User } from 'lucide-react';
-import { useTranslation } from '../i18n/useTranslation';
+import { useTranslation } from '../i18n/useTranslation.js';
 
 export default function BottomNav({ cartCount = 0 }) {
   const { t } = useTranslation();

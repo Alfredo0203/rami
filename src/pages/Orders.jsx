@@ -9,7 +9,7 @@ import { Package, ChevronRight, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { useScrollRestoration } from '../components/useScrollRestoration';
-import { useTranslation } from '../components/i18n/useTranslation';
+import { useTranslation } from '../components/i18n/useTranslation.js';
 
 export default function Orders() {
   useScrollRestoration();

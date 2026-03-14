@@ -10,7 +10,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useScrollRestoration } from '../components/useScrollRestoration';
-import { useTranslation } from '../components/i18n/useTranslation';
+import { useTranslation } from '../components/i18n/useTranslation.js';
 import { toast } from 'sonner';
 
 const ROLE_LABELS = { user: 'Customer', admin: 'Admin', super_admin: 'Owner' };
