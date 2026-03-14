@@ -123,7 +123,7 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
                     size="sm"
                     variant="outline"
                     className="text-xs h-7 border-destructive text-destructive hover:bg-destructive/10"
-                    onClick={() => updateUser.mutate({ status: 'deactivated', suspension_reason: reason || 'Deactivated by admin', deactivated_at: new Date().toISOString() })}
+                    onClick={() => updateUser.mutate({ status: 'deactivated', status_reason: reason || 'Deactivated by admin', status_changed_at: new Date().toISOString() })}
                     disabled={updateUser.isPending}
                   >
                     <Trash2 className="w-3 h-3 mr-1" /> Deactivate
