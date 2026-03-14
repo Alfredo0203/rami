@@ -16,6 +16,20 @@ export default function ProductDetail() {
   const [currentImage, setCurrentImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [liked, setLiked] = useState(false);
+  const touchStartX = useRef(null);
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e, images) => {
+    if (touchStartX.current === null) return;
+    const delta = touchStartX.current - e.changedTouches[0].clientX;
+    touchStartX.current = null;
+    if (Math.abs(delta) < 40) return;
+    if (delta > 0) setCurrentImage(i => Math.min(i + 1, images.length - 1));
+    else setCurrentImage(i => Math.max(i - 1, 0));
+  };
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', productId],
