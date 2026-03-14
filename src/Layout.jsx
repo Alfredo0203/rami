@@ -1,6 +1,7 @@
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLocation, useNavigationType } from 'react-router-dom';
+import DevModeGuard from './components/DevModeGuard';
 
 const TAB_PAGES = ['Home', 'Browse', 'Orders', 'Account'];
 let prevTabIdx = 0;
@@ -12,7 +13,6 @@ export default function Layout({ children, currentPageName }) {
   const tabIdx = TAB_PAGES.indexOf(currentPageName);
   const isTab = tabIdx >= 0;
 
-  // 1 = new page enters from right, -1 = from left
   let dir = 1;
   if (navType === 'POP') {
     dir = -1;
@@ -37,7 +37,9 @@ export default function Layout({ children, currentPageName }) {
           exit="exit"
           transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
-          {children}
+          <DevModeGuard>
+            {children}
+          </DevModeGuard>
         </motion.div>
       </AnimatePresence>
     </div>
