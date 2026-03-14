@@ -97,6 +97,18 @@ export default function OrderDetail() {
         <div className="ml-auto"><OrderStatusBadge status={order.status} /></div>
       </div>
 
+      {/* Reorder button */}
+      <div className="px-4 pt-4">
+        <button
+          onClick={handleReorder}
+          disabled={reordering}
+          className="w-full flex items-center justify-center gap-2 py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm disabled:opacity-60 transition-opacity"
+        >
+          {reordering ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+          {reordering ? 'Adding to Cart…' : 'Reorder'}
+        </button>
+      </div>
+
       <div className="px-4 py-4 space-y-4">
         {/* Tracking */}
         {!isCancelled && (
