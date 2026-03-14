@@ -167,6 +167,20 @@ export default function Admin() {
             orders.map(order => <AdminOrderCard key={order.id} order={order} />)
           )}
         </TabsContent>
+
+        <TabsContent value="users" className="space-y-3 mt-3 pb-6">
+          {loadingUsers ? (
+            <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+          ) : allUsers.length === 0 ? (
+            <div className="text-center py-10">
+              <p className="text-muted-foreground text-sm">No users found</p>
+            </div>
+          ) : (
+            allUsers.map(u => (
+              <AdminUserCard key={u.id} targetUser={u} currentUser={user} orders={orders} />
+            ))
+          )}
+        </TabsContent>
       </Tabs>
 
       {showProductForm && (
