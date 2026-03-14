@@ -60,6 +60,28 @@ export default function OrderDetail() {
   const currentStepIdx = stepOrder.indexOf(order.status);
   const isCancelled = order.status === 'cancelled';
 
+  const handleReorder = async () => {
+    setReordering(true);
+    const existingCart = await base44.entities.CartItem.list();
+    for (const item of (order.items || [])) {
+      const existing = existingCart.find(c => c.product_id === item.product_id);
+      if (existing) {
+        await base44.entities.CartItem.update(existing.id, { quantity: existing.quantity + item.quantity });
+      } else {
+        await base44.entities.CartItem.create({
+          product_id: item.product_id,
+          product_name: item.product_name,
+          product_image: item.product_image,
+          product_price: item.price,
+          quantity: item.quantity,
+        });
+      }
+    }
+    queryClient.invalidateQueries({ queryKey: ['cart'] });
+    setReordering(false);
+    navigate(createPageUrl('Cart'));
+  };
+
   return (
     <div className="min-h-screen bg-background pb-6">
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 safe-area-top flex items-center gap-3">
