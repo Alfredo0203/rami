@@ -40,6 +40,12 @@ export default function Admin() {
     queryFn: () => base44.entities.Category.list('sort_order'),
   });
 
+  const { data: allUsers = [], isLoading: loadingUsers } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: () => base44.entities.User.list('-created_date'),
+    enabled: !!user,
+  });
+
   const deleteProductMutation = useMutation({
     mutationFn: (id) => base44.entities.Product.delete(id),
     onSuccess: () => {
