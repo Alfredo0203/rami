@@ -7,9 +7,10 @@ import { useQuery } from '@tanstack/react-query';
 import { User, Package, MapPin, LogOut, ChevronRight, Shield, Loader2, Trash2, AlertTriangle } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useScrollRestoration } from '../components/useScrollRestoration';
+import { useTranslation } from '../components/i18n/useTranslation';
 import { toast } from 'sonner';
 
 const ROLE_LABELS = { user: 'Customer', admin: 'Admin', super_admin: 'Owner' };
@@ -21,6 +22,7 @@ const STATUS_STYLES = {
 
 export default function Account() {
   useScrollRestoration();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -43,12 +45,12 @@ export default function Account() {
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
 
   const menuItems = [
-    { icon: Package, label: 'My Orders', page: 'Orders' },
-    { icon: MapPin, label: 'My Addresses', page: 'Addresses' },
+    { icon: Package, label: t('my_orders'), page: 'Orders' },
+    { icon: MapPin, label: t('my_addresses'), page: 'Addresses' },
   ];
 
   if (user?.role === 'admin' || user?.role === 'super_admin') {
-    menuItems.push({ icon: Shield, label: 'Admin Panel', page: 'Admin' });
+    menuItems.push({ icon: Shield, label: t('admin_panel'), page: 'Admin' });
   }
 
   const handleDeleteAccount = async () => {
@@ -84,7 +86,6 @@ export default function Account() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Profile header */}
       <div className="px-4 pb-6" style={{ background: 'linear-gradient(135deg, hsl(14 100% 55%), hsl(340 82% 52%))', paddingTop: 'max(2rem, env(safe-area-inset-top, 0px))' }}>
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-primary-foreground/20 backdrop-blur-sm rounded-full flex items-center justify-center">
@@ -101,12 +102,13 @@ export default function Account() {
       </div>
 
       <div className="px-4 -mt-3 space-y-3">
-        {/* Suspended / deactivated notice */}
         {userStatus !== 'active' && (
           <div className={`flex items-start gap-2 rounded-xl p-3 ${STATUS_STYLES[userStatus]}`}>
             <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
             <div>
-              <p className="text-sm font-semibold capitalize">{userStatus} Account</p>
+              <p className="text-sm font-semibold capitalize">
+                {t(userStatus === 'suspended' ? 'account_suspended' : 'account_deactivated')}
+              </p>
               {user?.status_reason && (
                 <p className="text-xs opacity-80">{user.status_reason}</p>
               )}
@@ -114,7 +116,6 @@ export default function Account() {
           </div>
         )}
 
-        {/* Menu */}
         <div className="bg-card rounded-xl shadow-sm overflow-hidden">
           {menuItems.map((item, i) => (
             <button
@@ -134,10 +135,9 @@ export default function Account() {
           className="w-full flex items-center gap-3 p-4 bg-card rounded-xl shadow-sm hover:bg-secondary/50 transition-colors"
         >
           <LogOut className="w-5 h-5 text-destructive" />
-          <span className="text-sm font-medium text-destructive">Sign Out</span>
+          <span className="text-sm font-medium text-destructive">{t('sign_out')}</span>
         </button>
 
-        {/* Delete account — regular users only, with email confirmation */}
         {isRegularUser && (
           <>
             <button
@@ -145,17 +145,17 @@ export default function Account() {
               className="w-full flex items-center gap-3 p-4 bg-card rounded-xl shadow-sm hover:bg-destructive/5 transition-colors"
             >
               <Trash2 className="w-5 h-5 text-destructive" />
-              <span className="text-sm font-medium text-destructive">Deactivate Account</span>
+              <span className="text-sm font-medium text-destructive">{t('deactivate_account')}</span>
             </button>
 
             <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Deactivate Account</AlertDialogTitle>
+                  <AlertDialogTitle>{t('deactivate_title')}</AlertDialogTitle>
                   <AlertDialogDescription asChild>
                     <div className="space-y-3">
-                      <p>Your account will be deactivated and you will be signed out. Your order history is retained for auditing purposes.</p>
-                      <p className="font-medium text-foreground">To confirm, enter your email address:</p>
+                      <p>{t('deactivate_description')}</p>
+                      <p className="font-medium text-foreground">{t('deactivate_confirm_email')}</p>
                       <input
                         type="email"
                         value={deleteEmail}
@@ -167,13 +167,13 @@ export default function Account() {
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel onClick={() => setDeleteEmail('')}>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel onClick={() => setDeleteEmail('')}>{t('cancel')}</AlertDialogCancel>
                   <AlertDialogAction
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     onClick={handleDeleteAccount}
                     disabled={deleting || deleteEmail.trim().toLowerCase() !== user?.email?.toLowerCase()}
                   >
-                    {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Delete'}
+                    {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : t('deactivate_confirm_btn')}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

@@ -10,9 +10,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useScrollRestoration } from '../components/useScrollRestoration';
+import { useTranslation } from '../components/i18n/useTranslation';
 
 export default function Browse() {
   useScrollRestoration();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [priceRange, setPriceRange] = useState([0, 1000]);
@@ -41,7 +43,7 @@ export default function Browse() {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(p =>
         p.name?.toLowerCase().includes(q) ||
-        p.tags?.some(t => t.toLowerCase().includes(q))
+        p.tags?.some(tag => tag.toLowerCase().includes(q))
       );
     }
 
@@ -68,7 +70,6 @@ export default function Browse() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Search bar */}
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 safe-area-top">
         <div className="flex items-center gap-2 max-w-lg mx-auto pt-0">
           <div className="flex-1 relative">
@@ -77,7 +78,7 @@ export default function Browse() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search all products..."
+              placeholder={t('search_placeholder_all')}
               className="w-full bg-secondary rounded-full pl-9 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
             {searchQuery && (
@@ -95,15 +96,15 @@ export default function Browse() {
             </SheetTrigger>
             <SheetContent side="bottom" className="rounded-t-3xl">
               <SheetHeader>
-                <SheetTitle>Filters</SheetTitle>
+                <SheetTitle>{t('filters')}</SheetTitle>
               </SheetHeader>
               <div className="space-y-6 py-4">
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">Category</label>
+                  <label className="text-sm font-medium text-foreground mb-2 block">{t('category')}</label>
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
+                      <SelectItem value="all">{t('all_categories')}</SelectItem>
                       {categories.map(c => (
                         <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                       ))}
@@ -112,7 +113,7 @@ export default function Browse() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">
-                    Price Range: ${priceRange[0]} - ${priceRange[1]}
+                    {t('price_range')}: ${priceRange[0]} - ${priceRange[1]}
                   </label>
                   <Slider
                     value={priceRange}
@@ -123,7 +124,7 @@ export default function Browse() {
                   />
                 </div>
                 <Button onClick={() => setFiltersOpen(false)} className="w-full bg-primary text-primary-foreground">
-                  Apply Filters
+                  {t('apply_filters')}
                 </Button>
               </div>
             </SheetContent>
@@ -131,24 +132,22 @@ export default function Browse() {
         </div>
       </div>
 
-      {/* Sort bar */}
       <div className="px-4 py-2 flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">{filteredProducts.length} products</p>
+        <p className="text-xs text-muted-foreground">{t('products_count', { count: filteredProducts.length })}</p>
         <Select value={sortBy} onValueChange={setSortBy}>
           <SelectTrigger className="w-36 h-8 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="newest">Newest</SelectItem>
-            <SelectItem value="price_low">Price: Low to High</SelectItem>
-            <SelectItem value="price_high">Price: High to Low</SelectItem>
-            <SelectItem value="rating">Top Rated</SelectItem>
-            <SelectItem value="popular">Best Selling</SelectItem>
+            <SelectItem value="newest">{t('sort_newest')}</SelectItem>
+            <SelectItem value="price_low">{t('sort_price_low')}</SelectItem>
+            <SelectItem value="price_high">{t('sort_price_high')}</SelectItem>
+            <SelectItem value="rating">{t('sort_rating')}</SelectItem>
+            <SelectItem value="popular">{t('sort_popular')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {/* Products grid */}
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="px-3">
           {isLoading ? (
@@ -157,7 +156,7 @@ export default function Browse() {
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-muted-foreground text-sm">No products found</p>
+              <p className="text-muted-foreground text-sm">{t('no_products')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-2.5">

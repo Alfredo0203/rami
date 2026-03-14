@@ -9,9 +9,11 @@ import { Package, ChevronRight, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { useScrollRestoration } from '../components/useScrollRestoration';
+import { useTranslation } from '../components/i18n/useTranslation';
 
 export default function Orders() {
   useScrollRestoration();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [userEmail, setUserEmail] = useState(null);
@@ -26,7 +28,6 @@ export default function Orders() {
     enabled: !!userEmail,
   });
 
-  // Real-time subscription: refresh orders list when any order changes
   useEffect(() => {
     const unsub = base44.entities.Order.subscribe(() => {
       queryClient.invalidateQueries({ queryKey: ['orders', userEmail] });
@@ -44,7 +45,7 @@ export default function Orders() {
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 safe-area-top">
-        <h1 className="text-lg font-bold text-foreground">My Orders</h1>
+        <h1 className="text-lg font-bold text-foreground">{t('orders_title')}</h1>
       </div>
 
       {isLoading ? (
@@ -56,8 +57,8 @@ export default function Orders() {
           <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
             <Package className="w-10 h-10 text-muted-foreground" />
           </div>
-          <p className="text-foreground font-semibold text-lg mb-1">No orders yet</p>
-          <p className="text-muted-foreground text-sm">Your order history will appear here</p>
+          <p className="text-foreground font-semibold text-lg mb-1">{t('orders_empty_title')}</p>
+          <p className="text-muted-foreground text-sm">{t('orders_empty_subtitle')}</p>
         </div>
       ) : (
         <div className="px-4 py-3 space-y-3">
@@ -92,7 +93,7 @@ export default function Orders() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">
-                    {order.items?.map(i => i.product_name).join(', ')}
+                    {order.items?.map(item => item.product_name).join(', ')}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {order.created_date ? format(new Date(order.created_date), 'MMM d, yyyy') : ''}

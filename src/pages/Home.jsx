@@ -7,14 +7,19 @@ import CategoryBar from '../components/shop/CategoryBar';
 import PromoBanner from '../components/shop/PromoBanner';
 import ProductCard from '../components/shop/ProductCard';
 import BottomNav from '../components/shop/BottomNav';
+import ExitConfirmDialog from '../components/ExitConfirmDialog';
+import { useBackExitConfirm } from '../components/useBackExitConfirm';
+import { useTranslation } from '../components/i18n/useTranslation';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { useScrollRestoration } from '../components/useScrollRestoration';
 
 export default function Home() {
   useScrollRestoration();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const { showExitDialog, setShowExitDialog, handleExit } = useBackExitConfirm();
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
@@ -44,7 +49,7 @@ export default function Home() {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(p =>
         p.name?.toLowerCase().includes(q) ||
-        p.tags?.some(t => t.toLowerCase().includes(q))
+        p.tags?.some(tag => tag.toLowerCase().includes(q))
       );
     }
     return filtered;
@@ -65,15 +70,17 @@ export default function Home() {
         <div className="w-14 h-14 bg-destructive/10 rounded-full flex items-center justify-center">
           <AlertTriangle className="w-7 h-7 text-destructive" />
         </div>
-        <h1 className="text-lg font-bold text-foreground">Account {userStatus === 'suspended' ? 'Suspended' : 'Deactivated'}</h1>
+        <h1 className="text-lg font-bold text-foreground">
+          {t(userStatus === 'suspended' ? 'account_suspended' : 'account_deactivated')}
+        </h1>
         <p className="text-sm text-muted-foreground text-center">
-          {currentUser?.status_reason || 'Your account access has been restricted. Please contact support.'}
+          {currentUser?.status_reason || t('account_restricted')}
         </p>
         <button
           onClick={() => base44.auth.logout()}
           className="mt-2 text-sm text-destructive underline"
         >
-          Sign Out
+          {t('sign_out')}
         </button>
       </div>
     );
@@ -81,7 +88,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <SearchHeader searchQuery={searchQuery} setSearchQuery={setSearchQuery} cartCount={cartCount} />
+      <SearchHeader
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        cartCount={cartCount}
+      />
 
       <PullToRefresh onRefresh={handleRefresh}>
         <PromoBanner />
@@ -95,7 +106,7 @@ export default function Home() {
         <div className="px-3">
           {searchQuery && (
             <p className="text-xs text-muted-foreground mb-2 px-1">
-              {filteredProducts.length} results for "{searchQuery}"
+              {t('search_results', { count: filteredProducts.length, query: searchQuery })}
             </p>
           )}
 
@@ -105,7 +116,7 @@ export default function Home() {
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-muted-foreground text-sm">No products found</p>
+              <p className="text-muted-foreground text-sm">{t('no_products')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-2.5">
@@ -118,6 +129,12 @@ export default function Home() {
       </PullToRefresh>
 
       <BottomNav cartCount={cartCount} />
+
+      <ExitConfirmDialog
+        open={showExitDialog}
+        onOpenChange={setShowExitDialog}
+        onExit={handleExit}
+      />
     </div>
   );
 }

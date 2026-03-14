@@ -1,18 +1,20 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Home, Search, ShoppingBag, User, LayoutGrid } from 'lucide-react';
-
-const navItems = [
-  { icon: Home, label: 'Home', page: 'Home' },
-  { icon: Search, label: 'Browse', page: 'Browse' },
-  { icon: ShoppingBag, label: 'Orders', page: 'Orders' },
-  { icon: User, label: 'Account', page: 'Account' },
-];
+import { Home, Search, ShoppingBag, User } from 'lucide-react';
+import { useTranslation } from '../i18n/useTranslation';
 
 export default function BottomNav({ cartCount = 0 }) {
+  const { t } = useTranslation();
   const location = useLocation();
   const currentPath = location.pathname;
+
+  const navItems = [
+    { icon: Home, label: t('nav_home'), page: 'Home' },
+    { icon: Search, label: t('nav_browse'), page: 'Browse' },
+    { icon: ShoppingBag, label: t('nav_orders'), page: 'Orders' },
+    { icon: User, label: t('nav_account'), page: 'Account' },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border safe-area-bottom">
