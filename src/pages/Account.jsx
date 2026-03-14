@@ -145,7 +145,7 @@ export default function Account() {
               className="w-full flex items-center gap-3 p-4 bg-card rounded-xl shadow-sm hover:bg-destructive/5 transition-colors"
             >
               <Trash2 className="w-5 h-5 text-destructive" />
-              <span className="text-sm font-medium text-destructive">Delete Account</span>
+              <span className="text-sm font-medium text-destructive">Deactivate Account</span>
             </button>
 
             <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
