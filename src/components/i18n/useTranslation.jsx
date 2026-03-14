@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import en from './en';
 import es from './es';
 import pt from './pt';
@@ -6,26 +6,41 @@ import pt from './pt';
 const translations = { en, es, pt };
 
 function detectLanguage() {
-  const lang = navigator.language || navigator.userLanguage || 'en';
-  const code = lang.toLowerCase().split('-')[0];
-  return translations[code] ? code : 'en';
+  try {
+    // navigator.languages is the standard array (most accurate on mobile)
+    const langs = navigator.languages && navigator.languages.length
+      ? navigator.languages
+      : [navigator.language || 'en'];
+
+    for (const lang of langs) {
+      const code = lang.toLowerCase().split('-')[0];
+      if (translations[code]) return code;
+    }
+  } catch (e) {
+    // ignore
+  }
+  return 'en';
 }
 
+// Detect once at module level so it's stable across re-renders
+const DETECTED_LANG = detectLanguage();
+
 /**
- * Returns a `t(key, vars)` function that translates keys using the device language.
+ * Returns a stable `t(key, vars)` function that translates keys using the device language.
  * Supports simple interpolation: t('search_results', { count: 5, query: 'shirt' })
  */
 export function useTranslation() {
-  const lang = useMemo(() => detectLanguage(), []);
-  const dict = translations[lang] || en;
+  const dict = translations[DETECTED_LANG] || en;
 
-  const t = (key, vars = {}) => {
+  const t = useCallback((key, vars = {}) => {
     let str = dict[key] ?? en[key] ?? key;
-    Object.entries(vars).forEach(([k, v]) => {
-      str = str.replace(new RegExp(`\\{\\{${k}\\}\\}`, 'g'), String(v));
-    });
+    if (Object.keys(vars).length > 0) {
+      Object.entries(vars).forEach(([k, v]) => {
+        str = str.replace(new RegExp(`\\{\\{${k}\\}\\}`, 'g'), String(v));
+      });
+    }
     return str;
-  };
+  }, [dict]);
 
-  return { t, lang };
+  return { t, lang: DETECTED_LANG };
 }
