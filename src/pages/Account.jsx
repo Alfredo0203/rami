@@ -107,8 +107,8 @@ export default function Account() {
             <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
             <div>
               <p className="text-sm font-semibold capitalize">{userStatus} Account</p>
-              {user?.suspension_reason && (
-                <p className="text-xs opacity-80">{user.suspension_reason}</p>
+              {user?.status_reason && (
+                <p className="text-xs opacity-80">{user.status_reason}</p>
               )}
             </div>
           </div>
