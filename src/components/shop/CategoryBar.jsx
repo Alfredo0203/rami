@@ -1,15 +1,22 @@
 import React from 'react';
-import { Shirt, Watch, Home, Smartphone, Dumbbell, Sparkles, Gift, Palette } from 'lucide-react';
+import { Shirt, Watch, Smartphone, Dumbbell, Sparkles, Gift, Palette, Tag, ShoppingBag, Star } from 'lucide-react';
 
 const iconMap = {
-  Shirt, Watch, Home, Smartphone, Dumbbell, Sparkles, Gift, Palette
+  Shirt, Watch, Smartphone, Dumbbell, Sparkles, Gift, Palette, Tag, ShoppingBag, Star
 };
 
-const defaultIcons = [Shirt, Watch, Home, Smartphone, Dumbbell, Sparkles, Gift, Palette];
+// Home icon intentionally excluded — "Home" is only in the bottom nav
+const defaultIcons = [Shirt, Watch, Smartphone, Dumbbell, Sparkles, Gift, Palette, Tag, ShoppingBag, Star];
 
 export default function CategoryBar({ categories, selectedId, onSelect }) {
+  // Filter out any category literally named "Home" to avoid duplication with the bottom nav
+  const filteredCategories = (categories || []).filter(
+    cat => cat.name?.toLowerCase() !== 'home'
+  );
+
   return (
     <div className="flex gap-3 overflow-x-auto hide-scrollbar py-3 px-4">
+      {/* "All" button */}
       <button
         onClick={() => onSelect(null)}
         className={`flex flex-col items-center gap-1 min-w-[56px] transition-all ${
@@ -23,7 +30,8 @@ export default function CategoryBar({ categories, selectedId, onSelect }) {
         </div>
         <span className="text-[10px] font-medium text-foreground">All</span>
       </button>
-      {categories.map((cat, i) => {
+
+      {filteredCategories.map((cat, i) => {
         const Icon = iconMap[cat.icon] || defaultIcons[i % defaultIcons.length];
         const isActive = selectedId === cat.id;
         return (
