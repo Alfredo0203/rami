@@ -129,11 +129,6 @@ export default function Home() {
 
       <BottomNav cartCount={cartCount} />
 
-      <ExitConfirmDialog
-        open={showExitDialog}
-        onOpenChange={setShowExitDialog}
-        onExit={handleExit}
-      />
     </div>
   );
 }
