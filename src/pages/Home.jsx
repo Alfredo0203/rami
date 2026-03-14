@@ -18,7 +18,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
-  const { showExitDialog, setShowExitDialog, handleExit } = useBackExitConfirm();
+  useBackExitConfirm();
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
