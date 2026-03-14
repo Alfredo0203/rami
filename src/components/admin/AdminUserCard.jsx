@@ -101,7 +101,7 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
                     size="sm"
                     variant="outline"
                     className="text-xs h-7 border-warning text-warning hover:bg-warning/10"
-                    onClick={() => updateUser.mutate({ status: 'suspended', suspension_reason: reason || 'Suspended by admin' })}
+                    onClick={() => updateUser.mutate({ status: 'suspended', status_reason: reason || 'Suspended by admin', status_changed_at: new Date().toISOString() })}
                     disabled={updateUser.isPending}
                   >
                     <Ban className="w-3 h-3 mr-1" /> Suspend
