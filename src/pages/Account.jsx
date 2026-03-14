@@ -4,18 +4,29 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import BottomNav from '../components/shop/BottomNav';
 import { useQuery } from '@tanstack/react-query';
-import { User, Package, MapPin, LogOut, ChevronRight, Shield, Loader2, Trash2 } from 'lucide-react';
+import { User, Package, MapPin, LogOut, ChevronRight, Shield, Loader2, Trash2, AlertTriangle } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
 } from '@/components/ui/alert-dialog';
 import { useScrollRestoration } from '../components/useScrollRestoration';
+import { toast } from 'sonner';
+
+const ROLE_LABELS = { user: 'Customer', admin: 'Admin', super_admin: 'Super Admin' };
+const STATUS_STYLES = {
+  active: null,
+  suspended: 'bg-warning/10 border border-warning/30 text-warning',
+  deactivated: 'bg-destructive/10 border border-destructive/30 text-destructive',
+};
 
 export default function Account() {
   useScrollRestoration();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [deleteEmail, setDeleteEmail] = useState('');
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     base44.auth.me()
@@ -36,9 +47,32 @@ export default function Account() {
     { icon: MapPin, label: 'My Addresses', page: 'Addresses' },
   ];
 
-  if (user?.role === 'admin') {
+  if (user?.role === 'admin' || user?.role === 'super_admin') {
     menuItems.push({ icon: Shield, label: 'Admin Panel', page: 'Admin' });
   }
+
+  const handleDeleteAccount = async () => {
+    if (deleteEmail.trim().toLowerCase() !== user?.email?.toLowerCase()) {
+      toast.error('Email does not match your account email');
+      return;
+    }
+    setDeleting(true);
+    try {
+      await base44.entities.User.update(user.id, {
+        status: 'deactivated',
+        suspension_reason: 'Self-requested account deletion',
+        deactivated_at: new Date().toISOString(),
+      });
+      toast.success('Account deactivated. Your data is retained for auditing.');
+      setTimeout(() => base44.auth.logout(), 1500);
+    } catch {
+      toast.error('Failed to deactivate account');
+      setDeleting(false);
+    }
+  };
+
+  const isRegularUser = user?.role === 'user';
+  const userStatus = user?.status || 'active';
 
   if (loading) {
     return (
@@ -59,12 +93,28 @@ export default function Account() {
           <div>
             <h1 className="text-lg font-bold text-primary-foreground">{user?.full_name || 'Guest User'}</h1>
             <p className="text-sm text-primary-foreground/70">{user?.email || ''}</p>
+            <span className="text-[11px] font-medium text-primary-foreground/60 bg-primary-foreground/10 px-2 py-0.5 rounded-full mt-1 inline-block">
+              {ROLE_LABELS[user?.role] || 'Customer'}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Menu */}
-      <div className="px-4 -mt-3">
+      <div className="px-4 -mt-3 space-y-3">
+        {/* Suspended / deactivated notice */}
+        {userStatus !== 'active' && (
+          <div className={`flex items-start gap-2 rounded-xl p-3 ${STATUS_STYLES[userStatus]}`}>
+            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-sm font-semibold capitalize">{userStatus} Account</p>
+              {user?.suspension_reason && (
+                <p className="text-xs opacity-80">{user.suspension_reason}</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Menu */}
         <div className="bg-card rounded-xl shadow-sm overflow-hidden">
           {menuItems.map((item, i) => (
             <button
@@ -81,38 +131,54 @@ export default function Account() {
 
         <button
           onClick={() => base44.auth.logout()}
-          className="w-full flex items-center gap-3 p-4 mt-4 bg-card rounded-xl shadow-sm hover:bg-secondary/50 transition-colors"
+          className="w-full flex items-center gap-3 p-4 bg-card rounded-xl shadow-sm hover:bg-secondary/50 transition-colors"
         >
           <LogOut className="w-5 h-5 text-destructive" />
           <span className="text-sm font-medium text-destructive">Sign Out</span>
         </button>
 
-        {user?.role !== 'admin' && (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <button className="w-full flex items-center gap-3 p-4 mt-3 bg-card rounded-xl shadow-sm hover:bg-destructive/5 transition-colors">
-                <Trash2 className="w-5 h-5 text-destructive" />
-                <span className="text-sm font-medium text-destructive">Delete Account</span>
-              </button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Account</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. All your data including orders and addresses will be permanently deleted.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  onClick={() => base44.auth.logout()}
-                >
-                  Delete Account
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+        {/* Delete account — regular users only, with email confirmation */}
+        {isRegularUser && (
+          <>
+            <button
+              onClick={() => setDeleteOpen(true)}
+              className="w-full flex items-center gap-3 p-4 bg-card rounded-xl shadow-sm hover:bg-destructive/5 transition-colors"
+            >
+              <Trash2 className="w-5 h-5 text-destructive" />
+              <span className="text-sm font-medium text-destructive">Delete Account</span>
+            </button>
+
+            <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Account</AlertDialogTitle>
+                  <AlertDialogDescription asChild>
+                    <div className="space-y-3">
+                      <p>Your account will be deactivated and you will be logged out. Your order history is retained for auditing purposes.</p>
+                      <p className="font-medium text-foreground">To confirm, enter your email address:</p>
+                      <input
+                        type="email"
+                        value={deleteEmail}
+                        onChange={e => setDeleteEmail(e.target.value)}
+                        placeholder={user?.email || 'your@email.com'}
+                        className="w-full text-sm px-3 py-2 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground"
+                      />
+                    </div>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setDeleteEmail('')}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={handleDeleteAccount}
+                    disabled={deleting || deleteEmail.trim().toLowerCase() !== user?.email?.toLowerCase()}
+                  >
+                    {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Delete'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </>
         )}
       </div>
 
