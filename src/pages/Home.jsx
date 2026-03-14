@@ -57,6 +57,28 @@ export default function Home() {
     await queryClient.invalidateQueries({ queryKey: ['products'] });
   }, [queryClient]);
 
+  const userStatus = currentUser?.status || 'active';
+
+  if (userStatus === 'suspended' || userStatus === 'deactivated') {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 gap-4">
+        <div className="w-14 h-14 bg-destructive/10 rounded-full flex items-center justify-center">
+          <AlertTriangle className="w-7 h-7 text-destructive" />
+        </div>
+        <h1 className="text-lg font-bold text-foreground">Account {userStatus === 'suspended' ? 'Suspended' : 'Deactivated'}</h1>
+        <p className="text-sm text-muted-foreground text-center">
+          {currentUser?.suspension_reason || 'Your account access has been restricted. Please contact support.'}
+        </p>
+        <button
+          onClick={() => base44.auth.logout()}
+          className="mt-2 text-sm text-destructive underline"
+        >
+          Sign Out
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <SearchHeader searchQuery={searchQuery} setSearchQuery={setSearchQuery} cartCount={cartCount} />
