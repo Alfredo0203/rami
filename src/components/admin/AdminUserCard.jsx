@@ -57,7 +57,7 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
           <p className="text-xs text-muted-foreground truncate">{targetUser.email}</p>
           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
             <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${ROLE_STYLES[targetUser.role] || ROLE_STYLES.user}`}>
-              {targetUser.role?.replace('_', ' ')}
+              {ROLE_LABELS[targetUser.role] || 'Customer'}
             </span>
             <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${STATUS_STYLES[targetUser.status || 'active']}`}>
               {targetUser.status || 'active'}
