@@ -17,14 +17,20 @@ const ROLE_STYLES = {
   super_admin: 'bg-accent/10 text-accent',
 };
 
+const ROLE_LABELS = {
+  user: 'Customer',
+  admin: 'Admin',
+  super_admin: 'Owner',
+};
+
 export default function AdminUserCard({ targetUser, currentUser, orders = [] }) {
   const queryClient = useQueryClient();
   const [expanded, setExpanded] = useState(false);
   const [reason, setReason] = useState('');
 
   const isSelf = currentUser?.id === targetUser?.id;
-  const canPromote = currentUser?.role === 'super_admin';
-  const canManageStatus = currentUser?.role === 'admin' || currentUser?.role === 'super_admin';
+  const isOwner = currentUser?.role === 'super_admin';
+  const canManageStatus = (currentUser?.role === 'admin' || isOwner) && targetUser?.role !== 'super_admin';
   const isSuperAdmin = targetUser?.role === 'super_admin';
 
   const updateUser = useMutation({
