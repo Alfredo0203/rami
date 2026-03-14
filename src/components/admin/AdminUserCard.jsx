@@ -85,8 +85,8 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
             </div>
           </div>
 
-          {/* Actions — skip for self and super_admins (unless you are super_admin acting on non-super) */}
-          {!isSelf && canManageStatus && !(isSuperAdmin && !canPromote) && (
+          {/* Actions — skip for self, owners, and non-owners acting on owners */}
+          {!isSelf && canManageStatus && (
             <div className="space-y-2">
               <input
                 type="text"
