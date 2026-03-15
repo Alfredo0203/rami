@@ -85,6 +85,7 @@ export default function Checkout() {
         shipping_cost: shipping,
         total,
         status: 'pending',
+        payment_status: paymentMethod === 'cash_on_delivery' ? 'pending_payment' : 'pending_payment',
         shipping_address: {
           full_name: address.full_name,
           phone: address.phone,
