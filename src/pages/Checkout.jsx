@@ -289,13 +289,20 @@ export default function Checkout() {
 
       {/* Place Order */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border px-4 py-3 safe-area-bottom">
+        {paymentMethod === 'cash_on_delivery' && (
+          <p className="text-xs text-muted-foreground text-center mb-2">
+            💵 You will pay <span className="font-semibold text-foreground">${total.toFixed(2)}</span> upon delivery
+          </p>
+        )}
         <Button
           onClick={() => placeOrderMutation.mutate()}
-          disabled={placeOrderMutation.isPending || !selectedAddressId}
+          disabled={placeOrderMutation.isPending || !selectedAddressId || !paymentMethod}
           className="w-full bg-primary text-primary-foreground font-bold h-12 rounded-full text-base max-w-lg mx-auto block"
         >
           {placeOrderMutation.isPending ? (
             <Loader2 className="w-5 h-5 animate-spin" />
+          ) : paymentMethod === 'cash_on_delivery' ? (
+            `Place Order · Pay on Delivery`
           ) : (
             `Place Order · $${total.toFixed(2)}`
           )}
