@@ -14,8 +14,9 @@ import { motion } from 'framer-motion';
 export default function Checkout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [paymentMethod, setPaymentMethod] = useState('credit_card');
+  const [paymentMethod, setPaymentMethod] = useState(null);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [allowedPaymentMethods, setAllowedPaymentMethods] = useState(['credit_card']);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [newAddress, setNewAddress] = useState({
     label: 'Home', full_name: '', phone: '', street: '', city: '', state: '', zip_code: '', country: 'United States'
