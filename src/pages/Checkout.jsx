@@ -241,17 +241,22 @@ export default function Checkout() {
           <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-2">
             {[
               { value: 'credit_card', icon: CreditCard, label: 'Credit / Debit Card' },
-              { value: 'paypal', icon: Wallet, label: 'PayPal' },
-              { value: 'apple_pay', icon: Smartphone, label: 'Apple Pay' },
-            ].map(method => (
-              <label key={method.value} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                paymentMethod === method.value ? 'border-primary bg-primary/5' : 'border-border'
-              }`}>
-                <RadioGroupItem value={method.value} />
-                <method.icon className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm text-foreground">{method.label}</span>
-              </label>
-            ))}
+              { value: 'cash_on_delivery', icon: Banknote, label: 'Cash on Delivery (Contra Entrega)', description: 'Pay when your order arrives' },
+            ].filter(m => allowedPaymentMethods.includes(m.value)).map(method => {
+              const Icon = method.icon;
+              return (
+                <label key={method.value} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                  paymentMethod === method.value ? 'border-primary bg-primary/5' : 'border-border'
+                }`}>
+                  <RadioGroupItem value={method.value} className="mt-0.5" />
+                  <Icon className="w-4 h-4 text-muted-foreground mt-0.5" />
+                  <div>
+                    <span className="text-sm text-foreground">{method.label}</span>
+                    {method.description && <p className="text-xs text-muted-foreground">{method.description}</p>}
+                  </div>
+                </label>
+              );
+            })}
           </RadioGroup>
         </div>
 
