@@ -25,6 +25,12 @@ export default function Checkout() {
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
+    base44.entities.AppSettings.filter({ key: 'global' }).then(results => {
+      const s = results[0];
+      const methods = s?.allowed_payment_methods?.length ? s.allowed_payment_methods : ['credit_card'];
+      setAllowedPaymentMethods(methods);
+      setPaymentMethod(methods[0]);
+    }).catch(() => {});
   }, []);
 
   const { data: cartItems = [] } = useQuery({
