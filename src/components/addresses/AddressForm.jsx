@@ -9,24 +9,20 @@ const COUNTRY_CODE = 'SV';
 
 const EMPTY_FORM = {
   label: 'Casa',
-  full_name: '',
+  first_name: '',
+  last_name: '',
   phone: '',
   departamento: '',
   municipio: '',
+  colonia: '',
   street: '',
   house_number: '',
+  reference: '',
   dui: '',
   country: 'El Salvador',
 };
 
-function validatePhone(phone) {
-  return /^\d{8}$/.test(phone.trim());
-}
-
-function validateDUI(dui) {
-  return /^\d{8}-\d$/.test(dui.trim());
-}
-
+// Helpers
 function formatPhone(raw) {
   return raw.replace(/\D/g, '').slice(0, 8);
 }
@@ -37,14 +33,60 @@ function formatDUI(raw) {
   return digits;
 }
 
-// Field wrapper defined OUTSIDE component to avoid remounts on each render
-function Field({ label, error, children }) {
+function validate(form) {
+  const e = {};
+  if (!form.first_name.trim() || form.first_name.trim().length < 3)
+    e.first_name = 'El nombre debe tener al menos 3 letras';
+  if (!form.last_name.trim() || form.last_name.trim().length < 3)
+    e.last_name = 'El apellido debe tener al menos 3 letras';
+  if (!form.phone.trim())
+    e.phone = 'El teléfono es requerido';
+  else if (!/^\d{8}$/.test(form.phone.trim()))
+    e.phone = 'Ingresa exactamente 8 dígitos (ej: 71234567)';
+  if (!form.departamento)
+    e.departamento = 'Selecciona un departamento';
+  if (!form.municipio)
+    e.municipio = 'Selecciona un municipio';
+  if (!form.colonia.trim())
+    e.colonia = 'La colonia / residencial / barrio es requerida';
+  if (!form.street.trim())
+    e.street = 'La calle / pasaje / avenida es requerida';
+  if (!form.house_number.trim())
+    e.house_number = 'El número de casa es requerido';
+  if (!form.dui.trim())
+    e.dui = 'El DUI es requerido';
+  else if (!/^\d{8}-\d$/.test(form.dui.trim()))
+    e.dui = 'Formato inválido. Ej: 12345678-9';
+  return e;
+}
+
+// Field wrapper OUTSIDE component to prevent remounts on re-render
+function Field({ label, error, optional, children }) {
   return (
     <div>
-      <Label className="text-xs text-muted-foreground mb-1 block">{label}</Label>
+      <div className="flex items-center gap-1 mb-1">
+        <Label className="text-xs text-muted-foreground">{label}</Label>
+        {optional && <span className="text-[10px] text-muted-foreground">(opcional)</span>}
+      </div>
       {children}
       {error && <p className="text-[11px] text-destructive mt-0.5">{error}</p>}
     </div>
+  );
+}
+
+function SelectField({ value, onChange, disabled, placeholder, options }) {
+  return (
+    <select
+      value={value}
+      onChange={onChange}
+      disabled={disabled}
+      className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+    >
+      <option value="">{placeholder}</option>
+      {options.map(opt => (
+        <option key={opt} value={opt}>{opt}</option>
+      ))}
+    </select>
   );
 }
 
@@ -67,47 +109,46 @@ export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
     setErrors(e => ({ ...e, [field]: undefined }));
   };
 
-  const validate = () => {
-    const e = {};
-    if (!form.full_name.trim()) e.full_name = 'El nombre es requerido';
-    if (!form.phone.trim()) e.phone = 'El teléfono es requerido';
-    else if (!validatePhone(form.phone)) e.phone = 'Formato inválido. Ingresa 8 dígitos (ej: 71234567)';
-    if (!form.departamento) e.departamento = 'Selecciona un departamento';
-    if (!form.municipio) e.municipio = 'Selecciona un municipio';
-    if (!form.street.trim()) e.street = 'La calle o avenida es requerida';
-    if (!form.house_number.trim()) e.house_number = 'El número de casa es requerido';
-    if (!form.dui.trim()) e.dui = 'El DUI es requerido';
-    else if (!validateDUI(form.dui)) e.dui = 'Formato inválido. Ej: 12345678-9';
-    return e;
-  };
-
   const handleSubmit = () => {
-    const e = validate();
+    const e = validate(form);
     if (Object.keys(e).length > 0) { setErrors(e); return; }
     onSave({ ...form, phone: `+503 ${form.phone}` });
   };
 
   return (
     <div className="space-y-3">
-      {/* País — read-only */}
+
+      {/* País */}
       <Field label="País">
         <Input value="El Salvador" disabled className="h-9 text-sm bg-muted" />
       </Field>
 
-      {/* Nombre completo */}
-      <Field label="Nombre completo" error={errors.full_name}>
-        <Input
-          value={form.full_name}
-          onChange={e => set('full_name', e.target.value)}
-          placeholder="Ej: María García"
-          className="h-9 text-sm"
-        />
-      </Field>
+      {/* Nombre + Apellido */}
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Nombre" error={errors.first_name}>
+          <Input
+            value={form.first_name}
+            onChange={e => set('first_name', e.target.value)}
+            placeholder="Ej: María"
+            className="h-9 text-sm"
+          />
+        </Field>
+        <Field label="Apellido" error={errors.last_name}>
+          <Input
+            value={form.last_name}
+            onChange={e => set('last_name', e.target.value)}
+            placeholder="Ej: García"
+            className="h-9 text-sm"
+          />
+        </Field>
+      </div>
 
       {/* Teléfono */}
       <Field label="Número de teléfono" error={errors.phone}>
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground bg-muted border border-border rounded-md px-3 h-9 flex items-center select-none">+503</span>
+          <span className="text-sm font-medium text-muted-foreground bg-muted border border-border rounded-md px-3 h-9 flex items-center select-none shrink-0">
+            +503
+          </span>
           <Input
             value={form.phone}
             onChange={e => set('phone', formatPhone(e.target.value))}
@@ -121,39 +162,41 @@ export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
 
       {/* Departamento */}
       <Field label="Departamento" error={errors.departamento}>
-        <select
+        <SelectField
           value={form.departamento}
           onChange={e => set('departamento', e.target.value)}
-          className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="">— Selecciona un departamento —</option>
-          {departments.map(d => (
-            <option key={d.name} value={d.name}>{d.name}</option>
-          ))}
-        </select>
+          placeholder="— Selecciona un departamento —"
+          options={departments.map(d => d.name)}
+        />
       </Field>
 
       {/* Municipio */}
       <Field label="Municipio" error={errors.municipio}>
-        <select
+        <SelectField
           value={form.municipio}
           onChange={e => set('municipio', e.target.value)}
           disabled={!form.departamento}
-          className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
-        >
-          <option value="">— Selecciona un municipio —</option>
-          {municipalities.map(m => (
-            <option key={m} value={m}>{m}</option>
-          ))}
-        </select>
+          placeholder={form.departamento ? '— Selecciona un municipio —' : '— Primero selecciona departamento —'}
+          options={municipalities}
+        />
       </Field>
 
-      {/* Calle o avenida */}
-      <Field label="Calle o avenida" error={errors.street}>
+      {/* Colonia / Residencial / Barrio */}
+      <Field label="Colonia / Residencial / Barrio" error={errors.colonia}>
+        <Input
+          value={form.colonia}
+          onChange={e => set('colonia', e.target.value)}
+          placeholder="Ej: Col. Escalón, Res. Santa Elena, Bo. San Miguelito"
+          className="h-9 text-sm"
+        />
+      </Field>
+
+      {/* Calle / Pasaje / Avenida */}
+      <Field label="Calle / Pasaje / Avenida" error={errors.street}>
         <Input
           value={form.street}
           onChange={e => set('street', e.target.value)}
-          placeholder="Ej: Calle Principal, Col. San Benito"
+          placeholder="Ej: Calle Los Bambúes, Pasaje 2"
           className="h-9 text-sm"
         />
       </Field>
@@ -163,7 +206,17 @@ export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
         <Input
           value={form.house_number}
           onChange={e => set('house_number', e.target.value)}
-          placeholder="Ej: #15, Pasaje 3"
+          placeholder="Ej: #23, Casa 5-B"
+          className="h-9 text-sm"
+        />
+      </Field>
+
+      {/* Punto de referencia (opcional) */}
+      <Field label="Punto de referencia" optional error={errors.reference}>
+        <Input
+          value={form.reference}
+          onChange={e => set('reference', e.target.value)}
+          placeholder="Ej: Frente al parque, contiguo a farmacia"
           className="h-9 text-sm"
         />
       </Field>
@@ -180,13 +233,18 @@ export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
         />
       </Field>
 
-      {/* Actions */}
+      {/* Botones */}
       <div className="flex gap-2 pt-1">
         <Button variant="outline" size="sm" onClick={onCancel} className="flex-1">
           Cancelar
         </Button>
-        <Button size="sm" className="flex-1 bg-primary text-primary-foreground" onClick={handleSubmit} disabled={isSaving}>
-          {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar'}
+        <Button
+          size="sm"
+          className="flex-1 bg-primary text-primary-foreground"
+          onClick={handleSubmit}
+          disabled={isSaving}
+        >
+          {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar dirección'}
         </Button>
       </div>
     </div>
