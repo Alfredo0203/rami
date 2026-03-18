@@ -9,8 +9,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AddressForm from '@/components/addresses/AddressForm';
 
 const EMPTY_FORM = {
-  label: 'Casa', full_name: '', phone: '', departamento: '', municipio: '',
-  street: '', house_number: '', dui: '', country: 'El Salvador',
+  label: 'Casa', first_name: '', last_name: '', phone: '',
+  departamento: '', municipio: '', colonia: '', street: '',
+  house_number: '', reference: '', dui: '', country: 'El Salvador',
 };
 
 export default function Addresses() {
@@ -118,9 +119,10 @@ export default function Addresses() {
                   <div className="flex items-start gap-2">
                     <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-sm font-semibold text-foreground">{addr.full_name} · {addr.label}</p>
-                      <p className="text-xs text-muted-foreground">{addr.street}{addr.house_number ? `, ${addr.house_number}` : ''}</p>
+                      <p className="text-sm font-semibold text-foreground">{addr.first_name} {addr.last_name} · {addr.label}</p>
+                      <p className="text-xs text-muted-foreground">{addr.colonia && `${addr.colonia}, `}{addr.street}{addr.house_number ? ` ${addr.house_number}` : ''}</p>
                       <p className="text-xs text-muted-foreground">{addr.municipio}, {addr.departamento}</p>
+                      {addr.reference && <p className="text-xs text-muted-foreground italic">{addr.reference}</p>}
                       <p className="text-xs text-muted-foreground">{addr.phone}</p>
                       {addr.is_default && (
                         <span className="inline-flex items-center gap-1 text-[10px] text-primary font-semibold mt-1">
