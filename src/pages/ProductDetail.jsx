@@ -40,7 +40,7 @@ export default function ProductDetail() {
 
   const [isAuthenticated, setIsAuthenticated] = useState(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     base44.auth.isAuthenticated().then(setIsAuthenticated).catch(() => setIsAuthenticated(false));
   }, []);
 
