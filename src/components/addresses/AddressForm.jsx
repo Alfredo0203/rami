@@ -20,9 +20,7 @@ const EMPTY_FORM = {
 };
 
 function validatePhone(phone) {
-  // Accepts: 8 digits or +503 followed by 8 digits (with optional spaces/dashes)
-  const digits = phone.replace(/[\s\-\+503]/g, '').replace(/^503/, '');
-  return /^\d{8}$/.test(digits);
+  return /^\d{8}$/.test(phone.trim());
 }
 
 function validateDUI(dui) {
@@ -30,16 +28,24 @@ function validateDUI(dui) {
 }
 
 function formatPhone(raw) {
-  // Strip everything, keep only digits
-  const digits = raw.replace(/\D/g, '').replace(/^503/, '').slice(0, 8);
-  return digits;
+  return raw.replace(/\D/g, '').slice(0, 8);
 }
 
 function formatDUI(raw) {
-  // Auto-insert hyphen after 8 digits
   const digits = raw.replace(/\D/g, '').slice(0, 9);
   if (digits.length > 8) return `${digits.slice(0, 8)}-${digits[8]}`;
   return digits;
+}
+
+// Field wrapper defined OUTSIDE component to avoid remounts on each render
+function Field({ label, error, children }) {
+  return (
+    <div>
+      <Label className="text-xs text-muted-foreground mb-1 block">{label}</Label>
+      {children}
+      {error && <p className="text-[11px] text-destructive mt-0.5">{error}</p>}
+    </div>
+  );
 }
 
 export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
@@ -53,9 +59,7 @@ export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
 
   // Reset municipio when departamento changes
   useEffect(() => {
-    if (initial?.departamento !== form.departamento) {
-      setForm(f => ({ ...f, municipio: '' }));
-    }
+    setForm(f => ({ ...f, municipio: '' }));
   }, [form.departamento]);
 
   const set = (field, value) => {
@@ -80,18 +84,8 @@ export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
   const handleSubmit = () => {
     const e = validate();
     if (Object.keys(e).length > 0) { setErrors(e); return; }
-    // Store phone with prefix
-    const phoneStored = `+503 ${form.phone}`;
-    onSave({ ...form, phone: phoneStored });
+    onSave({ ...form, phone: `+503 ${form.phone}` });
   };
-
-  const Field = ({ label, error, children }) => (
-    <div>
-      <Label className="text-xs text-muted-foreground mb-1 block">{label}</Label>
-      {children}
-      {error && <p className="text-[11px] text-destructive mt-0.5">{error}</p>}
-    </div>
-  );
 
   return (
     <div className="space-y-3">
