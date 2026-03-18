@@ -7,6 +7,8 @@ import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-route
 import PageNotFound from './lib/PageNotFound';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { base44 } from '@/api/base44Client';
+import { LanguageProvider } from '@/components/i18n/LanguageProvider';
+import { ThemeProvider } from '@/components/theme/ThemeProvider';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
