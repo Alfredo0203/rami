@@ -273,7 +273,13 @@ export default function ProductDetail() {
             </button>
           </div>
           <Button
-            onClick={() => addToCartMutation.mutate()}
+            onClick={() => {
+              if (!isAuthenticated) {
+                base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+                return;
+              }
+              addToCartMutation.mutate();
+            }}
             disabled={addToCartMutation.isPending || product.stock === 0}
             className="flex-1 bg-primary text-primary-foreground font-bold h-12 rounded-full text-base"
           >
