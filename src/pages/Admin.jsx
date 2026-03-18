@@ -149,7 +149,7 @@ export default function Admin() {
                     <Edit2 className="w-3.5 h-3.5 text-foreground" />
                   </button>
                   <button
-                    onClick={() => deleteProductMutation.mutate(product.id)}
+                    onClick={() => setDeletingProductId(product.id)}
                     className="p-2 bg-secondary rounded-lg hover:bg-destructive/10"
                   >
                     <Trash2 className="w-3.5 h-3.5 text-destructive" />
