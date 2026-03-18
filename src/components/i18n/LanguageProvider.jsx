@@ -7,13 +7,13 @@ const translations = { en, es, pt };
 
 function detectLanguage() {
   try {
-    const langs = navigator.languages?.length ? navigator.languages : [navigator.language || 'en'];
+    const langs = navigator.languages?.length ? navigator.languages : [navigator.language || 'es'];
     for (const lang of langs) {
       const code = lang.toLowerCase().split('-')[0];
       if (translations[code]) return code;
     }
   } catch (_) {}
-  return 'en';
+  return 'es'; // Default to Spanish for El Salvador
 }
 
 const LanguageContext = createContext({ lang: 'en', t: (k) => k });
