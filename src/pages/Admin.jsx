@@ -19,6 +19,7 @@ export default function Admin() {
   const [user, setUser] = useState(null);
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [deletingProductId, setDeletingProductId] = useState(null);
 
   useEffect(() => {
     base44.auth.me().then(u => {
