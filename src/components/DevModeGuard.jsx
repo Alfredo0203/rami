@@ -29,8 +29,9 @@ export default function DevModeGuard({ children }) {
         const devMode = settings?.development_mode === true;
         const isAdmin = user && ADMIN_ROLES.includes(user.role);
         const isHome = location.pathname === HOME_PATH || location.pathname === '/';
+        const isAccount = location.pathname === '/Account';
 
-        if (devMode && !isAdmin && !isHome) {
+        if (devMode && !isAdmin && !isHome && !isAccount) {
           setBlocked(true);
         } else {
           setBlocked(false);
