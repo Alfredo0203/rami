@@ -9,6 +9,7 @@ import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, T
 import AdminSettingsTab from '../components/admin/AdminSettingsTab';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
