@@ -29,16 +29,11 @@ const AuthenticatedApp = () => {
       try {
         const isAuthenticated = await base44.auth.isAuthenticated();
         if (!isAuthenticated) {
-          setAuthError({ type: 'auth_required' });
-          // Redirect to login with replace to avoid back button returning to login
-          base44.auth.redirectToLogin('/Home');
+          // Allow unauthenticated browsing - no redirect
         }
       } catch (error) {
         if (error.message?.includes('not registered')) {
           setAuthError({ type: 'user_not_registered' });
-        } else {
-          setAuthError({ type: 'auth_required' });
-          base44.auth.redirectToLogin('/Home');
         }
       } finally {
         setIsLoadingAuth(false);
