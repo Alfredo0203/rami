@@ -34,9 +34,16 @@ export default function Home() {
     queryFn: () => base44.entities.Category.list('sort_order'),
   });
 
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    base44.auth.isAuthenticated().then(setIsAuthenticated).catch(() => {});
+  }, []);
+
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart'],
     queryFn: () => base44.entities.CartItem.list(),
+    enabled: isAuthenticated,
   });
 
   const filteredProducts = useMemo(() => {
