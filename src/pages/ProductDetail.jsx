@@ -38,9 +38,16 @@ export default function ProductDetail() {
     enabled: !!productId,
   });
 
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+
+  React.useEffect(() => {
+    base44.auth.isAuthenticated().then(setIsAuthenticated).catch(() => setIsAuthenticated(false));
+  }, []);
+
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart'],
     queryFn: () => base44.entities.CartItem.list(),
+    enabled: !!isAuthenticated,
   });
 
   const addToCartMutation = useMutation({
