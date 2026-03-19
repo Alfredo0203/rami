@@ -40,7 +40,7 @@ export default function Home() {
   });
 
   const filteredProducts = useMemo(() => {
-    let filtered = products;
+    let filtered = products.filter(p => p.is_active !== false);
     if (selectedCategory) {
       filtered = filtered.filter(p => p.category_id === selectedCategory);
     }
