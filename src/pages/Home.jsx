@@ -24,15 +24,13 @@ export default function Home() {
     base44.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
-  const { data: products = [], isLoading: loadingProducts } = useQuery({
-    queryKey: ['products'],
-    queryFn: () => base44.entities.Product.list().catch(() => []),
+  const { data: catalogData, isLoading: loadingProducts } = useQuery({
+    queryKey: ['public-catalog'],
+    queryFn: () => base44.functions.invoke('getPublicCatalog', {}).then(r => r.data),
   });
 
-  const { data: categories = [] } = useQuery({
-    queryKey: ['categories'],
-    queryFn: () => base44.entities.Category.list('sort_order'),
-  });
+  const products = catalogData?.products ?? [];
+  const categories = catalogData?.categories ?? [];
 
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart'],

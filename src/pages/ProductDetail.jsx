@@ -35,8 +35,7 @@ export default function ProductDetail() {
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', productId],
-    queryFn: () => base44.entities.Product.filter({ id: productId }),
-    select: (data) => data[0],
+    queryFn: () => base44.functions.invoke('getPublicProduct', { product_id: productId }).then(r => r.data.product),
     enabled: !!productId,
   });
 
