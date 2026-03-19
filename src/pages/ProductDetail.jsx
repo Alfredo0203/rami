@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -38,16 +38,9 @@ export default function ProductDetail() {
     enabled: !!productId,
   });
 
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
-
-  useEffect(() => {
-    base44.auth.isAuthenticated().then(setIsAuthenticated).catch(() => setIsAuthenticated(false));
-  }, []);
-
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart'],
     queryFn: () => base44.entities.CartItem.list(),
-    enabled: !!isAuthenticated,
   });
 
   const addToCartMutation = useMutation({
@@ -273,13 +266,7 @@ export default function ProductDetail() {
             </button>
           </div>
           <Button
-            onClick={() => {
-              if (!isAuthenticated) {
-                base44.auth.redirectToLogin(window.location.pathname + window.location.search);
-                return;
-              }
-              addToCartMutation.mutate();
-            }}
+            onClick={() => addToCartMutation.mutate()}
             disabled={addToCartMutation.isPending || product.stock === 0}
             className="flex-1 bg-primary text-primary-foreground font-bold h-12 rounded-full text-base"
           >
