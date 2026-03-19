@@ -26,7 +26,7 @@ export default function Home() {
 
   const { data: products = [], isLoading: loadingProducts } = useQuery({
     queryKey: ['products'],
-    queryFn: () => base44.entities.Product.filter({ is_active: true }),
+    queryFn: () => base44.entities.Product.list().catch(() => []),
   });
 
   const { data: categories = [] } = useQuery({
