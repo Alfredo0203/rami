@@ -116,7 +116,7 @@ export default function Account() {
             <LogIn className="w-5 h-5 mr-2" />
             Iniciar sesión / Crear cuenta
           </Button>
-          <p className="text-center text-xs text-muted-foreground">Puedes seguir viendo productos sin iniciar sesión.</p>
+          <p className="text-center text-xs text-muted-foreground">Puedes seguir explorando productos sin iniciar sesión.</p>
         </div>
         <BottomNav cartCount={0} />
       </div>
