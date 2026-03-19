@@ -170,7 +170,7 @@ export default function Account() {
         </div>
 
         <button
-          onClick={() => base44.auth.logout()}
+          onClick={handleLogout}
           className="w-full flex items-center gap-3 p-4 bg-card rounded-xl shadow-sm hover:bg-secondary/50 transition-colors"
         >
           <LogOut className="w-5 h-5 text-destructive" />
