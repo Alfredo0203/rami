@@ -105,8 +105,8 @@ export default function Account() {
           <div className="w-20 h-20 bg-primary-foreground/20 backdrop-blur-sm rounded-full flex items-center justify-center mb-4">
             <User className="w-10 h-10 text-primary-foreground" />
           </div>
-          <h1 className="text-xl font-bold text-primary-foreground mb-1">¡Hola, visitante! 👋</h1>
-          <p className="text-primary-foreground/80 text-sm">Inicia sesión para ver tus pedidos, guardar direcciones y mucho más.</p>
+          <h1 className="text-xl font-bold text-primary-foreground mb-1">¡Hola! 👋</h1>
+          <p className="text-primary-foreground/80 text-sm">Inicia sesión para ver tus pedidos, guardar direcciones y más.</p>
         </div>
         <div className="px-4 -mt-5 space-y-3">
           <Button
