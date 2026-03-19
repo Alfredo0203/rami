@@ -19,46 +19,22 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   : <>{children}</>;
 
 const AuthenticatedApp = () => {
-  const navigate = useNavigate();
-  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-  const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(true);
   const [authError, setAuthError] = useState(null);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const isAuthenticated = await base44.auth.isAuthenticated();
-        if (!isAuthenticated) {
-          setAuthError({ type: 'auth_required' });
-          // Redirect to login with replace to avoid back button returning to login
-          base44.auth.redirectToLogin('/Home');
-        }
-      } catch (error) {
-        if (error.message?.includes('not registered')) {
+    // Only check if user is "not_registered" — guests are allowed
+    base44.auth.me()
+      .then(() => setChecking(false))
+      .catch((err) => {
+        if (err?.message?.includes('not registered')) {
           setAuthError({ type: 'user_not_registered' });
-        } else {
-          setAuthError({ type: 'auth_required' });
-          base44.auth.redirectToLogin('/Home');
         }
-      } finally {
-        setIsLoadingAuth(false);
-      }
-    };
+        setChecking(false);
+      });
+  }, []);
 
-    const checkPublicSettings = async () => {
-      try {
-        await base44.entities.AppSettings.filter({ key: 'global' });
-      } finally {
-        setIsLoadingPublicSettings(false);
-      }
-    };
-
-    checkAuth();
-    checkPublicSettings();
-  }, [navigate]);
-
-  // Show loading spinner while checking app public settings or auth
-  if (isLoadingPublicSettings || isLoadingAuth) {
+  if (checking) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
@@ -66,15 +42,11 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    }
-    return null;
+  if (authError?.type === 'user_not_registered') {
+    return <UserNotRegisteredError />;
   }
 
-  // Render the main app
+  // Render the main app (guest or authenticated)
   return (
     <Routes>
       <Route path="/" element={
