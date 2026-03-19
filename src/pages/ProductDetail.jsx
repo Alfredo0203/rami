@@ -14,6 +14,7 @@ export default function ProductDetail() {
   const productId = urlParams.get('id');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user, isGuest } = useCurrentUser();
   const [currentImage, setCurrentImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [liked, setLiked] = useState(false);
