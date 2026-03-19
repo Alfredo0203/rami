@@ -25,6 +25,7 @@ export default function Account() {
   useScrollRestoration();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [deleteEmail, setDeleteEmail] = useState('');
@@ -37,6 +38,17 @@ export default function Account() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  const handleLogout = () => {
+    // Clear user cache so the app treats them as guest
+    queryClient.setQueryData(['currentUser'], null);
+    queryClient.invalidateQueries({ queryKey: ['cart'] });
+    // Logout without redirect — user stays as guest
+    base44.auth.logout(window.location.origin + '/Home');
+    toast.success('¡Hasta luego! 👋 Cerraste sesión exitosamente. Puedes seguir explorando nuestros productos como invitado 🛍️', {
+      duration: 5000,
+    });
+  };
 
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart'],
