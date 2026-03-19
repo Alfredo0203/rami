@@ -7,6 +7,8 @@ import { Wrench } from 'lucide-react';
 
 const ADMIN_ROLES = ['admin', 'super_admin', 'owner'];
 const HOME_PATH = createPageUrl('Home');
+// Pages accessible without authentication (guest mode)
+const GUEST_ALLOWED_PATHS = ['/Home', '/Browse', '/ProductDetail', '/Account', '/'];
 
 export default function DevModeGuard({ children }) {
   const { t } = useTranslation();
@@ -28,14 +30,27 @@ export default function DevModeGuard({ children }) {
 
         const devMode = settings?.development_mode === true;
         const isAdmin = user && ADMIN_ROLES.includes(user.role);
+        const isGuest = !user;
         const isHome = location.pathname === HOME_PATH || location.pathname === '/';
         const isAccount = location.pathname === '/Account';
 
+        // Dev mode: block non-admins (including guests) from non-home pages
         if (devMode && !isAdmin && !isHome && !isAccount) {
           setBlocked(true);
-        } else {
-          setBlocked(false);
+          return;
         }
+
+        // Guest mode: redirect to login for private pages
+        if (isGuest) {
+          const currentPath = location.pathname;
+          const isGuestAllowed = GUEST_ALLOWED_PATHS.some(p => currentPath.startsWith(p));
+          if (!isGuestAllowed) {
+            base44.auth.redirectToLogin(window.location.href);
+            return;
+          }
+        }
+
+        setBlocked(false);
       } finally {
         if (!cancelled) setChecked(true);
       }
