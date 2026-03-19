@@ -97,6 +97,32 @@ export default function Account() {
     );
   }
 
+  // Guest screen
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <div style={{ background: 'linear-gradient(135deg, hsl(14 100% 55%), hsl(340 82% 52%))', paddingTop: 'max(2rem, env(safe-area-inset-top, 0px))' }} className="px-4 pb-8 flex flex-col items-center text-center">
+          <div className="w-20 h-20 bg-primary-foreground/20 backdrop-blur-sm rounded-full flex items-center justify-center mb-4">
+            <User className="w-10 h-10 text-primary-foreground" />
+          </div>
+          <h1 className="text-xl font-bold text-primary-foreground mb-1">¡Hola, visitante! 👋</h1>
+          <p className="text-primary-foreground/80 text-sm">Inicia sesión para ver tus pedidos, guardar direcciones y mucho más.</p>
+        </div>
+        <div className="px-4 -mt-5 space-y-3">
+          <Button
+            onClick={() => base44.auth.redirectToLogin(window.location.href)}
+            className="w-full h-12 bg-primary text-primary-foreground font-bold rounded-full text-base shadow-lg"
+          >
+            <LogIn className="w-5 h-5 mr-2" />
+            Iniciar sesión / Crear cuenta
+          </Button>
+          <p className="text-center text-xs text-muted-foreground">Puedes seguir viendo productos sin iniciar sesión.</p>
+        </div>
+        <BottomNav cartCount={0} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="px-4 pb-6" style={{ background: 'linear-gradient(135deg, hsl(14 100% 55%), hsl(340 82% 52%))', paddingTop: 'max(2rem, env(safe-area-inset-top, 0px))' }}>
