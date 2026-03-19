@@ -3,8 +3,8 @@ import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import BottomNav from '../components/shop/BottomNav';
-import { useQuery } from '@tanstack/react-query';
-import { User, Package, MapPin, LogOut, ChevronRight, Shield, Loader2, Trash2, AlertTriangle } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { User, Package, MapPin, LogOut, ChevronRight, Shield, Loader2, Trash2, AlertTriangle, LogIn } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -12,6 +12,7 @@ import {
 import { useScrollRestoration } from '../components/useScrollRestoration';
 import { useTranslation } from '../components/i18n/useTranslation';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 
 const ROLE_LABELS = { user: 'Customer', admin: 'Admin', super_admin: 'Owner' };
 const STATUS_STYLES = {
