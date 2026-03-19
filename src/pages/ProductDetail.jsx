@@ -267,20 +267,30 @@ export default function ProductDetail() {
               <Plus className="w-4 h-4 text-foreground" />
             </button>
           </div>
-          <Button
-            onClick={() => addToCartMutation.mutate()}
-            disabled={addToCartMutation.isPending || product.stock === 0}
-            className="flex-1 bg-primary text-primary-foreground font-bold h-12 rounded-full text-base"
-          >
-            {addToCartMutation.isPending ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <>
-                <ShoppingCart className="w-5 h-5 mr-2" />
-                Add to Cart
-              </>
-            )}
-          </Button>
+          {isGuest ? (
+            <Button
+              onClick={() => base44.auth.redirectToLogin(window.location.href)}
+              className="flex-1 bg-primary text-primary-foreground font-bold h-12 rounded-full text-base"
+            >
+              <LogIn className="w-5 h-5 mr-2" />
+              Iniciar sesión para comprar
+            </Button>
+          ) : (
+            <Button
+              onClick={() => addToCartMutation.mutate()}
+              disabled={addToCartMutation.isPending || product.stock === 0}
+              className="flex-1 bg-primary text-primary-foreground font-bold h-12 rounded-full text-base"
+            >
+              {addToCartMutation.isPending ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  <ShoppingCart className="w-5 h-5 mr-2" />
+                  Add to Cart
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </div>
     </div>
