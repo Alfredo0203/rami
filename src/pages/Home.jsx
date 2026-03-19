@@ -36,7 +36,7 @@ export default function Home() {
 
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart'],
-    queryFn: () => base44.entities.CartItem.list(),
+    queryFn: () => base44.entities.CartItem.list().catch(() => []),
   });
 
   const filteredProducts = useMemo(() => {
