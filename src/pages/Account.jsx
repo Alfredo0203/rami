@@ -45,8 +45,8 @@ export default function Account() {
     queryClient.invalidateQueries({ queryKey: ['cart'] });
     // Logout without redirect — user stays as guest
     base44.auth.logout(window.location.origin + '/Home');
-    toast.success('¡Hasta luego! 👋 Cerraste sesión exitosamente. Puedes seguir explorando nuestros productos como invitado 🛍️', {
-      duration: 5000,
+    toast.success('Sesión cerrada exitosamente. Seguís teniendo acceso a todos nuestros productos. 🛍️', {
+      duration: 4000,
     });
   };
 
