@@ -63,7 +63,7 @@ export default function Browse() {
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
 
   const handleRefresh = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: ['products'] });
+    await queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
   }, [queryClient]);
 
   return (
