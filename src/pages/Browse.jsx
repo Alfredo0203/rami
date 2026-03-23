@@ -21,15 +21,13 @@ export default function Browse() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const { data: products = [], isLoading } = useQuery({
-    queryKey: ['products'],
-    queryFn: () => base44.entities.Product.filter({ is_active: true }),
+  const { data: catalogData, isLoading } = useQuery({
+    queryKey: ['public-catalog'],
+    queryFn: () => base44.functions.invoke('getPublicCatalog', {}).then(r => r.data),
   });
 
-  const { data: categories = [] } = useQuery({
-    queryKey: ['categories'],
-    queryFn: () => base44.entities.Category.list('sort_order'),
-  });
+  const products = useMemo(() => (catalogData?.products || []).filter(p => p.is_active), [catalogData]);
+  const categories = catalogData?.categories || [];
 
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart'],
