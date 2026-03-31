@@ -7,9 +7,12 @@ import { useTranslation } from '../i18n/useTranslation';
 
 const PAGES_CONFIG = [
   { path: 'Browse', label: 'Browse / Catálogo', description: 'Explorar productos por categoría' },
+  { path: 'ProductDetail', label: 'Detalle de Producto', description: 'Ver detalles de un producto específico' },
   { path: 'Cart', label: 'Carrito', description: 'Ver y gestionar el carrito de compras' },
-  { path: 'Orders', label: 'Mis Pedidos', description: 'Historial de órdenes del usuario' },
   { path: 'Checkout', label: 'Checkout', description: 'Proceso de pago y confirmación' },
+  { path: 'Orders', label: 'Mis Pedidos', description: 'Historial de órdenes del usuario' },
+  { path: 'OrderDetail', label: 'Detalle de Orden', description: 'Ver detalles de una orden específica' },
+  { path: 'OrderConfirmation', label: 'Confirmación de Orden', description: 'Pantalla de confirmación tras compra' },
   { path: 'Addresses', label: 'Mis Direcciones', description: 'Gestión de direcciones de envío' },
 ];
 

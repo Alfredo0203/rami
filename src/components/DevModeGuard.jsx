@@ -45,7 +45,7 @@ export default function DevModeGuard({ children }) {
           // Dev mode: additionally block pages that are NOT explicitly listed (i.e. not in PAGES_CONFIG) when devMode is on
           // But Home and Account are always allowed
           if (devMode && !isHome && !isAccount) {
-            const PAGES_CONFIG_PATHS = ['Browse', 'Cart', 'Orders', 'Checkout', 'Addresses'];
+            const PAGES_CONFIG_PATHS = ['Browse', 'Cart', 'Orders', 'Checkout', 'Addresses', 'ProductDetail', 'OrderDetail', 'OrderConfirmation'];
             const isKnownPage = PAGES_CONFIG_PATHS.includes(currentPage);
             // If it's a known page and NOT disabled, allow it. If it's unknown (not in config), block it.
             if (!isKnownPage) {
