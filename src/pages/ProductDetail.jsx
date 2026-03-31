@@ -37,19 +37,13 @@ export default function ProductDetail() {
     queryFn: () =>
       base44.functions.invoke('getPublicProduct', { product_id: productId }).then(r => r.data),
     enabled: !!productId,
-    onSuccess: (d) => {
-      // Auto-select first variant if product has variants
-      if (d.variants?.length > 0 && !selectedVariant) {
-        setSelectedVariant(d.variants[0]);
-      }
-    },
   });
 
   const product = data?.product;
   const variants = data?.variants || [];
 
-  // When variants load, auto-select first
-  React.useEffect(() => {
+  // Auto-select first variant when data loads
+  useEffect(() => {
     if (variants.length > 0 && !selectedVariant) {
       setSelectedVariant(variants[0]);
     }

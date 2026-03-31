@@ -19,11 +19,16 @@ export default function VariantSelector({ variants, selected, onSelect }) {
   const selectedAttrs = selected?.attributes || {};
 
   const handleAttrSelect = (key, value) => {
-    // Find variant that matches current selection + this change
+    // Build new desired attrs
     const newAttrs = { ...selectedAttrs, [key]: value };
-    const match = variants.find(v =>
-      attrKeys.every(k => !newAttrs[k] || v.attributes?.[k] === newAttrs[k])
+    // Try to find exact match across all keys
+    let match = variants.find(v =>
+      attrKeys.every(k => v.attributes?.[k] === newAttrs[k])
     );
+    // Fallback: match only on the changed key
+    if (!match) {
+      match = variants.find(v => v.attributes?.[key] === value);
+    }
     if (match) onSelect(match);
   };
 
