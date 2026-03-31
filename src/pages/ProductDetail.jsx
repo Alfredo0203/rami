@@ -41,6 +41,8 @@ export default function ProductDetail() {
 
   const product = data?.product;
   const variants = data?.variants || [];
+  // Show variant selector whenever there are variants, regardless of has_variants flag
+  const hasVariants = variants.length > 0;
 
   // Auto-select first variant when data loads
   useEffect(() => {
@@ -55,13 +57,13 @@ export default function ProductDetail() {
   });
 
   // Determine effective price and stock
-  const effectivePrice = (product?.has_variants && selectedVariant)
+  const effectivePrice = (hasVariants && selectedVariant)
     ? (selectedVariant.price ?? product?.price)
     : product?.price;
-  const effectiveOriginalPrice = (product?.has_variants && selectedVariant)
+  const effectiveOriginalPrice = (hasVariants && selectedVariant)
     ? (selectedVariant.original_price ?? product?.original_price)
     : product?.original_price;
-  const effectiveStock = (product?.has_variants && selectedVariant)
+  const effectiveStock = (hasVariants && selectedVariant)
     ? (selectedVariant.stock ?? 0)
     : (product?.stock ?? 0);
   const inStock = effectiveStock > 0;
@@ -224,7 +226,7 @@ export default function ProductDetail() {
         </div>
 
         {/* Variant selector */}
-        {product.has_variants && variants.length > 0 && (
+        {hasVariants && (
           <VariantSelector
             variants={variants}
             selected={selectedVariant}
@@ -268,11 +270,13 @@ export default function ProductDetail() {
           </div>
           <Button
             onClick={() => isGuest ? base44.auth.redirectToLogin(window.location.href) : addToCartMutation.mutate()}
-            disabled={addToCartMutation.isPending || (!isGuest && !inStock)}
+            disabled={addToCartMutation.isPending || (!isGuest && !inStock) || (hasVariants && !selectedVariant)}
             className="flex-1 bg-primary text-primary-foreground font-bold h-12 rounded-full text-base"
           >
             {addToCartMutation.isPending ? (
               <Loader2 className="w-5 h-5 animate-spin" />
+            ) : hasVariants && !selectedVariant ? (
+              'Selecciona una variante'
             ) : (
               <>
                 <ShoppingCart className="w-5 h-5 mr-2" />
