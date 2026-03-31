@@ -4,11 +4,12 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import PullToRefresh from '../components/shop/PullToRefresh';
 import ProductCard from '../components/shop/ProductCard';
 import BottomNav from '../components/shop/BottomNav';
-import { Search, SlidersHorizontal, X, Loader2 } from 'lucide-react';
+import { Search, SlidersHorizontal, X, Loader2, Star, Tag, Package } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
 import { useScrollRestoration } from '../components/useScrollRestoration';
 import { useTranslation } from '../components/i18n/useTranslation';
 
@@ -19,6 +20,9 @@ export default function Browse() {
   const [sortBy, setSortBy] = useState('newest');
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [minRating, setMinRating] = useState(0);
+  const [onlyOnSale, setOnlyOnSale] = useState(false);
+  const [onlyInStock, setOnlyInStock] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const { data: catalogData, isLoading } = useQuery({
@@ -34,6 +38,11 @@ export default function Browse() {
     queryFn: () => base44.entities.CartItem.list().catch(() => []),
   });
 
+  const maxPrice = useMemo(() => {
+    const max = Math.max(...products.map(p => p.price || 0), 100);
+    return Math.ceil(max / 10) * 10;
+  }, [products]);
+
   const filteredProducts = useMemo(() => {
     let filtered = products;
 
@@ -41,6 +50,7 @@ export default function Browse() {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(p =>
         p.name?.toLowerCase().includes(q) ||
+        p.description?.toLowerCase().includes(q) ||
         p.tags?.some(tag => tag.toLowerCase().includes(q))
       );
     }
@@ -51,16 +61,44 @@ export default function Browse() {
 
     filtered = filtered.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
 
-    if (sortBy === 'price_low') filtered.sort((a, b) => a.price - b.price);
-    else if (sortBy === 'price_high') filtered.sort((a, b) => b.price - a.price);
-    else if (sortBy === 'rating') filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    else if (sortBy === 'popular') filtered.sort((a, b) => (b.sold_count || 0) - (a.sold_count || 0));
+    if (onlyOnSale) {
+      filtered = filtered.filter(p => p.original_price && p.original_price > p.price);
+    }
+
+    if (onlyInStock) {
+      filtered = filtered.filter(p => (p.stock || 0) > 0);
+    }
+
+    if (minRating > 0) {
+      filtered = filtered.filter(p => (p.rating || 0) >= minRating);
+    }
+
+    if (sortBy === 'price_low') filtered = [...filtered].sort((a, b) => a.price - b.price);
+    else if (sortBy === 'price_high') filtered = [...filtered].sort((a, b) => b.price - a.price);
+    else if (sortBy === 'rating') filtered = [...filtered].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    else if (sortBy === 'popular') filtered = [...filtered].sort((a, b) => (b.sold_count || 0) - (a.sold_count || 0));
 
     return filtered;
-  }, [products, searchQuery, selectedCategory, priceRange, sortBy]);
+  }, [products, searchQuery, selectedCategory, priceRange, sortBy, onlyOnSale, onlyInStock, minRating]);
 
   const queryClient = useQueryClient();
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+
+  const activeFiltersCount = [
+    selectedCategory !== 'all',
+    onlyOnSale,
+    onlyInStock,
+    minRating > 0,
+    priceRange[0] > 0 || priceRange[1] < maxPrice,
+  ].filter(Boolean).length;
+
+  const resetFilters = () => {
+    setSelectedCategory('all');
+    setOnlyOnSale(false);
+    setOnlyInStock(false);
+    setMinRating(0);
+    setPriceRange([0, maxPrice]);
+  };
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
@@ -88,41 +126,104 @@ export default function Browse() {
 
           <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
             <SheetTrigger asChild>
-              <button className="p-2.5 bg-secondary rounded-full">
+              <button className="relative p-2.5 bg-secondary rounded-full">
                 <SlidersHorizontal className="w-5 h-5 text-foreground" />
+                {activeFiltersCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full text-[10px] text-primary-foreground font-bold flex items-center justify-center">
+                    {activeFiltersCount}
+                  </span>
+                )}
               </button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="rounded-t-3xl">
-              <SheetHeader>
-                <SheetTitle>{t('filters')}</SheetTitle>
+            <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
+              <SheetHeader className="flex flex-row items-center justify-between pr-8">
+                <SheetTitle>Filtros</SheetTitle>
+                {activeFiltersCount > 0 && (
+                  <button onClick={resetFilters} className="text-xs text-primary font-medium">
+                    Limpiar todo
+                  </button>
+                )}
               </SheetHeader>
               <div className="space-y-6 py-4">
+
+                {/* Categoría */}
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">{t('category')}</label>
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">{t('all_categories')}</SelectItem>
-                      {categories.map(c => (
-                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <label className="text-sm font-semibold text-foreground mb-2 block">Categoría</label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setSelectedCategory('all')}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${selectedCategory === 'all' ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}
+                    >
+                      Todas
+                    </button>
+                    {categories.map(c => (
+                      <button
+                        key={c.id}
+                        onClick={() => setSelectedCategory(c.id)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${selectedCategory === c.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}
+                      >
+                        {c.name}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
+                {/* Precio */}
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">
-                    {t('price_range')}: ${priceRange[0]} - ${priceRange[1]}
+                  <label className="text-sm font-semibold text-foreground mb-3 block">
+                    Precio: <span className="text-primary">${priceRange[0]} – ${priceRange[1]}</span>
                   </label>
                   <Slider
                     value={priceRange}
                     onValueChange={setPriceRange}
                     min={0}
-                    max={1000}
-                    step={10}
+                    max={maxPrice}
+                    step={5}
                   />
                 </div>
-                <Button onClick={() => setFiltersOpen(false)} className="w-full bg-primary text-primary-foreground">
-                  {t('apply_filters')}
+
+                {/* Rating mínimo */}
+                <div>
+                  <label className="text-sm font-semibold text-foreground mb-2 block">Rating mínimo</label>
+                  <div className="flex gap-2">
+                    {[0, 3, 3.5, 4, 4.5].map(r => (
+                      <button
+                        key={r}
+                        onClick={() => setMinRating(r)}
+                        className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${minRating === r ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}
+                      >
+                        {r === 0 ? 'Todos' : <><Star className="w-3 h-3" />{r}+</>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Toggles */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Tag className="w-4 h-4 text-sale" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Solo en oferta</p>
+                        <p className="text-xs text-muted-foreground">Productos con descuento</p>
+                      </div>
+                    </div>
+                    <Switch checked={onlyOnSale} onCheckedChange={setOnlyOnSale} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Package className="w-4 h-4 text-success" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Solo en stock</p>
+                        <p className="text-xs text-muted-foreground">Productos disponibles</p>
+                      </div>
+                    </div>
+                    <Switch checked={onlyInStock} onCheckedChange={setOnlyInStock} />
+                  </div>
+                </div>
+
+                <Button onClick={() => setFiltersOpen(false)} className="w-full bg-primary text-primary-foreground rounded-full">
+                  Ver {filteredProducts.length} productos
                 </Button>
               </div>
             </SheetContent>
