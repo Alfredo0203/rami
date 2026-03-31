@@ -1,0 +1,84 @@
+{
+  "name": "Coupon",
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string",
+      "description": "Unique coupon code (e.g. SAVE10)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Internal description of the coupon"
+    },
+    "discount_type": {
+      "type": "string",
+      "enum": [
+        "percentage",
+        "fixed"
+      ],
+      "default": "percentage",
+      "description": "Whether the discount is a percentage or a fixed amount"
+    },
+    "discount_value": {
+      "type": "number",
+      "description": "Discount amount \u2014 percentage (e.g. 15 = 15%) or fixed (e.g. 5.00)"
+    },
+    "minimum_order_amount": {
+      "type": "number",
+      "default": 0,
+      "description": "Minimum cart total required to apply this coupon"
+    },
+    "maximum_discount_amount": {
+      "type": "number",
+      "description": "Cap on the discount for percentage-type coupons"
+    },
+    "usage_limit": {
+      "type": "number",
+      "description": "Maximum number of times this coupon can be used in total (null = unlimited)"
+    },
+    "usage_limit_per_user": {
+      "type": "number",
+      "default": 1,
+      "description": "Maximum number of times one user can use this coupon"
+    },
+    "used_count": {
+      "type": "number",
+      "default": 0,
+      "description": "How many times this coupon has been used"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the coupon is currently active"
+    },
+    "starts_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the coupon becomes valid"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the coupon expires"
+    },
+    "applicable_category_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Restrict coupon to specific category IDs (empty = all categories)"
+    },
+    "applicable_product_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Restrict coupon to specific product IDs (empty = all products)"
+    }
+  },
+  "required": [
+    "code",
+    "discount_type",
+    "discount_value"
+  ]
+}

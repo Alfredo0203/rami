@@ -1,0 +1,53 @@
+{
+  "name": "ProductVariant",
+  "type": "object",
+  "properties": {
+    "product_id": {
+      "type": "string",
+      "description": "Parent product ID"
+    },
+    "sku": {
+      "type": "string",
+      "description": "Stock Keeping Unit code"
+    },
+    "name": {
+      "type": "string",
+      "description": "Variant display name (e.g. 'Rojo / XL')"
+    },
+    "attributes": {
+      "type": "object",
+      "description": "Key-value pairs for variant dimensions (e.g. { color: 'Rojo', size: 'XL' })"
+    },
+    "price": {
+      "type": "number",
+      "description": "Override price for this variant (if different from base product price)"
+    },
+    "original_price": {
+      "type": "number",
+      "description": "Original price before discount for this variant"
+    },
+    "stock": {
+      "type": "number",
+      "default": 0,
+      "description": "Stock units available for this specific variant"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Variant-specific image (e.g. color swatch photo)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this variant is available for purchase"
+    },
+    "sort_order": {
+      "type": "number",
+      "default": 0,
+      "description": "Display order among variants"
+    }
+  },
+  "required": [
+    "product_id",
+    "name"
+  ]
+}

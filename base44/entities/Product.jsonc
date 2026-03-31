@@ -12,7 +12,7 @@
     },
     "price": {
       "type": "number",
-      "description": "Current price"
+      "description": "Current base price"
     },
     "original_price": {
       "type": "number",
@@ -30,6 +30,10 @@
       "type": "string",
       "description": "Primary color of the product (e.g. Rojo, Azul, Negro)"
     },
+    "sku": {
+      "type": "string",
+      "description": "Base Stock Keeping Unit code for the product"
+    },
     "images": {
       "type": "array",
       "items": {
@@ -40,17 +44,17 @@
     "stock": {
       "type": "number",
       "default": 0,
-      "description": "Available stock"
+      "description": "Base stock (used when no variants exist)"
     },
     "rating": {
       "type": "number",
       "default": 0,
-      "description": "Average rating (0-5)"
+      "description": "Average rating (0-5), synced from Reviews"
     },
     "review_count": {
       "type": "number",
       "default": 0,
-      "description": "Number of reviews"
+      "description": "Number of approved reviews, synced from Reviews"
     },
     "sold_count": {
       "type": "number",
@@ -67,12 +71,40 @@
       "default": true,
       "description": "Whether product is visible"
     },
+    "has_variants": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this product uses ProductVariant records instead of base stock/price"
+    },
     "tags": {
       "type": "array",
       "items": {
         "type": "string"
       },
       "description": "Product tags for search"
+    },
+    "specifications": {
+      "type": "object",
+      "description": "Flexible key-value specs (e.g. { Material: 'Cotton', RAM: '8GB', Voltaje: '110V' })"
+    },
+    "weight_kg": {
+      "type": "number",
+      "description": "Product weight in kilograms (used for shipping calculations)"
+    },
+    "dimensions_cm": {
+      "type": "object",
+      "description": "Package dimensions in cm: { length, width, height }",
+      "properties": {
+        "length": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        }
+      }
     }
   },
   "required": [

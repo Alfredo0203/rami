@@ -1,0 +1,56 @@
+{
+  "name": "Review",
+  "type": "object",
+  "properties": {
+    "product_id": {
+      "type": "string",
+      "description": "ID of the reviewed product"
+    },
+    "rating": {
+      "type": "number",
+      "description": "Rating from 1 to 5"
+    },
+    "title": {
+      "type": "string",
+      "description": "Short review title"
+    },
+    "body": {
+      "type": "string",
+      "description": "Full review text"
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Review photo URLs uploaded by the customer"
+    },
+    "reviewer_name": {
+      "type": "string",
+      "description": "Display name of the reviewer"
+    },
+    "reviewer_email": {
+      "type": "string",
+      "description": "Email of the reviewer (from created_by)"
+    },
+    "is_verified_purchase": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the reviewer actually purchased the product"
+    },
+    "is_approved": {
+      "type": "boolean",
+      "default": true,
+      "description": "Admin moderation flag"
+    },
+    "helpful_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of users who found this review helpful"
+    }
+  },
+  "required": [
+    "product_id",
+    "rating"
+  ]
+}

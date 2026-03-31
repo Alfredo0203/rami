@@ -1,0 +1,39 @@
+{
+  "name": "CartItem",
+  "type": "object",
+  "properties": {
+    "product_id": {
+      "type": "string",
+      "description": "Product ID"
+    },
+    "variant_id": {
+      "type": "string",
+      "description": "ProductVariant ID (optional \u2014 null if product has no variants)"
+    },
+    "quantity": {
+      "type": "number",
+      "default": 1,
+      "description": "Quantity in cart"
+    },
+    "product_name": {
+      "type": "string",
+      "description": "Product name snapshot"
+    },
+    "variant_name": {
+      "type": "string",
+      "description": "Variant name snapshot (e.g. 'Rojo / XL')"
+    },
+    "product_image": {
+      "type": "string",
+      "description": "Product image snapshot"
+    },
+    "product_price": {
+      "type": "number",
+      "description": "Unit price snapshot at time of adding to cart"
+    }
+  },
+  "required": [
+    "product_id",
+    "quantity"
+  ]
+}
