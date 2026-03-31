@@ -29,6 +29,7 @@ export default function DevModeGuard({ children }) {
         if (cancelled) return;
 
         const devMode = settings?.development_mode === true;
+        const disabledPages = settings?.disabled_pages || [];
         const isAdmin = user && ADMIN_ROLES.includes(user.role);
         const isGuest = !user;
         const isHome = location.pathname === HOME_PATH || location.pathname === '/';
@@ -38,6 +39,15 @@ export default function DevModeGuard({ children }) {
         if (devMode && !isAdmin && !isHome && !isAccount) {
           setBlocked(true);
           return;
+        }
+
+        // Disabled pages: block non-admins from disabled pages
+        if (!isAdmin && disabledPages.length > 0) {
+          const currentPage = location.pathname.replace('/', '');
+          if (disabledPages.includes(currentPage)) {
+            setBlocked(true);
+            return;
+          }
         }
 
         // Guest mode: redirect to login for private pages

@@ -1,0 +1,45 @@
+{
+  "name": "AppSettings",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string",
+      "description": "Setting key (e.g. 'global')"
+    },
+    "development_mode": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true, restricts regular users to Home only"
+    },
+    "allowed_payment_methods": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "credit_card"
+      ],
+      "description": "List of enabled payment methods: credit_card, cash_on_delivery"
+    },
+    "disabled_pages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "List of page paths disabled for regular users (e.g. ['Browse', 'Orders'])"
+    },
+    "updated_by": {
+      "type": "string",
+      "description": "Email of admin who last updated"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of last update"
+    }
+  },
+  "required": [
+    "key"
+  ]
+}

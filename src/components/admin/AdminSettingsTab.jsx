@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Wrench, CreditCard, Banknote } from 'lucide-react';
+import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '../i18n/useTranslation';
+
+const PAGES_CONFIG = [
+  { path: 'Browse', label: 'Browse / Catálogo', description: 'Explorar productos por categoría' },
+  { path: 'Cart', label: 'Carrito', description: 'Ver y gestionar el carrito de compras' },
+  { path: 'Orders', label: 'Mis Pedidos', description: 'Historial de órdenes del usuario' },
+  { path: 'Checkout', label: 'Checkout', description: 'Proceso de pago y confirmación' },
+  { path: 'Addresses', label: 'Mis Direcciones', description: 'Gestión de direcciones de envío' },
+];
 
 const PAYMENT_METHODS = [
   { value: 'credit_card', label: 'Card Payment', description: 'Credit / Debit card via payment gateway', icon: CreditCard },
@@ -48,6 +56,14 @@ export default function AdminSettingsTab({ currentUser }) {
   };
 
   const toggleDevMode = (value) => saveSettings({ development_mode: value });
+
+  const togglePage = (path, enabled) => {
+    const current = settings?.disabled_pages || [];
+    const updated = enabled
+      ? current.filter(p => p !== path)
+      : [...new Set([...current, path])];
+    saveSettings({ disabled_pages: updated });
+  };
 
   const togglePaymentMethod = (method, enabled) => {
     const current = settings?.allowed_payment_methods || ['credit_card'];
@@ -100,6 +116,34 @@ export default function AdminSettingsTab({ currentUser }) {
               Last updated by {settings.updated_by}
             </p>
           )}
+        </div>
+      </div>
+
+      {/* Page Visibility */}
+      <div className="bg-card rounded-xl p-4 shadow-sm">
+        <div className="flex items-center gap-2 mb-3">
+          <LayoutDashboard className="w-4 h-4 text-primary" />
+          <p className="text-sm font-semibold text-foreground">Visibilidad de Pantallas</p>
+        </div>
+        <p className="text-xs text-muted-foreground mb-3">Habilita o deshabilita pantallas para usuarios regulares.</p>
+        <div className="space-y-3">
+          {PAGES_CONFIG.map(({ path, label, description }) => {
+            const disabledPages = settings?.disabled_pages || [];
+            const isEnabled = !disabledPages.includes(path);
+            return (
+              <div key={path} className="flex items-center gap-3">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">{label}</p>
+                  <p className="text-xs text-muted-foreground">{description}</p>
+                </div>
+                {saving ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                ) : (
+                  <Switch checked={isEnabled} onCheckedChange={(v) => togglePage(path, v)} />
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
