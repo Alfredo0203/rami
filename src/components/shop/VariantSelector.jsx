@@ -34,7 +34,7 @@ export default function VariantSelector({ variants, selected, onSelect }) {
     return (
       <div className="space-y-2">
         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-          Selecciona una opción
+          Opción
         </p>
         <div className="flex flex-wrap gap-2">
           {variants.map(v => {

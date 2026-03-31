@@ -259,16 +259,11 @@ export default function ProductDetail() {
 
         {/* Variant selector */}
         {hasVariants && (
-          <div>
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-              Opciones disponibles
-            </p>
-            <VariantSelector
-              variants={variants}
-              selected={selectedVariant}
-              onSelect={handleVariantSelect}
-            />
-          </div>
+          <VariantSelector
+            variants={variants}
+            selected={selectedVariant}
+            onSelect={handleVariantSelect}
+          />
         )}
 
         {/* Features */}
