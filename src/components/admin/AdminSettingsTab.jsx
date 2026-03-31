@@ -119,8 +119,8 @@ export default function AdminSettingsTab({ currentUser }) {
         </div>
       </div>
 
-      {/* Page Visibility */}
-      <div className="bg-card rounded-xl p-4 shadow-sm">
+      {/* Page Visibility — only shown when dev mode is ON */}
+      {devMode && <div className="bg-card rounded-xl p-4 shadow-sm">
         <div className="flex items-center gap-2 mb-3">
           <LayoutDashboard className="w-4 h-4 text-primary" />
           <p className="text-sm font-semibold text-foreground">Visibilidad de Pantallas</p>
@@ -145,7 +145,7 @@ export default function AdminSettingsTab({ currentUser }) {
             );
           })}
         </div>
-      </div>
+      </div>}
 
       {/* Payment Methods */}
       <div className="bg-card rounded-xl p-4 shadow-sm">
