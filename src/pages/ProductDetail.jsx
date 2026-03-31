@@ -22,6 +22,20 @@ export default function ProductDetail() {
   const [selectedVariant, setSelectedVariant] = useState(null);
   const touchStartX = useRef(null);
 
+  // Al seleccionar una variante con imagen, cambiar la imagen principal
+  const handleVariantSelect = (variant) => {
+    setSelectedVariant(variant);
+    if (variant?.image_url && product?.images) {
+      const variantImgIndex = product.images.indexOf(variant.image_url);
+      if (variantImgIndex >= 0) {
+        setCurrentImage(variantImgIndex);
+      } else {
+        // La imagen de variante no está en el array del producto → mostrarla igual
+        setCurrentImage(-1);
+      }
+    }
+  };
+
   const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
   const handleTouchEnd = (e, images) => {
     if (touchStartX.current === null) return;
@@ -44,11 +58,13 @@ export default function ProductDetail() {
   // Show variant selector whenever there are variants, regardless of has_variants flag
   const hasVariants = variants.length > 0;
 
-  // Auto-select first variant when data loads
+  // Auto-select first in-stock variant when data loads
   useEffect(() => {
     if (variants.length > 0) {
-      setSelectedVariant(variants[0]);
+      const firstInStock = variants.find(v => (v.stock ?? 0) > 0) || variants[0];
+      handleVariantSelect(firstInStock);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
   const { data: cartItems = [] } = useQuery({
@@ -111,9 +127,19 @@ export default function ProductDetail() {
     );
   }
 
-  const images = product.images?.length > 0
+  const baseImages = product.images?.length > 0
     ? product.images
     : ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600'];
+
+  // Si la variante seleccionada tiene imagen fuera del array base, ponerla primero
+  const variantImgUrl = selectedVariant?.image_url;
+  const variantImgInBase = variantImgUrl ? baseImages.includes(variantImgUrl) : true;
+  const images = variantImgUrl && !variantImgInBase
+    ? [variantImgUrl, ...baseImages]
+    : baseImages;
+
+  // Normalizar índice: si era -1 (variante fuera del array), ahora es 0
+  const safeImageIndex = currentImage === -1 ? 0 : Math.min(currentImage, images.length - 1);
 
   const discount = effectiveOriginalPrice && effectiveOriginalPrice > effectivePrice
     ? Math.round((1 - effectivePrice / effectiveOriginalPrice) * 100)
@@ -153,8 +179,8 @@ export default function ProductDetail() {
       >
         <AnimatePresence mode="wait">
           <motion.img
-            key={currentImage}
-            src={images[currentImage]}
+            key={safeImageIndex}
+            src={images[safeImageIndex]}
             alt={product.name}
             className="w-full h-full object-cover"
             initial={{ opacity: 0 }}
@@ -167,7 +193,7 @@ export default function ProductDetail() {
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
             {images.map((_, i) => (
               <button key={i} onClick={() => setCurrentImage(i)}
-                className={`w-2 h-2 rounded-full transition-all ${i === currentImage ? 'bg-primary w-5' : 'bg-primary-foreground/50'}`}
+                className={`w-2 h-2 rounded-full transition-all ${i === safeImageIndex ? 'bg-primary w-5' : 'bg-primary-foreground/50'}`}
               />
             ))}
           </div>
@@ -184,7 +210,7 @@ export default function ProductDetail() {
         <div className="flex gap-2 px-4 py-3 overflow-x-auto hide-scrollbar">
           {images.map((img, i) => (
             <button key={i} onClick={() => setCurrentImage(i)}
-              className={`w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${i === currentImage ? 'border-primary' : 'border-transparent'}`}
+              className={`w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${i === safeImageIndex ? 'border-primary' : 'border-transparent'}`}
             >
               <img src={img} alt="" className="w-full h-full object-cover" />
             </button>
@@ -218,20 +244,31 @@ export default function ProductDetail() {
           )}
           {inStock ? (
             <span className="text-xs text-success font-medium flex items-center gap-1">
-              <Check className="w-3 h-3" /> In Stock {selectedVariant && `(${effectiveStock})`}
+              <Check className="w-3 h-3" />
+              {hasVariants && selectedVariant
+                ? `${Object.values(selectedVariant.attributes || {}).join(' / ')} — ${effectiveStock} disponibles`
+                : `En stock (${effectiveStock})`}
             </span>
           ) : (
-            <span className="text-xs text-destructive font-medium">Out of Stock</span>
+            <span className="text-xs text-destructive font-medium flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              {hasVariants && selectedVariant ? 'Esta opción no tiene stock' : 'Sin stock'}
+            </span>
           )}
         </div>
 
         {/* Variant selector */}
         {hasVariants && (
-          <VariantSelector
-            variants={variants}
-            selected={selectedVariant}
-            onSelect={setSelectedVariant}
-          />
+          <div>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              Opciones disponibles
+            </p>
+            <VariantSelector
+              variants={variants}
+              selected={selectedVariant}
+              onSelect={handleVariantSelect}
+            />
+          </div>
         )}
 
         {/* Features */}
