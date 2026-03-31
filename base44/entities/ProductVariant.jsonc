@@ -1,0 +1,42 @@
+{
+  "name": "ProductVariant",
+  "type": "object",
+  "properties": {
+    "product_id": {
+      "type": "string",
+      "description": "Parent product ID"
+    },
+    "sku": {
+      "type": "string",
+      "description": "Unique SKU code"
+    },
+    "combination": {
+      "type": "object",
+      "description": "Key-value map of option name -> selected value. e.g. {Color:'Rojo', Talla:'M'}"
+    },
+    "price": {
+      "type": "number",
+      "description": "Override price for this variant (null = use base price)"
+    },
+    "stock": {
+      "type": "number",
+      "default": 0,
+      "description": "Stock for this variant"
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Images specific to this variant (optional)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "product_id",
+    "combination"
+  ]
+}

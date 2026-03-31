@@ -8,11 +8,15 @@
     },
     "description": {
       "type": "string",
-      "description": "Product description"
+      "description": "Short description"
+    },
+    "full_description": {
+      "type": "string",
+      "description": "Full detailed description"
     },
     "price": {
       "type": "number",
-      "description": "Current price"
+      "description": "Base price"
     },
     "original_price": {
       "type": "number",
@@ -26,21 +30,17 @@
       "type": "string",
       "description": "Product brand or manufacturer"
     },
-    "color": {
-      "type": "string",
-      "description": "Primary color of the product (e.g. Rojo, Azul, Negro)"
-    },
     "images": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Product image URLs"
+      "description": "Base product image URLs"
     },
     "stock": {
       "type": "number",
       "default": 0,
-      "description": "Available stock"
+      "description": "Stock when no variants"
     },
     "rating": {
       "type": "number",
@@ -59,20 +59,48 @@
     },
     "is_featured": {
       "type": "boolean",
-      "default": false,
-      "description": "Featured product flag"
+      "default": false
     },
     "is_active": {
       "type": "boolean",
-      "default": true,
-      "description": "Whether product is visible"
+      "default": true
     },
     "tags": {
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "description": "Product tags for search"
+      }
+    },
+    "has_variants": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if this product uses variants/SKUs"
+    },
+    "variant_options": {
+      "type": "array",
+      "description": "Variant option groups e.g. [{name:'Color', values:['Rojo','Azul']}, {name:'Talla', values:['S','M','L']}]",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "color_images": {
+      "type": "object",
+      "description": "Map of color value -> array of image URLs. e.g. {Rojo: ['url1','url2']}"
+    },
+    "attributes": {
+      "type": "object",
+      "description": "Category-specific attributes as key-value pairs. e.g. {Material:'Algod\u00f3n', Fit:'Regular', Voltage:'110V'}"
     }
   },
   "required": [

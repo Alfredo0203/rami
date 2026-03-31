@@ -57,7 +57,7 @@ import Home from './pages/Home';
 import OrderConfirmation from './pages/OrderConfirmation';
 import OrderDetail from './pages/OrderDetail';
 import Orders from './pages/Orders';
-import ProductDetail from './pages/ProductDetail';
+import ProductDetail from './pages/ProductDetail.jsx';
 import __Layout from './Layout.jsx';
 
 
