@@ -15,17 +15,50 @@ export default function VariantSelector({ variants, selected, onSelect }) {
     variants.flatMap(v => Object.keys(v.attributes || {}))
   )];
 
-  // Track selected attribute values
+  // If no attributes defined, fall back to showing variants by name
+  const useNameFallback = attrKeys.length === 0;
+
+  if (useNameFallback) {
+    return (
+      <div>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+          Variante: <span className="text-foreground normal-case">{selected?.name || '—'}</span>
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {variants.map(v => {
+            const isSelected = selected?.id === v.id;
+            const available = v.stock == null || v.stock > 0;
+            return (
+              <button
+                key={v.id}
+                onClick={() => onSelect(v)}
+                disabled={!available}
+                className={[
+                  'px-3 py-1.5 rounded-full text-xs font-medium border transition-all',
+                  isSelected
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : available
+                      ? 'border-border bg-secondary text-foreground hover:border-primary'
+                      : 'border-border bg-secondary text-muted-foreground line-through opacity-50 cursor-not-allowed',
+                ].join(' ')}
+              >
+                {v.name}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Attribute-based selection
   const selectedAttrs = selected?.attributes || {};
 
   const handleAttrSelect = (key, value) => {
-    // Build new desired attrs
     const newAttrs = { ...selectedAttrs, [key]: value };
-    // Try to find exact match across all keys
     let match = variants.find(v =>
       attrKeys.every(k => v.attributes?.[k] === newAttrs[k])
     );
-    // Fallback: match only on the changed key
     if (!match) {
       match = variants.find(v => v.attributes?.[key] === value);
     }
@@ -44,7 +77,6 @@ export default function VariantSelector({ variants, selected, onSelect }) {
             <div className="flex flex-wrap gap-2">
               {values.map(val => {
                 const isSelected = selectedAttrs[key] === val;
-                // Check if any variant with this value is in stock
                 const available = variants.some(
                   v => v.attributes?.[key] === val && (v.stock == null || v.stock > 0)
                 );

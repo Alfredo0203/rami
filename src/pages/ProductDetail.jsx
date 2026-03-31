@@ -46,10 +46,10 @@ export default function ProductDetail() {
 
   // Auto-select first variant when data loads
   useEffect(() => {
-    if (variants.length > 0 && !selectedVariant) {
+    if (variants.length > 0) {
       setSelectedVariant(variants[0]);
     }
-  }, [variants.length]);
+  }, [data]);
 
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart'],
