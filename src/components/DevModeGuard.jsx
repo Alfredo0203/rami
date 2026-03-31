@@ -35,18 +35,23 @@ export default function DevModeGuard({ children }) {
         const isHome = location.pathname === HOME_PATH || location.pathname === '/';
         const isAccount = location.pathname === '/Account';
 
-        // Dev mode: block non-admins (including guests) from non-home pages
-        if (devMode && !isAdmin && !isHome && !isAccount) {
-          setBlocked(true);
-          return;
-        }
-
-        // Disabled pages: block non-admins from disabled pages
-        if (!isAdmin && disabledPages.length > 0) {
+        // Disabled pages: block non-admins from disabled pages (applies both in dev mode and normal mode)
+        if (!isAdmin) {
           const currentPage = location.pathname.replace('/', '');
           if (disabledPages.includes(currentPage)) {
             setBlocked(true);
             return;
+          }
+          // Dev mode: additionally block pages that are NOT explicitly listed (i.e. not in PAGES_CONFIG) when devMode is on
+          // But Home and Account are always allowed
+          if (devMode && !isHome && !isAccount) {
+            const PAGES_CONFIG_PATHS = ['Browse', 'Cart', 'Orders', 'Checkout', 'Addresses'];
+            const isKnownPage = PAGES_CONFIG_PATHS.includes(currentPage);
+            // If it's a known page and NOT disabled, allow it. If it's unknown (not in config), block it.
+            if (!isKnownPage) {
+              setBlocked(true);
+              return;
+            }
           }
         }
 
