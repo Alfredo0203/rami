@@ -18,11 +18,6 @@ export default function CartItemCard({ item, onUpdateQty, onRemove }) {
       />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-foreground line-clamp-2 leading-tight">{item.product_name}</p>
-        {item.selected_options && Object.keys(item.selected_options).length > 0 && (
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {Object.entries(item.selected_options).map(([k, v]) => `${k}: ${v}`).join(' · ')}
-          </p>
-        )}
         <p className="text-base font-bold text-primary mt-1">${item.product_price?.toFixed(2)}</p>
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-center gap-0 bg-secondary rounded-full">
