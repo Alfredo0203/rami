@@ -1,0 +1,82 @@
+{
+  "name": "Product",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Product name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Product description"
+    },
+    "price": {
+      "type": "number",
+      "description": "Current price"
+    },
+    "original_price": {
+      "type": "number",
+      "description": "Original price before discount"
+    },
+    "category_id": {
+      "type": "string",
+      "description": "Category ID"
+    },
+    "brand": {
+      "type": "string",
+      "description": "Product brand or manufacturer"
+    },
+    "color": {
+      "type": "string",
+      "description": "Primary color of the product (e.g. Rojo, Azul, Negro)"
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Product image URLs"
+    },
+    "stock": {
+      "type": "number",
+      "default": 0,
+      "description": "Available stock"
+    },
+    "rating": {
+      "type": "number",
+      "default": 0,
+      "description": "Average rating (0-5)"
+    },
+    "review_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of reviews"
+    },
+    "sold_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of items sold"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false,
+      "description": "Featured product flag"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether product is visible"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Product tags for search"
+    }
+  },
+  "required": [
+    "name",
+    "price"
+  ]
+}

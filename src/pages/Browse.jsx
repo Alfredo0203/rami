@@ -23,6 +23,8 @@ export default function Browse() {
   const [minRating, setMinRating] = useState(0);
   const [onlyOnSale, setOnlyOnSale] = useState(false);
   const [onlyInStock, setOnlyInStock] = useState(false);
+  const [selectedBrand, setSelectedBrand] = useState('all');
+  const [selectedColor, setSelectedColor] = useState('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const { data: catalogData, isLoading } = useQuery({
@@ -41,6 +43,16 @@ export default function Browse() {
   const maxPrice = useMemo(() => {
     const max = Math.max(...products.map(p => p.price || 0), 100);
     return Math.ceil(max / 10) * 10;
+  }, [products]);
+
+  const availableBrands = useMemo(() => {
+    const brands = [...new Set(products.map(p => p.brand).filter(Boolean))].sort();
+    return brands;
+  }, [products]);
+
+  const availableColors = useMemo(() => {
+    const colors = [...new Set(products.map(p => p.color).filter(Boolean))].sort();
+    return colors;
   }, [products]);
 
   const filteredProducts = useMemo(() => {
@@ -69,6 +81,14 @@ export default function Browse() {
       filtered = filtered.filter(p => (p.stock || 0) > 0);
     }
 
+    if (selectedBrand !== 'all') {
+      filtered = filtered.filter(p => p.brand === selectedBrand);
+    }
+
+    if (selectedColor !== 'all') {
+      filtered = filtered.filter(p => p.color === selectedColor);
+    }
+
     if (minRating > 0) {
       filtered = filtered.filter(p => (p.rating || 0) >= minRating);
     }
@@ -79,13 +99,15 @@ export default function Browse() {
     else if (sortBy === 'popular') filtered = [...filtered].sort((a, b) => (b.sold_count || 0) - (a.sold_count || 0));
 
     return filtered;
-  }, [products, searchQuery, selectedCategory, priceRange, sortBy, onlyOnSale, onlyInStock, minRating]);
+  }, [products, searchQuery, selectedCategory, priceRange, sortBy, onlyOnSale, onlyInStock, minRating, selectedBrand, selectedColor]);
 
   const queryClient = useQueryClient();
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
 
   const activeFiltersCount = [
     selectedCategory !== 'all',
+    selectedBrand !== 'all',
+    selectedColor !== 'all',
     onlyOnSale,
     onlyInStock,
     minRating > 0,
@@ -94,6 +116,8 @@ export default function Browse() {
 
   const resetFilters = () => {
     setSelectedCategory('all');
+    setSelectedBrand('all');
+    setSelectedColor('all');
     setOnlyOnSale(false);
     setOnlyInStock(false);
     setMinRating(0);
@@ -197,6 +221,54 @@ export default function Browse() {
                     ))}
                   </div>
                 </div>
+
+                {/* Marca */}
+                {availableBrands.length > 0 && (
+                  <div>
+                    <label className="text-sm font-semibold text-foreground mb-2 block">Marca</label>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => setSelectedBrand('all')}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${selectedBrand === 'all' ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}
+                      >
+                        Todas
+                      </button>
+                      {availableBrands.map(b => (
+                        <button
+                          key={b}
+                          onClick={() => setSelectedBrand(b)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${selectedBrand === b ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}
+                        >
+                          {b}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Color */}
+                {availableColors.length > 0 && (
+                  <div>
+                    <label className="text-sm font-semibold text-foreground mb-2 block">Color</label>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => setSelectedColor('all')}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${selectedColor === 'all' ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}
+                      >
+                        Todos
+                      </button>
+                      {availableColors.map(c => (
+                        <button
+                          key={c}
+                          onClick={() => setSelectedColor(c)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${selectedColor === c ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}
+                        >
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Toggles */}
                 <div className="space-y-3">

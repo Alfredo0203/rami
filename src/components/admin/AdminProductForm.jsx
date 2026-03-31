@@ -20,6 +20,8 @@ export default function AdminProductForm({ product, categories, onClose }) {
     price: product?.price || '',
     original_price: product?.original_price || '',
     category_id: product?.category_id || '',
+    brand: product?.brand || '',
+    color: product?.color || '',
     stock: product?.stock || 0,
     rating: product?.rating || 0,
     review_count: product?.review_count || 0,
@@ -96,6 +98,11 @@ export default function AdminProductForm({ product, categories, onClose }) {
             </Select>
           </div>
           <div><Label className="text-xs">Stock</Label><Input type="number" value={form.stock} onChange={e => setForm({...form, stock: e.target.value})} className="h-9 text-sm" /></div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div><Label className="text-xs">Marca</Label><Input value={form.brand} onChange={e => setForm({...form, brand: e.target.value})} className="h-9 text-sm" placeholder="Nike, Samsung…" /></div>
+          <div><Label className="text-xs">Color</Label><Input value={form.color} onChange={e => setForm({...form, color: e.target.value})} className="h-9 text-sm" placeholder="Rojo, Azul…" /></div>
         </div>
 
         <div><Label className="text-xs">Tags (comma-separated)</Label><Input value={form.tags} onChange={e => setForm({...form, tags: e.target.value})} className="h-9 text-sm" placeholder="fashion, summer" /></div>
