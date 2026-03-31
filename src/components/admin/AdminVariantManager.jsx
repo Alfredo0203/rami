@@ -5,17 +5,26 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Trash2, Loader2, ChevronDown, ChevronUp, ImagePlus } from 'lucide-react';
+import { Plus, Trash2, Loader2, ChevronDown, ChevronUp, ImagePlus, Info } from 'lucide-react';
 import { toast } from 'sonner';
 
-const EMPTY_VARIANT = { name: '', sku: '', price: '', original_price: '', stock: 0, is_active: true, image_url: '' };
+const COMMON_ATTR_KEYS = ['Color', 'Talla', 'Tamaño', 'Material', 'Estilo'];
+
+const EMPTY_FORM = {
+  attrKey: 'Color',
+  attrValue: '',
+  price: '',
+  original_price: '',
+  stock: '0',
+  sku: '',
+  image_url: '',
+};
 
 export default function AdminVariantManager({ product }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [adding, setAdding] = useState(false);
-  const [newVariant, setNewVariant] = useState(EMPTY_VARIANT);
-  const [attrPairs, setAttrPairs] = useState([{ key: 'Color', value: '' }]);
+  const [form, setForm] = useState(EMPTY_FORM);
   const [uploadingImg, setUploadingImg] = useState(false);
 
   const { data: variants = [], isLoading } = useQuery({
@@ -30,8 +39,7 @@ export default function AdminVariantManager({ product }) {
       queryClient.invalidateQueries({ queryKey: ['variants', product.id] });
       toast.success('Variante creada');
       setAdding(false);
-      setNewVariant(EMPTY_VARIANT);
-      setAttrPairs([{ key: 'Color', value: '' }]);
+      setForm(EMPTY_FORM);
     },
   });
 
@@ -53,27 +61,34 @@ export default function AdminVariantManager({ product }) {
     if (!file) return;
     setUploadingImg(true);
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    setNewVariant(v => ({ ...v, image_url: file_url }));
+    setForm(f => ({ ...f, image_url: file_url }));
     setUploadingImg(false);
   };
 
   const handleCreate = () => {
-    const attributes = {};
-    attrPairs.forEach(({ key, value }) => { if (key.trim() && value.trim()) attributes[key.trim()] = value.trim(); });
+    const key = form.attrKey.trim();
+    const val = form.attrValue.trim();
+    if (!key || !val) {
+      toast.error('Debes completar el tipo y valor del atributo');
+      return;
+    }
     createMutation.mutate({
       product_id: product.id,
-      name: newVariant.name || attrPairs.filter(p => p.value).map(p => p.value).join(' / '),
-      sku: newVariant.sku,
-      price: parseFloat(newVariant.price) || undefined,
-      original_price: parseFloat(newVariant.original_price) || undefined,
-      stock: parseInt(newVariant.stock) || 0,
-      is_active: newVariant.is_active,
-      image_url: newVariant.image_url || undefined,
-      attributes,
+      name: `${key}: ${val}`,
+      sku: form.sku || undefined,
+      price: parseFloat(form.price) || undefined,
+      original_price: parseFloat(form.original_price) || undefined,
+      stock: parseInt(form.stock) || 0,
+      is_active: true,
+      image_url: form.image_url || undefined,
+      attributes: { [key]: val },
     });
   };
 
-  const isValid = attrPairs.some(p => p.key.trim() && p.value.trim()) || newVariant.name.trim();
+  // Group variants by attribute key for display
+  const attrKeyInUse = variants.length > 0
+    ? Object.keys(variants[0]?.attributes || {})[0] || null
+    : null;
 
   return (
     <div className="border border-border rounded-xl overflow-hidden">
@@ -81,35 +96,52 @@ export default function AdminVariantManager({ product }) {
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between px-4 py-3 bg-secondary text-sm font-semibold text-foreground"
       >
-        <span>Variantes del producto ({product.has_variants ? 'activadas' : 'desactivadas'})</span>
+        <span>
+          Variantes ({variants.length > 0 ? `${variants.length} creadas` : product.has_variants ? 'activadas' : 'desactivadas'})
+        </span>
         {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
       </button>
 
       {open && (
         <div className="p-4 space-y-3">
+
+          {/* Info box */}
+          <div className="flex gap-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-3">
+            <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+              Cada variante es una opción seleccionable (ej: <strong>Color: Azul</strong>, <strong>Talla: XL</strong>).
+              El cliente verá botones para elegir entre ellas.
+            </p>
+          </div>
+
           {isLoading ? (
             <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
           ) : (
             <div className="space-y-2">
               {variants.length === 0 && (
-                <p className="text-xs text-muted-foreground text-center py-2">No hay variantes aún.</p>
+                <p className="text-xs text-muted-foreground text-center py-2 bg-secondary/50 rounded-xl">
+                  No hay variantes. Agrega una abajo.
+                </p>
               )}
               {variants.map(v => (
                 <div key={v.id} className="flex items-center gap-3 bg-secondary/50 rounded-xl px-3 py-2">
-                  {v.image_url && (
+                  {v.image_url ? (
                     <img src={v.image_url} alt={v.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-border" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-lg bg-secondary border border-border flex items-center justify-center text-lg flex-shrink-0">
+                      {v.attributes && Object.values(v.attributes)[0]?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-foreground truncate">{v.name}</p>
+                    <p className="text-xs font-semibold text-foreground">
+                      {v.attributes && Object.keys(v.attributes).length > 0
+                        ? Object.entries(v.attributes).map(([k, val]) => `${k}: ${val}`).join(' · ')
+                        : v.name}
+                    </p>
                     <p className="text-xs text-muted-foreground">
-                      Stock: {v.stock ?? '—'} · ${v.price ?? '—'}
+                      Stock: {v.stock ?? 0} · ${v.price ?? product.price ?? '—'}
                       {v.sku ? ` · ${v.sku}` : ''}
                     </p>
-                    {v.attributes && Object.keys(v.attributes).length > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        {Object.entries(v.attributes).map(([k, val]) => `${k}: ${val}`).join(' · ')}
-                      </p>
-                    )}
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Switch
@@ -129,85 +161,109 @@ export default function AdminVariantManager({ product }) {
           )}
 
           {adding ? (
-            <div className="border border-border rounded-xl p-3 space-y-3 bg-card">
+            <div className="border-2 border-primary/30 rounded-xl p-4 space-y-3 bg-card">
+              <p className="text-xs font-semibold text-foreground">Nueva variante</p>
 
-              {/* Atributos primero — lo más importante */}
-              <div>
-                <Label className="text-xs font-semibold mb-1 block">Atributos de la variante</Label>
-                <p className="text-[11px] text-muted-foreground mb-1.5">
-                  Ej: Color → Negro, Talla → XL. Cada par define la opción seleccionable.
+              {/* Attribute — the core */}
+              <div className="bg-secondary/60 rounded-xl p-3 space-y-2">
+                <p className="text-xs font-medium text-foreground">
+                  Tipo y valor del atributo <span className="text-destructive">*</span>
                 </p>
-                <div className="space-y-1.5">
-                  {attrPairs.map((pair, i) => (
-                    <div key={i} className="flex gap-1.5 items-center">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-[11px] text-muted-foreground">Tipo</Label>
+                    <select
+                      value={form.attrKey}
+                      onChange={e => setForm(f => ({ ...f, attrKey: e.target.value }))}
+                      className="w-full h-9 px-2 rounded-lg border border-input bg-background text-xs mt-0.5"
+                    >
+                      {COMMON_ATTR_KEYS.map(k => <option key={k} value={k}>{k}</option>)}
+                      <option value="__custom">Otro...</option>
+                    </select>
+                    {form.attrKey === '__custom' && (
                       <Input
-                        value={pair.key}
-                        onChange={e => setAttrPairs(prev => prev.map((p, j) => j === i ? { ...p, key: e.target.value } : p))}
-                        className="h-8 text-xs"
-                        placeholder="Ej: Color"
+                        className="h-8 text-xs mt-1"
+                        placeholder="Escribe el tipo"
+                        onChange={e => setForm(f => ({ ...f, attrKey: e.target.value === '__custom' ? '' : e.target.value }))}
                       />
-                      <Input
-                        value={pair.value}
-                        onChange={e => setAttrPairs(prev => prev.map((p, j) => j === i ? { ...p, value: e.target.value } : p))}
-                        className="h-8 text-xs"
-                        placeholder="Ej: Negro"
-                      />
-                      {attrPairs.length > 1 && (
-                        <button onClick={() => setAttrPairs(p => p.filter((_, j) => j !== i))} className="p-1 text-destructive">
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  <button onClick={() => setAttrPairs(p => [...p, { key: '', value: '' }])} className="text-xs text-primary hover:underline">
-                    + Otro atributo
-                  </button>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-[11px] text-muted-foreground">
+                      Valor (ej: {form.attrKey === 'Color' ? 'Rojo, Azul, Negro' : form.attrKey === 'Talla' ? 'S, M, L, XL' : 'escribe el valor'})
+                    </Label>
+                    <Input
+                      value={form.attrValue}
+                      onChange={e => setForm(f => ({ ...f, attrValue: e.target.value }))}
+                      className="h-9 text-sm mt-0.5 font-medium"
+                      placeholder={form.attrKey === 'Color' ? 'Rojo' : form.attrKey === 'Talla' ? 'XL' : 'Valor'}
+                      autoFocus
+                    />
+                  </div>
+                </div>
+                {form.attrKey && form.attrValue && (
+                  <p className="text-[11px] text-primary font-medium">
+                    → El cliente verá una opción "{form.attrKey}: <strong>{form.attrValue}</strong>"
+                  </p>
+                )}
+              </div>
+
+              {/* Image */}
+              <div className="flex items-center gap-3">
+                {form.image_url ? (
+                  <div className="relative">
+                    <img src={form.image_url} alt="preview" className="w-14 h-14 rounded-lg object-cover border border-border" />
+                    <button onClick={() => setForm(f => ({ ...f, image_url: '' }))} className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-white rounded-full text-[10px] flex items-center justify-center">✕</button>
+                  </div>
+                ) : (
+                  <label className="w-14 h-14 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors bg-secondary">
+                    {uploadingImg ? <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /> : <ImagePlus className="w-4 h-4 text-muted-foreground" />}
+                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                  </label>
+                )}
+                <div>
+                  <p className="text-xs font-medium text-foreground">Foto de esta opción</p>
+                  <p className="text-[11px] text-muted-foreground">Recomendado si es por color</p>
                 </div>
               </div>
 
-              {/* Imagen de la variante */}
-              <div>
-                <Label className="text-xs font-semibold mb-1 block">Imagen de esta variante</Label>
-                <div className="flex items-center gap-2">
-                  {newVariant.image_url ? (
-                    <div className="relative">
-                      <img src={newVariant.image_url} alt="preview" className="w-14 h-14 rounded-lg object-cover border border-border" />
-                      <button onClick={() => setNewVariant(v => ({ ...v, image_url: '' }))} className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-white rounded-full text-[10px] flex items-center justify-center">✕</button>
-                    </div>
-                  ) : (
-                    <label className="w-14 h-14 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors bg-secondary">
-                      {uploadingImg ? <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /> : <ImagePlus className="w-4 h-4 text-muted-foreground" />}
-                      <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                    </label>
-                  )}
-                  <p className="text-[11px] text-muted-foreground">Foto del color o modelo<br />(opcional pero recomendado)</p>
-                </div>
-              </div>
-
-              {/* Precio y stock */}
+              {/* Price & stock */}
               <div className="grid grid-cols-3 gap-2">
-                <div><Label className="text-xs">Precio ($)</Label><Input type="number" value={newVariant.price} onChange={e => setNewVariant({...newVariant, price: e.target.value})} className="h-8 text-xs" placeholder={product.price} /></div>
-                <div><Label className="text-xs">Precio original</Label><Input type="number" value={newVariant.original_price} onChange={e => setNewVariant({...newVariant, original_price: e.target.value})} className="h-8 text-xs" /></div>
-                <div><Label className="text-xs">Stock</Label><Input type="number" value={newVariant.stock} onChange={e => setNewVariant({...newVariant, stock: e.target.value})} className="h-8 text-xs" /></div>
+                <div>
+                  <Label className="text-[11px] text-muted-foreground">Precio ($)</Label>
+                  <Input type="number" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} className="h-8 text-xs" placeholder={String(product.price ?? '')} />
+                </div>
+                <div>
+                  <Label className="text-[11px] text-muted-foreground">Precio tachado</Label>
+                  <Input type="number" value={form.original_price} onChange={e => setForm(f => ({ ...f, original_price: e.target.value }))} className="h-8 text-xs" />
+                </div>
+                <div>
+                  <Label className="text-[11px] text-muted-foreground">Stock</Label>
+                  <Input type="number" value={form.stock} onChange={e => setForm(f => ({ ...f, stock: e.target.value }))} className="h-8 text-xs" />
+                </div>
               </div>
 
-              {/* Nombre y SKU opcionales */}
-              <div className="grid grid-cols-2 gap-2">
-                <div><Label className="text-xs text-muted-foreground">Nombre (opcional)</Label><Input value={newVariant.name} onChange={e => setNewVariant({...newVariant, name: e.target.value})} className="h-8 text-xs" placeholder="Se genera automático" /></div>
-                <div><Label className="text-xs text-muted-foreground">SKU (opcional)</Label><Input value={newVariant.sku} onChange={e => setNewVariant({...newVariant, sku: e.target.value})} className="h-8 text-xs" /></div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button onClick={handleCreate} disabled={createMutation.isPending || !isValid} size="sm" className="flex-1 h-8 text-xs bg-primary text-primary-foreground rounded-full">
+              <div className="flex gap-2 pt-1">
+                <Button
+                  onClick={handleCreate}
+                  disabled={createMutation.isPending || !form.attrKey.trim() || !form.attrValue.trim()}
+                  size="sm"
+                  className="flex-1 h-9 text-xs bg-primary text-primary-foreground rounded-full"
+                >
                   {createMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Guardar variante'}
                 </Button>
-                <Button onClick={() => { setAdding(false); setNewVariant(EMPTY_VARIANT); setAttrPairs([{ key: 'Color', value: '' }]); }} size="sm" variant="outline" className="h-8 text-xs rounded-full">
+                <Button
+                  onClick={() => { setAdding(false); setForm(EMPTY_FORM); }}
+                  size="sm"
+                  variant="outline"
+                  className="h-9 text-xs rounded-full"
+                >
                   Cancelar
                 </Button>
               </div>
             </div>
           ) : (
-            <button onClick={() => setAdding(true)} className="flex items-center gap-1.5 text-xs text-primary font-medium hover:underline">
+            <button onClick={() => setAdding(true)} className="flex items-center gap-1.5 text-xs text-primary font-medium hover:underline py-1">
               <Plus className="w-3.5 h-3.5" /> Agregar variante
             </button>
           )}
