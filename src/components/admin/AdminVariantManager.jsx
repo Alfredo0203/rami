@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Trash2, Loader2, ChevronDown, ChevronUp, ImagePlus, Info, X } from 'lucide-react';
+import { Plus, Trash2, Loader2, ChevronDown, ChevronUp, ImagePlus, Info, X, Edit2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Sugerencias de claves por categoría — puramente cosmético/ayuda al admin
@@ -29,6 +29,7 @@ export default function AdminVariantManager({ product }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [uploadingImg, setUploadingImg] = useState(false);
 
@@ -44,6 +45,16 @@ export default function AdminVariantManager({ product }) {
       queryClient.invalidateQueries({ queryKey: ['variants', product.id] });
       toast.success('Variante creada');
       setAdding(false);
+      setForm(EMPTY_FORM);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.ProductVariant.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['variants', product.id] });
+      toast.success('Variante actualizada');
+      setEditing(null);
       setForm(EMPTY_FORM);
     },
   });
@@ -85,25 +96,48 @@ export default function AdminVariantManager({ product }) {
     attrs: f.attrs.filter((_, i) => i !== idx),
   }));
 
-  const handleCreate = () => {
+  const buildVariantData = () => {
     const validAttrs = form.attrs.filter(a => a.key.trim() && a.value.trim());
     if (validAttrs.length === 0) {
       toast.error('Agrega al menos una opción con tipo y valor');
-      return;
+      return null;
     }
     const attributesObj = Object.fromEntries(validAttrs.map(a => [a.key.trim(), a.value.trim()]));
     const name = validAttrs.map(a => `${a.key.trim()}: ${a.value.trim()}`).join(' / ');
 
-    createMutation.mutate({
-      product_id: product.id,
+    return {
       name,
       sku: form.sku || undefined,
       price: parseFloat(form.price) || undefined,
       original_price: parseFloat(form.original_price) || undefined,
       stock: parseInt(form.stock) || 0,
-      is_active: true,
       image_url: form.image_url || undefined,
       attributes: attributesObj,
+    };
+  };
+
+  const handleCreate = () => {
+    const data = buildVariantData();
+    if (!data) return;
+    createMutation.mutate({ ...data, product_id: product.id, is_active: true });
+  };
+
+  const handleUpdate = () => {
+    if (!editing) return;
+    const data = buildVariantData();
+    if (!data) return;
+    updateMutation.mutate({ id: editing.id, data });
+  };
+
+  const startEdit = (variant) => {
+    setEditing(variant);
+    setForm({
+      attrs: Object.entries(variant.attributes || {}).map(([k, v]) => ({ key: k, value: v })) || [EMPTY_ATTR],
+      price: variant.price ? String(variant.price) : '',
+      original_price: variant.original_price ? String(variant.original_price) : '',
+      stock: String(variant.stock ?? 0),
+      sku: variant.sku || '',
+      image_url: variant.image_url || '',
     });
   };
 
@@ -152,6 +186,7 @@ export default function AdminVariantManager({ product }) {
                   key={v.id}
                   variant={v}
                   product={product}
+                  onEdit={() => startEdit(v)}
                   onToggle={(val) => toggleMutation.mutate({ id: v.id, is_active: val })}
                   onDelete={() => deleteMutation.mutate(v.id)}
                 />
@@ -159,9 +194,11 @@ export default function AdminVariantManager({ product }) {
             </div>
           )}
 
-          {adding ? (
+          {adding || editing ? (
             <div className="border-2 border-primary/30 rounded-xl p-4 space-y-4 bg-card">
-              <p className="text-xs font-semibold text-foreground">Nueva variante</p>
+              <p className="text-xs font-semibold text-foreground">
+                {editing ? 'Editar variante' : 'Nueva variante'}
+              </p>
 
               {/* Dynamic attributes */}
               <div className="bg-secondary/60 rounded-xl p-3 space-y-3">
@@ -299,15 +336,21 @@ export default function AdminVariantManager({ product }) {
 
               <div className="flex gap-2 pt-1">
                 <Button
-                  onClick={handleCreate}
-                  disabled={createMutation.isPending || form.attrs.every(a => !a.key.trim() || !a.value.trim())}
+                  onClick={editing ? handleUpdate : handleCreate}
+                  disabled={(editing ? updateMutation.isPending : createMutation.isPending) || form.attrs.every(a => !a.key.trim() || !a.value.trim())}
                   size="sm"
                   className="flex-1 h-9 text-xs bg-primary text-primary-foreground rounded-full"
                 >
-                  {createMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Guardar variante'}
+                  {(editing ? updateMutation.isPending : createMutation.isPending) ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : editing ? (
+                    'Guardar cambios'
+                  ) : (
+                    'Guardar variante'
+                  )}
                 </Button>
                 <Button
-                  onClick={() => { setAdding(false); setForm(EMPTY_FORM); }}
+                  onClick={() => { setAdding(false); setEditing(null); setForm(EMPTY_FORM); }}
                   size="sm"
                   variant="outline"
                   className="h-9 text-xs rounded-full"
@@ -330,7 +373,7 @@ export default function AdminVariantManager({ product }) {
   );
 }
 
-function VariantRow({ variant, product, onToggle, onDelete }) {
+function VariantRow({ variant, product, onEdit, onToggle, onDelete }) {
   const attrLabel = variant.attributes && Object.keys(variant.attributes).length > 0
     ? Object.entries(variant.attributes).map(([k, v]) => `${k}: ${v}`).join(' · ')
     : variant.name;
@@ -363,6 +406,12 @@ function VariantRow({ variant, product, onToggle, onDelete }) {
           checked={variant.is_active !== false}
           onCheckedChange={onToggle}
         />
+        <button
+          onClick={onEdit}
+          className="p-1.5 text-primary hover:bg-primary/10 rounded-lg"
+        >
+          <Edit2 className="w-3.5 h-3.5" />
+        </button>
         <button
           onClick={onDelete}
           className="p-1.5 text-destructive hover:bg-destructive/10 rounded-lg"
