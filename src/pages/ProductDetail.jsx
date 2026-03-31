@@ -1,13 +1,14 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { ArrowLeft, Star, ShoppingCart, Heart, Minus, Plus, Check, Truck, Shield, RotateCcw, Loader2 } from 'lucide-react';
+import { ArrowLeft, Star, ShoppingCart, Heart, Minus, Plus, Check, Truck, Shield, RotateCcw, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrentUser } from '@/lib/useCurrentUser';
+import VariantSelector from '@/components/shop/VariantSelector';
 
 export default function ProductDetail() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -18,12 +19,10 @@ export default function ProductDetail() {
   const [currentImage, setCurrentImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [liked, setLiked] = useState(false);
+  const [selectedVariant, setSelectedVariant] = useState(null);
   const touchStartX = useRef(null);
 
-  const handleTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
+  const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
   const handleTouchEnd = (e, images) => {
     if (touchStartX.current === null) return;
     const delta = touchStartX.current - e.changedTouches[0].clientX;
@@ -33,55 +32,71 @@ export default function ProductDetail() {
     else setCurrentImage(i => Math.max(i - 1, 0));
   };
 
-  const { data: product, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['product', productId],
-    queryFn: () => base44.functions.invoke('getPublicProduct', { product_id: productId }).then(r => r.data.product),
+    queryFn: () =>
+      base44.functions.invoke('getPublicProduct', { product_id: productId }).then(r => r.data),
     enabled: !!productId,
+    onSuccess: (d) => {
+      // Auto-select first variant if product has variants
+      if (d.variants?.length > 0 && !selectedVariant) {
+        setSelectedVariant(d.variants[0]);
+      }
+    },
   });
+
+  const product = data?.product;
+  const variants = data?.variants || [];
+
+  // When variants load, auto-select first
+  React.useEffect(() => {
+    if (variants.length > 0 && !selectedVariant) {
+      setSelectedVariant(variants[0]);
+    }
+  }, [variants.length]);
 
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart'],
     queryFn: () => base44.entities.CartItem.list().catch(() => []),
   });
 
+  // Determine effective price and stock
+  const effectivePrice = (product?.has_variants && selectedVariant)
+    ? (selectedVariant.price ?? product?.price)
+    : product?.price;
+  const effectiveOriginalPrice = (product?.has_variants && selectedVariant)
+    ? (selectedVariant.original_price ?? product?.original_price)
+    : product?.original_price;
+  const effectiveStock = (product?.has_variants && selectedVariant)
+    ? (selectedVariant.stock ?? 0)
+    : (product?.stock ?? 0);
+  const inStock = effectiveStock > 0;
+
   const addToCartMutation = useMutation({
     mutationFn: async () => {
-      const existingItem = cartItems.find(item => item.product_id === productId);
-      if (existingItem) {
-        return base44.entities.CartItem.update(existingItem.id, {
-          quantity: existingItem.quantity + quantity
-        });
-      }
-      return base44.entities.CartItem.create({
+      const variantId = product?.has_variants ? selectedVariant?.id : null;
+      const key = variantId ? `${productId}-${variantId}` : productId;
+      const existingItem = cartItems.find(item =>
+        item.product_id === productId && item.variant_id === variantId
+      );
+      const cartData = {
         product_id: productId,
+        variant_id: variantId || undefined,
         quantity,
         product_name: product.name,
-        product_image: product.images?.[0] || '',
-        product_price: product.price,
-      });
+        variant_name: selectedVariant?.name || undefined,
+        product_image: (selectedVariant?.image_url) || product.images?.[0] || '',
+        product_price: effectivePrice,
+      };
+      if (existingItem) {
+        return base44.entities.CartItem.update(existingItem.id, { quantity: existingItem.quantity + quantity });
+      }
+      return base44.entities.CartItem.create(cartData);
     },
-    onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ['cart'] });
-      const prev = queryClient.getQueryData(['cart']);
-      queryClient.setQueryData(['cart'], (old = []) => {
-        const existing = old.find(i => i.product_id === productId);
-        if (existing) {
-          return old.map(i => i.product_id === productId ? { ...i, quantity: i.quantity + quantity } : i);
-        }
-        return [...old, {
-          id: `opt-${Date.now()}`,
-          product_id: productId,
-          quantity,
-          product_name: product.name,
-          product_image: product.images?.[0] || '',
-          product_price: product.price,
-        }];
-      });
-      return { prev };
+    onSuccess: () => {
+      toast.success('Agregado al carrito');
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
-    onError: (_e, _v, ctx) => ctx?.prev && queryClient.setQueryData(['cart'], ctx.prev),
-    onSuccess: () => toast.success('Added to cart!'),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['cart'] }),
   });
 
   if (isLoading) {
@@ -104,11 +119,13 @@ export default function ProductDetail() {
     ? product.images
     : ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600'];
 
-  const discount = product.original_price && product.original_price > product.price
-    ? Math.round((1 - product.price / product.original_price) * 100)
+  const discount = effectiveOriginalPrice && effectiveOriginalPrice > effectivePrice
+    ? Math.round((1 - effectivePrice / effectiveOriginalPrice) * 100)
     : 0;
 
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+
+  const needsVariantSelection = product.has_variants && variants.length > 0 && !selectedVariant;
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -121,10 +138,7 @@ export default function ProductDetail() {
           <button onClick={() => setLiked(!liked)} className="p-2 bg-secondary rounded-full">
             <Heart className={`w-5 h-5 ${liked ? 'fill-sale text-sale' : 'text-foreground'}`} />
           </button>
-          <button
-            onClick={() => navigate(createPageUrl('Cart'))}
-            className="p-2 bg-secondary rounded-full relative"
-          >
+          <button onClick={() => navigate(createPageUrl('Cart'))} className="p-2 bg-secondary rounded-full relative">
             <ShoppingCart className="w-5 h-5 text-foreground" />
             {cartCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[9px] font-bold rounded-full flex items-center justify-center">
@@ -156,12 +170,8 @@ export default function ProductDetail() {
         {images.length > 1 && (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
             {images.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentImage(i)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  i === currentImage ? 'bg-primary w-5' : 'bg-primary-foreground/50'
-                }`}
+              <button key={i} onClick={() => setCurrentImage(i)}
+                className={`w-2 h-2 rounded-full transition-all ${i === currentImage ? 'bg-primary w-5' : 'bg-primary-foreground/50'}`}
               />
             ))}
           </div>
@@ -177,12 +187,8 @@ export default function ProductDetail() {
       {images.length > 1 && (
         <div className="flex gap-2 px-4 py-3 overflow-x-auto hide-scrollbar">
           {images.map((img, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentImage(i)}
-              className={`w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${
-                i === currentImage ? 'border-primary' : 'border-transparent'
-              }`}
+            <button key={i} onClick={() => setCurrentImage(i)}
+              className={`w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${i === currentImage ? 'border-primary' : 'border-transparent'}`}
             >
               <img src={img} alt="" className="w-full h-full object-cover" />
             </button>
@@ -194,9 +200,9 @@ export default function ProductDetail() {
       <div className="px-4 pt-3 space-y-4">
         <div>
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-2xl font-extrabold text-primary">${product.price?.toFixed(2)}</span>
+            <span className="text-2xl font-extrabold text-primary">${effectivePrice?.toFixed(2)}</span>
             {discount > 0 && (
-              <span className="text-sm text-muted-foreground line-through">${product.original_price?.toFixed(2)}</span>
+              <span className="text-sm text-muted-foreground line-through">${effectiveOriginalPrice?.toFixed(2)}</span>
             )}
           </div>
           <h1 className="text-base font-semibold text-foreground leading-tight">{product.name}</h1>
@@ -214,35 +220,41 @@ export default function ProductDetail() {
           {product.sold_count > 0 && (
             <span className="text-xs text-muted-foreground">{product.sold_count}+ sold</span>
           )}
-          {product.stock > 0 ? (
+          {inStock ? (
             <span className="text-xs text-success font-medium flex items-center gap-1">
-              <Check className="w-3 h-3" /> In Stock
+              <Check className="w-3 h-3" /> In Stock {selectedVariant && `(${effectiveStock})`}
             </span>
           ) : (
             <span className="text-xs text-destructive font-medium">Out of Stock</span>
           )}
         </div>
 
+        {/* Variant selector */}
+        {product.has_variants && variants.length > 0 && (
+          <VariantSelector
+            variants={variants}
+            selected={selectedVariant}
+            onSelect={setSelectedVariant}
+          />
+        )}
+
         {/* Features */}
         <div className="flex gap-4 py-3 border-t border-b border-border">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Truck className="w-4 h-4" />
-            <span>Free Shipping</span>
+            <Truck className="w-4 h-4" /><span>Envío gratis</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Shield className="w-4 h-4" />
-            <span>Buyer Protection</span>
+            <Shield className="w-4 h-4" /><span>Compra protegida</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <RotateCcw className="w-4 h-4" />
-            <span>Easy Returns</span>
+            <RotateCcw className="w-4 h-4" /><span>Devoluciones</span>
           </div>
         </div>
 
         {/* Description */}
         {product.description && (
           <div>
-            <h3 className="text-sm font-semibold text-foreground mb-2">Description</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-2">Descripción</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
           </div>
         )}
@@ -252,23 +264,17 @@ export default function ProductDetail() {
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border px-4 py-3 safe-area-bottom">
         <div className="flex items-center gap-3 max-w-lg mx-auto">
           <div className="flex items-center gap-0 bg-secondary rounded-full">
-            <button
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              className="p-2.5 rounded-full"
-            >
+            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-2.5 rounded-full">
               <Minus className="w-4 h-4 text-foreground" />
             </button>
             <span className="text-sm font-bold w-8 text-center text-foreground">{quantity}</span>
-            <button
-              onClick={() => setQuantity(quantity + 1)}
-              className="p-2.5 rounded-full"
-            >
+            <button onClick={() => setQuantity(quantity + 1)} className="p-2.5 rounded-full">
               <Plus className="w-4 h-4 text-foreground" />
             </button>
           </div>
           <Button
             onClick={() => isGuest ? base44.auth.redirectToLogin(window.location.href) : addToCartMutation.mutate()}
-            disabled={addToCartMutation.isPending || (!isGuest && product.stock === 0)}
+            disabled={addToCartMutation.isPending || (!isGuest && !inStock)}
             className="flex-1 bg-primary text-primary-foreground font-bold h-12 rounded-full text-base"
           >
             {addToCartMutation.isPending ? (

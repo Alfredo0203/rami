@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { X, Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import AdminVariantManager from './AdminVariantManager';
 
 export default function AdminProductForm({ product, categories, onClose }) {
   const queryClient = useQueryClient();
@@ -28,6 +29,7 @@ export default function AdminProductForm({ product, categories, onClose }) {
     sold_count: product?.sold_count || 0,
     is_featured: product?.is_featured || false,
     is_active: product?.is_active !== false,
+    has_variants: product?.has_variants || false,
     images: product?.images || [],
     tags: product?.tags?.join(', ') || '',
   });
@@ -136,6 +138,15 @@ export default function AdminProductForm({ product, categories, onClose }) {
             <Label className="text-xs">Active</Label>
           </div>
         </div>
+
+        <div className="flex items-center gap-2">
+          <Switch checked={form.has_variants} onCheckedChange={v => setForm({...form, has_variants: v})} />
+          <Label className="text-xs">Tiene variantes (color, talla, etc.)</Label>
+        </div>
+
+        {isEditing && product?.id && (
+          <AdminVariantManager product={{ ...product, has_variants: form.has_variants }} />
+        )}
 
         <Button onClick={handleSubmit} disabled={saveMutation.isPending} className="w-full bg-primary text-primary-foreground rounded-full h-11 font-bold">
           {saveMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : (isEditing ? 'Update Product' : 'Create Product')}
