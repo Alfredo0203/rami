@@ -119,26 +119,26 @@ export default function VariantSelector({ variants, selected, onSelect }) {
    * Valida si un valor específico de un atributo es válido
    */
   const isValueAvailable = (attrKey, attrValue) => {
-    const selectedWithNewValue = selectedAttrs.map(a => 
-      a.key === attrKey ? { ...a, values: [attrValue] } : a
-    );
-    const keysToCheck = selectedWithNewValue.filter(a => a.values.length > 0).map(a => a.key);
-    
-    return variants.some(v => {
-      const testAttrs = selectedWithNewValue;
-      testAttrsLookup = {};
-      testAttrs.forEach(a => {
-        if (a.values.length > 0) testAttrsLookup[a.key] = a.values;
-      });
-      
-      const matches = v.attributes?.every(vattr => {
-        const selectedValues = testAttrsLookup[vattr.key];
-        if (!selectedValues) return true;
-        return selectedValues.some(val => vattr.values.includes(val));
-      });
-      
-      return matches && (v.stock ?? 0) > 0 && v.is_active !== false;
-    });
+   const selectedWithNewValue = selectedAttrs.map(a => 
+     a.key === attrKey ? { ...a, values: [attrValue] } : a
+   );
+   const keysToCheck = selectedWithNewValue.filter(a => a.values.length > 0).map(a => a.key);
+
+   return variants.some(v => {
+     const testAttrs = selectedWithNewValue;
+     const testAttrsLookup = {};
+     testAttrs.forEach(a => {
+       if (a.values.length > 0) testAttrsLookup[a.key] = a.values;
+     });
+
+     const matches = v.attributes?.every(vattr => {
+       const selectedValues = testAttrsLookup[vattr.key];
+       if (!selectedValues) return true;
+       return selectedValues.some(val => vattr.values.includes(val));
+     });
+
+     return matches && (v.stock ?? 0) > 0 && v.is_active !== false;
+   });
   };
 
   /**
