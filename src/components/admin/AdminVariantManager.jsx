@@ -120,7 +120,7 @@ export default function AdminVariantManager({ product }) {
   }));
 
   const buildVariantData = () => {
-    const validAttrs = form.attrs.filter(a => a.key.trim() && a.values.length > 0);
+    const validAttrs = form.attrs.filter(a => a?.key?.trim?.() && a.values?.length > 0);
     if (validAttrs.length === 0) {
       toast.error('Agrega al menos un atributo con valores');
       return null;
@@ -467,6 +467,10 @@ function VariantRow({ variant, product, onEdit, onToggle, onDelete }) {
     ? variant.attributes.map(a => `${a.key}: ${a.values.join(', ')}`).join(' · ')
     : variant.name;
 
+  const firstAttrChar = Array.isArray(variant.attributes) && variant.attributes[0]
+    ? variant.attributes[0].values[0]?.charAt(0)?.toUpperCase()
+    : '?';
+
   return (
     <div className="flex items-center gap-3 bg-secondary/50 rounded-xl px-3 py-2">
       {variant.image_url ? (
@@ -477,9 +481,7 @@ function VariantRow({ variant, product, onEdit, onToggle, onDelete }) {
         />
       ) : (
         <div className="w-10 h-10 rounded-lg bg-secondary border border-border flex items-center justify-center text-lg flex-shrink-0">
-          {variant.attributes
-            ? Object.values(variant.attributes)[0]?.charAt(0)?.toUpperCase()
-            : '?'}
+          {firstAttrChar}
         </div>
       )}
       <div className="flex-1 min-w-0">
