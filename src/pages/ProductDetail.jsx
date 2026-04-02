@@ -87,22 +87,26 @@ export default function ProductDetail() {
   const addToCartMutation = useMutation({
     mutationFn: async () => {
       const variantId = hasVariants ? selectedVariant?.id : null;
-      const key = variantId ? `${productId}-${variantId}` : productId;
       const existingItem = cartItems.find(item =>
         item.product_id === productId && item.variant_id === variantId
       );
+
       const cartData = {
         product_id: productId,
         variant_id: variantId || undefined,
         quantity,
         product_name: product.name,
         variant_name: selectedVariant?.name || undefined,
-        product_image: (selectedVariant?.image_url) || product.images?.[0] || '',
+        product_image: selectedVariant?.image_url || product.images?.[0] || '',
         product_price: effectivePrice,
       };
+
       if (existingItem) {
-        return base44.entities.CartItem.update(existingItem.id, { quantity: existingItem.quantity + quantity });
+        return base44.entities.CartItem.update(existingItem.id, {
+          quantity: (existingItem.quantity || 0) + quantity
+        });
       }
+
       return base44.entities.CartItem.create(cartData);
     },
     onSuccess: () => {
@@ -147,7 +151,7 @@ export default function ProductDetail() {
 
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
 
-  const needsVariantSelection = product.has_variants && variants.length > 0 && !selectedVariant;
+  const needsVariantSelection = hasVariants && !selectedVariant;
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -304,12 +308,12 @@ export default function ProductDetail() {
           </div>
           <Button
             onClick={() => isGuest ? base44.auth.redirectToLogin(window.location.href) : addToCartMutation.mutate()}
-            disabled={addToCartMutation.isPending || (!isGuest && !inStock) || (hasVariants && !selectedVariant)}
+            disabled={addToCartMutation.isPending || (!isGuest && !inStock) || needsVariantSelection}
             className="flex-1 bg-primary text-primary-foreground font-bold h-12 rounded-full text-base"
           >
             {addToCartMutation.isPending ? (
               <Loader2 className="w-5 h-5 animate-spin" />
-            ) : hasVariants && !selectedVariant ? (
+            ) : needsVariantSelection ? (
               'Selecciona una variante'
             ) : (
               <>
