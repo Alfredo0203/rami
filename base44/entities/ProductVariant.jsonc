@@ -12,11 +12,31 @@
     },
     "name": {
       "type": "string",
-      "description": "Variant display name (e.g. 'Rojo / XL')"
+      "description": "Variant display name (e.g. 'Rojo / M / L / XL')"
     },
     "attributes": {
-      "type": "object",
-      "description": "Key-value pairs for variant dimensions (e.g. { color: 'Rojo', size: 'XL' })"
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Attribute type (e.g. 'Color', 'Talla', 'Material')"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Array of values for this attribute (e.g. ['M', 'L', 'XL'])"
+          }
+        },
+        "required": [
+          "key",
+          "values"
+        ]
+      },
+      "description": "Array of attribute groups, each with key and multiple values (allows same key with multiple values)"
     },
     "price": {
       "type": "number",

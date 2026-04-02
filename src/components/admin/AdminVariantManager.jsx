@@ -15,9 +15,9 @@ const ATTR_KEY_SUGGESTIONS = [
   'Acabado', 'Conectividad', 'Capacidad',
 ];
 
-const EMPTY_ATTR = { key: '', value: '' };
+const EMPTY_ATTR_GROUP = { key: '', values: [] };
 const EMPTY_FORM = {
-  attrs: [{ key: '', value: '' }], // array de {key, value}
+  attrs: [{ key: '', values: [] }], // array de {key, values: []}
   price: '',
   original_price: '',
   stock: '0',
@@ -81,38 +81,61 @@ export default function AdminVariantManager({ product }) {
     setUploadingImg(false);
   };
 
-  const setAttr = (idx, field, value) => {
+  const setAttrKey = (idx, key) => {
     setForm(f => {
       const attrs = [...f.attrs];
-      attrs[idx] = { ...attrs[idx], [field]: value };
+      attrs[idx] = { ...attrs[idx], key };
       return { ...f, attrs };
     });
   };
 
-  const addAttr = () => setForm(f => ({ ...f, attrs: [...f.attrs, { key: '', value: '' }] }));
+  const addAttrValue = (idx, value) => {
+    if (!value.trim()) return;
+    setForm(f => {
+      const attrs = [...f.attrs];
+      const currentValues = attrs[idx].values || [];
+      if (!currentValues.includes(value.trim())) {
+        attrs[idx] = { ...attrs[idx], values: [...currentValues, value.trim()] };
+      }
+      return { ...f, attrs };
+    });
+  };
 
-  const removeAttr = (idx) => setForm(f => ({
+  const removeAttrValue = (idx, valueIdx) => {
+    setForm(f => {
+      const attrs = [...f.attrs];
+      attrs[idx] = {
+        ...attrs[idx],
+        values: attrs[idx].values.filter((_, i) => i !== valueIdx),
+      };
+      return { ...f, attrs };
+    });
+  };
+
+  const addAttrGroup = () => setForm(f => ({ ...f, attrs: [...f.attrs, { key: '', values: [] }] }));
+
+  const removeAttrGroup = (idx) => setForm(f => ({
     ...f,
     attrs: f.attrs.filter((_, i) => i !== idx),
   }));
 
   const buildVariantData = () => {
-    const validAttrs = form.attrs.filter(a => a.key.trim() && a.value.trim());
+    const validAttrs = form.attrs.filter(a => a.key.trim() && a.values.length > 0);
     if (validAttrs.length === 0) {
-      toast.error('Agrega al menos una opción con tipo y valor');
+      toast.error('Agrega al menos un atributo con valores');
       return null;
     }
+
+    // Nuevo formato: array de {key, values}
+    const attributesArr = validAttrs.map(a => ({
+      key: a.key.trim(),
+      values: a.values,
+    }));
     
-    // Validar: no permitir claves duplicadas
-    const keys = validAttrs.map(a => a.key.trim());
-    const duplicates = keys.filter((k, i) => keys.indexOf(k) !== i);
-    if (duplicates.length > 0) {
-      toast.error(`No puedes repetir: ${[...new Set(duplicates)].join(', ')}. Cada tipo de atributo debe ser único.`);
-      return null;
-    }
-    
-    const attributesObj = Object.fromEntries(validAttrs.map(a => [a.key.trim(), a.value.trim()]));
-    const name = validAttrs.map(a => `${a.key.trim()}: ${a.value.trim()}`).join(' / ');
+    // Display name: "Color: Rojo, Verde / Talla: M, L, XL"
+    const name = attributesArr
+      .map(a => `${a.key}: ${a.values.join(', ')}`)
+      .join(' / ');
 
     return {
       name,
@@ -121,7 +144,7 @@ export default function AdminVariantManager({ product }) {
       original_price: parseFloat(form.original_price) || undefined,
       stock: parseInt(form.stock) || 0,
       image_url: form.image_url || undefined,
-      attributes: attributesObj,
+      attributes: attributesArr,
     };
   };
 
@@ -141,7 +164,7 @@ export default function AdminVariantManager({ product }) {
   const startEdit = (variant) => {
     setEditing(variant);
     setForm({
-      attrs: Object.entries(variant.attributes || {}).map(([k, v]) => ({ key: k, value: v })) || [EMPTY_ATTR],
+      attrs: (Array.isArray(variant.attributes) ? variant.attributes : []) || [EMPTY_ATTR_GROUP],
       price: variant.price ? String(variant.price) : '',
       original_price: variant.original_price ? String(variant.original_price) : '',
       stock: String(variant.stock ?? 0),
@@ -152,8 +175,8 @@ export default function AdminVariantManager({ product }) {
 
   // Preview label for the "what the customer sees" hint
   const previewLabel = form.attrs
-    .filter(a => a.key.trim() && a.value.trim())
-    .map(a => `${a.key.trim()}: ${a.value.trim()}`)
+    .filter(a => a.key.trim() && a.values.length > 0)
+    .map(a => `${a.key.trim()}: ${a.values.join(', ')}`)
     .join(' / ');
 
   return (
@@ -217,64 +240,114 @@ export default function AdminVariantManager({ product }) {
               </p>
 
               {/* Dynamic attributes */}
-              <div className="bg-secondary/60 rounded-xl p-3 space-y-3">
+              <div className="bg-secondary/60 rounded-xl p-3 space-y-4">
                 <p className="text-xs font-medium text-foreground">
                   Atributos <span className="text-destructive">*</span>
                   <span className="font-normal text-muted-foreground ml-1">
-                    (Sin límite — agrega los que necesites: Color, Talla, Material, etc.)
+                    (Agrupa múltiples valores por tipo: Color puede ser Rojo Y Verde)
                   </span>
                 </p>
 
-                {form.attrs.map((attr, idx) => (
-                  <div key={idx} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
+                {form.attrs.map((attrGroup, groupIdx) => (
+                  <div key={groupIdx} className="border border-border/50 rounded-lg p-3 space-y-2 bg-background/50">
+                    {/* Tipo de atributo */}
                     <div>
-                      <Label className="text-[11px] text-muted-foreground">Tipo</Label>
+                      <Label className="text-[11px] text-muted-foreground">Tipo de atributo</Label>
                       <div className="relative mt-0.5">
                         <Input
-                          list={`attr-keys-${idx}`}
-                          value={attr.key}
-                          onChange={e => setAttr(idx, 'key', e.target.value)}
+                          list={`attr-keys-${groupIdx}`}
+                          value={attrGroup.key}
+                          onChange={e => setAttrKey(groupIdx, e.target.value)}
                           className="h-9 text-xs"
-                          placeholder="ej: Color, Talla..."
+                          placeholder="ej: Color, Talla, Material..."
                         />
-                        <datalist id={`attr-keys-${idx}`}>
+                        <datalist id={`attr-keys-${groupIdx}`}>
                           {ATTR_KEY_SUGGESTIONS.map(k => <option key={k} value={k} />)}
                         </datalist>
                       </div>
                     </div>
-                    <div>
-                      <Label className="text-[11px] text-muted-foreground">Valor</Label>
-                      <Input
-                        value={attr.value}
-                        onChange={e => setAttr(idx, 'value', e.target.value)}
-                        className="h-9 text-xs mt-0.5"
-                        placeholder={
-                          attr.key === 'Color' ? 'ej: Rojo' :
-                          attr.key === 'Talla' ? 'ej: XL' :
-                          attr.key === 'Almacenamiento' ? 'ej: 256GB' :
-                          'valor'
-                        }
-                      />
-                    </div>
+
+                    {/* Valores múltiples */}
+                    {attrGroup.key && (
+                      <div className="space-y-2">
+                        <Label className="text-[11px] text-muted-foreground">Valores (presiona Enter para agregar)</Label>
+                        <div className="flex gap-2 items-center">
+                          <input
+                            type="text"
+                            id={`input-${groupIdx}`}
+                            placeholder={
+                              attrGroup.key === 'Color' ? 'ej: Rojo' :
+                              attrGroup.key === 'Talla' ? 'ej: M' :
+                              attrGroup.key === 'Almacenamiento' ? 'ej: 256GB' :
+                              'valor'
+                            }
+                            className="h-8 px-2 text-xs border border-border rounded-lg flex-1 bg-card"
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                const val = e.currentTarget.value;
+                                addAttrValue(groupIdx, val);
+                                e.currentTarget.value = '';
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const input = document.getElementById(`input-${groupIdx}`);
+                              if (input) {
+                                addAttrValue(groupIdx, input.value);
+                                input.value = '';
+                              }
+                            }}
+                            className="h-8 px-3 text-[11px] bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        {/* Chips de valores */}
+                        {attrGroup.values.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {attrGroup.values.map((val, valIdx) => (
+                              <div
+                                key={valIdx}
+                                className="flex items-center gap-2 px-2.5 py-1 bg-primary text-primary-foreground rounded-full text-xs"
+                              >
+                                <span>{val}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => removeAttrValue(groupIdx, valIdx)}
+                                  className="flex items-center justify-center rounded-full hover:bg-primary/80"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Eliminar grupo */}
                     {form.attrs.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => removeAttr(idx)}
-                        className="h-9 w-9 flex items-center justify-center text-destructive hover:bg-destructive/10 rounded-lg flex-shrink-0"
+                        onClick={() => removeAttrGroup(groupIdx)}
+                        className="text-xs text-destructive font-medium flex items-center gap-1 hover:underline"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <Trash2 className="w-3 h-3" /> Eliminar atributo
                       </button>
                     )}
                   </div>
                 ))}
 
                 <button
-                   type="button"
-                   onClick={addAttr}
-                   className="w-full text-[11px] text-primary font-medium flex items-center justify-center gap-1.5 px-3 py-2 border border-primary/30 rounded-lg hover:bg-primary/5 transition-colors"
-                 >
-                   <Plus className="w-3.5 h-3.5" /> Agregar otro atributo
-                 </button>
+                  type="button"
+                  onClick={addAttrGroup}
+                  className="w-full text-[11px] text-primary font-medium flex items-center justify-center gap-1.5 px-3 py-2 border border-primary/30 rounded-lg hover:bg-primary/5 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Agregar otro tipo de atributo
+                </button>
 
                 {previewLabel && (
                   <p className="text-[11px] text-primary font-medium bg-primary/5 rounded-lg px-2 py-1">
@@ -390,8 +463,8 @@ export default function AdminVariantManager({ product }) {
 }
 
 function VariantRow({ variant, product, onEdit, onToggle, onDelete }) {
-  const attrLabel = variant.attributes && Object.keys(variant.attributes).length > 0
-    ? Object.entries(variant.attributes).map(([k, v]) => `${k}: ${v}`).join(' · ')
+  const attrLabel = Array.isArray(variant.attributes) && variant.attributes.length > 0
+    ? variant.attributes.map(a => `${a.key}: ${a.values.join(', ')}`).join(' · ')
     : variant.name;
 
   return (

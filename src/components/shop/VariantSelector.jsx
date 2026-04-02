@@ -40,12 +40,12 @@ export default function VariantSelector({ variants, selected, onSelect }) {
   // ────────────────────────────────────────────────────────────────────────────
   // 1. EXTRAER ESTRUCTURA DE ATRIBUTOS
   // ────────────────────────────────────────────────────────────────────────────
-  // Claves presentes en cualquier variante del producto
+  // Claves presentes en cualquier variante del producto (nuevo formato: array)
   const attrKeys = useMemo(() => {
     const keys = new Set();
     variants.forEach(v => {
-      if (v.attributes) {
-        Object.keys(v.attributes).forEach(k => keys.add(k));
+      if (Array.isArray(v.attributes)) {
+        v.attributes.forEach(attr => keys.add(attr.key));
       }
     });
     return Array.from(keys).sort(); // orden alfabético para consistencia
@@ -77,83 +77,104 @@ export default function VariantSelector({ variants, selected, onSelect }) {
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  // 3. LÓGICA DE VALIDACIÓN Y CASCADA
+  // 3. LÓGICA DE VALIDACIÓN Y CASCADA (Nuevo formato: array de {key, values})
   // ────────────────────────────────────────────────────────────────────────────
 
-  const selectedAttrs = selected?.attributes || {};
+  const selectedAttrs = selected?.attributes || [];
 
   /**
-   * Obtiene todas las variantes que coinciden parcialmente con los atributos
-   * seleccionados actualmente. Permite cascada inteligente.
+   * Convierte array de {key, values} a objeto lookup para búsquedas rápidas
    */
-  const getMatchingVariants = (partialAttrs) => {
-    return variants.filter(v => {
-      if (!v.attributes) return false;
-      return Object.entries(partialAttrs).every(
-        ([key, value]) => v.attributes[key] === value
-      );
+  const selectedAttrsLookup = useMemo(() => {
+    const lookup = {};
+    if (Array.isArray(selectedAttrs)) {
+      selectedAttrs.forEach(attr => {
+        if (attr.values.length > 0) {
+          lookup[attr.key] = attr.values; // Múltiples valores posibles
+        }
+      });
+    }
+    return lookup;
+  }, [selectedAttrs]);
+
+  /**
+   * Verifica si una variante coincide con los atributos seleccionados
+   * (considera múltiples valores por atributo)
+   */
+  const variantMatchesSelection = (variant, attrKeysToCheck) => {
+    if (!Array.isArray(variant.attributes)) return false;
+    return attrKeysToCheck.every(key => {
+      const selectedValues = selectedAttrsLookup[key];
+      if (!selectedValues) return true; // Sin restricción si no está seleccionado
+      
+      const variantAttr = variant.attributes.find(a => a.key === key);
+      if (!variantAttr) return false;
+      
+      // Variante debe tener al menos UNO de los valores seleccionados
+      return selectedValues.some(val => variantAttr.values.includes(val));
     });
   };
 
   /**
    * Valida si un valor específico de un atributo es válido
-   * considerando la selección actual de otros atributos.
    */
   const isValueAvailable = (attrKey, attrValue) => {
-    const desiredAttrs = { ...selectedAttrs, [attrKey]: attrValue };
-    const matching = getMatchingVariants(desiredAttrs);
-    return matching.some(v => (v.stock ?? 0) > 0 && v.is_active !== false);
+    const selectedWithNewValue = selectedAttrs.map(a => 
+      a.key === attrKey ? { ...a, values: [attrValue] } : a
+    );
+    const keysToCheck = selectedWithNewValue.filter(a => a.values.length > 0).map(a => a.key);
+    
+    return variants.some(v => {
+      const testAttrs = selectedWithNewValue;
+      testAttrsLookup = {};
+      testAttrs.forEach(a => {
+        if (a.values.length > 0) testAttrsLookup[a.key] = a.values;
+      });
+      
+      const matches = v.attributes?.every(vattr => {
+        const selectedValues = testAttrsLookup[vattr.key];
+        if (!selectedValues) return true;
+        return selectedValues.some(val => vattr.values.includes(val));
+      });
+      
+      return matches && (v.stock ?? 0) > 0 && v.is_active !== false;
+    });
   };
 
   /**
-   * Al cambiar un atributo, intenta encontrar la mejor combinación válida.
-   * Prioridad: 1) Exacta con stock, 2) Parcial con stock, 3) Cualquier parcial
+   * Al seleccionar un valor, busca variante que lo contiene
    */
   const handleSelect = (attrKey, attrValue) => {
-    const desiredAttrs = { ...selectedAttrs, [attrKey]: attrValue };
-
-    // 1. Buscar coincidencia exacta (todos los atributos)
-    let match = variants.find(v =>
-      v.is_active !== false &&
-      (v.stock ?? 0) > 0 &&
-      attrKeys.every(k => v.attributes?.[k] === desiredAttrs[k])
-    );
-
-    // 2. Buscar con el atributo clickeado + otros ya seleccionados (si hay)
-    if (!match && Object.keys(selectedAttrs).length > 0) {
-      match = variants.find(v =>
-        v.is_active !== false &&
+    // Busca variante que contiene este atributo con este valor
+    const match = variants.find(v => {
+      if (!Array.isArray(v.attributes)) return false;
+      const attrGroup = v.attributes.find(a => a.key === attrKey);
+      return (
+        attrGroup &&
+        attrGroup.values.includes(attrValue) &&
         (v.stock ?? 0) > 0 &&
-        Object.entries(desiredAttrs).every(([k, val]) => v.attributes?.[k] === val)
+        v.is_active !== false
       );
-    }
-
-    // 3. Buscar solo con el atributo clickeado (sin stock)
-    if (!match) {
-      match = variants.find(v =>
-        v.attributes?.[attrKey] === attrValue &&
-        (v.is_active !== false)
-      );
-    }
-
-    if (match) {
-      onSelect(match);
-    }
+    });
+    if (match) onSelect(match);
   };
 
   /**
-   * Extrae los valores únicos de un atributo del conjunto de variantes.
-   * Respeta el orden de aparición en la BD para consistencia.
+   * Extrae todos los valores únicos de un atributo
    */
   const getAttrValues = (attrKey) => {
     const values = [];
     const seen = new Set();
     variants.forEach(v => {
-      if (v.attributes) {
-        const val = v.attributes[attrKey];
-        if (val && !seen.has(val)) {
-          values.push(val);
-          seen.add(val);
+      if (Array.isArray(v.attributes)) {
+        const attr = v.attributes.find(a => a.key === attrKey);
+        if (attr && attr.values) {
+          attr.values.forEach(val => {
+            if (!seen.has(val)) {
+              values.push(val);
+              seen.add(val);
+            }
+          });
         }
       }
     });
@@ -161,12 +182,13 @@ export default function VariantSelector({ variants, selected, onSelect }) {
   };
 
   /**
-   * Obtiene la imagen representativa de un valor de atributo.
-   * Si hay variante con imagen, la usa; sino, placeholder.
+   * Obtiene imagen de una variante que contiene este valor de atributo
    */
   const getSwatchImage = (attrKey, attrValue) => {
     const v = variants.find(
-      vv => vv.attributes?.[attrKey] === attrValue && vv.image_url
+      vv => Array.isArray(vv.attributes) &&
+        vv.attributes.some(a => a.key === attrKey && a.values.includes(attrValue)) &&
+        vv.image_url
     );
     return v?.image_url || null;
   };
@@ -190,7 +212,8 @@ export default function VariantSelector({ variants, selected, onSelect }) {
     <div className="space-y-5">
       {attrKeys.map(attrKey => {
         const values = getAttrValues(attrKey);
-        const selectedValue = selectedAttrs[attrKey];
+        const selectedAttrGroup = selectedAttrs.find(a => a.key === attrKey);
+        const selectedValues = selectedAttrGroup?.values || [];
         const useSwatchStyle = shouldUseSwatchStyle(attrKey);
 
         return (
@@ -200,9 +223,9 @@ export default function VariantSelector({ variants, selected, onSelect }) {
               <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                 {attrKey}
               </p>
-              {selectedValue && (
+              {selectedValues.length > 0 && (
                 <span className="text-xs font-semibold text-foreground">
-                  {selectedValue}
+                  {selectedValues.join(', ')}
                 </span>
               )}
             </div>
@@ -210,7 +233,7 @@ export default function VariantSelector({ variants, selected, onSelect }) {
             {/* Opciones */}
             <div className="flex flex-wrap gap-2">
               {values.map(value => {
-                const isSelected = selectedValue === value;
+                const isSelected = selectedValues.includes(value);
                 const available = isValueAvailable(attrKey, value);
                 const imgUrl = getSwatchImage(attrKey, value);
 
