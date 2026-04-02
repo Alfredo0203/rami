@@ -1,59 +1,157 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Check } from 'lucide-react';
 
 /**
- * VariantSelector — Tipo Temu/Shein (arquitectura escalable)
+ * VariantSelector — corregido
  *
- * ✨ Soporta:
- *   - Productos sin variantes (fallback simple)
- *   - Productos con 1+ dimensiones de variantes (Color, Talla, Material, etc.)
- *   - Combinaciones multi-atributo (Color + Talla + Material)
- *   - Validación automática de combinaciones válidas
- *   - Cascada inteligente (al elegir un atributo, actualiza los demás disponibles)
- *   - Imagen por variante que cambia automáticamente
- *   - Precio y stock dinámico según combinación
- *
- * 📚 Documentación completa en /docs:
- *   - VARIANT_QUICK_START.md       → 5 min overview
- *   - VARIANT_ARCHITECTURE.md      → Estructura técnica completa
- *   - VARIANT_UI_EXAMPLES.md       → Ejemplos visuales por tipo
- *   - VARIANT_BEST_PRACTICES.md    → Best practices & recomendaciones
- *
- * Props:
- *   variants    – array de ProductVariant con { attributes, price, stock, image_url, etc. }
- *   selected    – variante actualmente seleccionada (puede ser null)
- *   onSelect    – callback(variant) cuando el usuario confirma una selección válida
- *
- * Ejemplos de uso:
- *   <VariantSelector variants={variants} selected={selected} onSelect={setSelected} />
- *
- * Casos soportados:
- *   - Ropa:        { Color, Talla, Fit, Material }
- *   - Electrónica: { RAM, Almacenamiento, Color, Modelo }
- *   - Belleza:     { Volumen, Aroma, Concentración }
- *   - Hogar:       { Tamaño, Color, Material }
- *   - Cualquier combinación de atributos
+ * Cambios clave:
+ * - La UI ya no depende de selected.attributes.values como fuente visual directa
+ * - Ahora mantiene un estado interno por atributo: { Color: 'Amarillo', Talla: 'M' }
+ * - Evita que salgan múltiples opciones seleccionadas al mismo tiempo
+ * - Calcula disponibilidad por combinación parcial
+ * - Intenta resolver la variante exacta seleccionada y la manda por onSelect
  */
+
 export default function VariantSelector({ variants, selected, onSelect }) {
   if (!variants || variants.length === 0) return null;
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // 1. EXTRAER ESTRUCTURA DE ATRIBUTOS
-  // ────────────────────────────────────────────────────────────────────────────
-  // Claves presentes en cualquier variante del producto (nuevo formato: array)
   const attrKeys = useMemo(() => {
     const keys = new Set();
     variants.forEach(v => {
       if (Array.isArray(v.attributes)) {
-        v.attributes.forEach(attr => keys.add(attr.key));
+        v.attributes.forEach(attr => {
+          if (attr?.key) keys.add(attr.key);
+        });
       }
     });
-    return Array.from(keys).sort(); // orden alfabético para consistencia
+    return Array.from(keys);
   }, [variants]);
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // 2. FALLBACK: Sin atributos (variantes por nombre)
-  // ────────────────────────────────────────────────────────────────────────────
+  const normalizeVariantToSelectionMap = (variant) => {
+    const map = {};
+    if (!variant || !Array.isArray(variant.attributes)) return map;
+
+    variant.attributes.forEach(attr => {
+      if (!attr?.key) return;
+      if (Array.isArray(attr.values) && attr.values.length > 0) {
+        map[attr.key] = attr.values[0];
+      }
+    });
+
+    return map;
+  };
+
+  const [selectedMap, setSelectedMap] = useState(() =>
+    normalizeVariantToSelectionMap(selected)
+  );
+
+  useEffect(() => {
+    if (selected) {
+      setSelectedMap(normalizeVariantToSelectionMap(selected));
+    }
+  }, [selected]);
+
+  const getAttrValues = (attrKey) => {
+    const values = [];
+    const seen = new Set();
+
+    variants.forEach(v => {
+      if (!Array.isArray(v.attributes)) return;
+
+      const attr = v.attributes.find(a => a.key === attrKey);
+      if (!attr || !Array.isArray(attr.values)) return;
+
+      attr.values.forEach(val => {
+        if (!seen.has(val)) {
+          seen.add(val);
+          values.push(val);
+        }
+      });
+    });
+
+    return values;
+  };
+
+  const variantHasAttrValue = (variant, attrKey, attrValue) => {
+    if (!Array.isArray(variant.attributes)) return false;
+
+    const attr = variant.attributes.find(a => a.key === attrKey);
+    if (!attr || !Array.isArray(attr.values)) return false;
+
+    return attr.values.includes(attrValue);
+  };
+
+  const variantMatchesMap = (variant, map) => {
+    if (!Array.isArray(variant.attributes)) return false;
+
+    return Object.entries(map).every(([key, value]) => {
+      if (!value) return true;
+      return variantHasAttrValue(variant, key, value);
+    });
+  };
+
+  const isVariantAvailable = (variant) =>
+    variant?.is_active !== false && (variant?.stock ?? 0) > 0;
+
+  const getAvailableVariantMatches = (map) => {
+    return variants.filter(v => variantMatchesMap(v, map) && isVariantAvailable(v));
+  };
+
+  const isValueAvailable = (attrKey, attrValue) => {
+    const nextMap = {
+      ...selectedMap,
+      [attrKey]: attrValue,
+    };
+
+    return getAvailableVariantMatches(nextMap).length > 0;
+  };
+
+  const findBestMatchingVariant = (map) => {
+    const exactAvailable = getAvailableVariantMatches(map);
+    if (exactAvailable.length > 0) {
+      return exactAvailable[0];
+    }
+
+    const relaxedMap = { ...map };
+    delete relaxedMap[Object.keys(map).find(key => !map[key])];
+
+    const partialAvailable = variants.find(v => {
+      if (!isVariantAvailable(v)) return false;
+      return variantMatchesMap(v, map);
+    });
+
+    if (partialAvailable) return partialAvailable;
+
+    return variants.find(v => isVariantAvailable(v)) || null;
+  };
+
+  const handleSelect = (attrKey, attrValue) => {
+    const nextMap = {
+      ...selectedMap,
+      [attrKey]: attrValue,
+    };
+
+    setSelectedMap(nextMap);
+
+    const match = findBestMatchingVariant(nextMap);
+    if (match) {
+      onSelect(match);
+    }
+  };
+
+  const getSwatchImage = (attrKey, attrValue) => {
+    const matched = variants.find(v =>
+      variantHasAttrValue(v, attrKey, attrValue) && v.image_url
+    );
+    return matched?.image_url || null;
+  };
+
+  const shouldUseSwatchStyle = (attrKey) => {
+    if (/color|colour/i.test(attrKey)) return true;
+    const values = getAttrValues(attrKey);
+    return values.some(val => getSwatchImage(attrKey, val));
+  };
+
   if (attrKeys.length === 0) {
     return (
       <div className="space-y-2">
@@ -67,7 +165,7 @@ export default function VariantSelector({ variants, selected, onSelect }) {
               label={v.name}
               imgUrl={v.image_url}
               isSelected={selected?.id === v.id}
-              isAvailable={(v.stock ?? 0) > 0 && v.is_active !== false}
+              isAvailable={isVariantAvailable(v)}
               onClick={() => onSelect(v)}
             />
           ))}
@@ -76,192 +174,33 @@ export default function VariantSelector({ variants, selected, onSelect }) {
     );
   }
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // 3. LÓGICA DE VALIDACIÓN Y CASCADA (Nuevo formato: array de {key, values})
-  // ────────────────────────────────────────────────────────────────────────────
-
-  const selectedAttrs = selected?.attributes || [];
-
-  /**
-   * Convierte array de {key, values} a objeto lookup para búsquedas rápidas
-   */
-  const selectedAttrsLookup = useMemo(() => {
-    const lookup = {};
-    if (Array.isArray(selectedAttrs)) {
-      selectedAttrs.forEach(attr => {
-        if (attr.values.length > 0) {
-          lookup[attr.key] = attr.values; // Múltiples valores posibles
-        }
-      });
-    }
-    return lookup;
-  }, [selectedAttrs]);
-
-  /**
-   * Verifica si una variante coincide con los atributos seleccionados
-   * (considera múltiples valores por atributo)
-   */
-  const variantMatchesSelection = (variant, attrKeysToCheck) => {
-    if (!Array.isArray(variant.attributes)) return false;
-    return attrKeysToCheck.every(key => {
-      const selectedValues = selectedAttrsLookup[key];
-      if (!selectedValues) return true; // Sin restricción si no está seleccionado
-      
-      const variantAttr = variant.attributes.find(a => a.key === key);
-      if (!variantAttr) return false;
-      
-      // Variante debe tener al menos UNO de los valores seleccionados
-      return selectedValues.some(val => variantAttr.values.includes(val));
-    });
-  };
-
-  /**
-   * Valida si un valor específico de un atributo es válido
-   */
-  const isValueAvailable = (attrKey, attrValue) => {
-   // Crear nueva selección con este valor
-   const newSelection = selectedAttrs.length > 0
-     ? selectedAttrs.map(a => a.key === attrKey ? { ...a, values: [attrValue] } : a)
-     : [{ key: attrKey, values: [attrValue] }];
-
-   // Agregar si no existe
-   if (!newSelection.some(a => a.key === attrKey)) {
-     newSelection.push({ key: attrKey, values: [attrValue] });
-   }
-
-   return variants.some(v => {
-     if (!Array.isArray(v.attributes)) return false;
-
-     // Verificar que coincida con todos los atributos seleccionados
-     const matches = newSelection.every(sel => {
-       const vAttr = v.attributes.find(a => a.key === sel.key);
-       return vAttr && sel.values.some(val => vAttr.values.includes(val));
-     });
-
-     return matches && (v.stock ?? 0) > 0 && v.is_active !== false;
-   });
-  };
-
-  /**
-   * Al seleccionar un valor, busca variante que lo contiene
-   */
-  const handleSelect = (attrKey, attrValue) => {
-    // Construir nuevos atributos seleccionados
-    const newAttrs = selectedAttrs.length > 0
-      ? selectedAttrs.map(a => 
-          a.key === attrKey ? { ...a, values: [attrValue] } : a
-        )
-      : [{ key: attrKey, values: [attrValue] }];
-
-    // Si este atributo no existe, agregarlo
-    if (!newAttrs.some(a => a.key === attrKey)) {
-      newAttrs.push({ key: attrKey, values: [attrValue] });
-    }
-
-    // Busca primera variante que coincida (incluso parcial)
-    const match = variants.find(v => {
-      if (!Array.isArray(v.attributes)) return false;
-
-      return newAttrs.every(selectedAttr => {
-        const variantAttr = v.attributes.find(a => a.key === selectedAttr.key);
-        return variantAttr && variantAttr.values.some(val => selectedAttr.values.includes(val));
-      });
-    });
-
-    // Si encuentra match, selecciona; sino intenta solo con este atributo
-    if (match && (match.stock ?? 0) > 0 && match.is_active !== false) {
-      onSelect(match);
-    } else {
-      // Fallback: intenta encontrar con solo este atributo
-      const singleAttrMatch = variants.find(v => {
-        if (!Array.isArray(v.attributes)) return false;
-        return v.attributes.some(a => a.key === attrKey && a.values.includes(attrValue)) &&
-               (v.stock ?? 0) > 0 && v.is_active !== false;
-      });
-      if (singleAttrMatch) onSelect(singleAttrMatch);
-    }
-  };
-
-  /**
-   * Extrae todos los valores únicos de un atributo
-   */
-  const getAttrValues = (attrKey) => {
-    const values = [];
-    const seen = new Set();
-    variants.forEach(v => {
-      if (Array.isArray(v.attributes)) {
-        const attr = v.attributes.find(a => a.key === attrKey);
-        if (attr && attr.values) {
-          attr.values.forEach(val => {
-            if (!seen.has(val)) {
-              values.push(val);
-              seen.add(val);
-            }
-          });
-        }
-      }
-    });
-    return values;
-  };
-
-  /**
-   * Obtiene imagen de una variante que contiene este valor de atributo
-   */
-  const getSwatchImage = (attrKey, attrValue) => {
-    const v = variants.find(
-      vv => Array.isArray(vv.attributes) &&
-        vv.attributes.some(a => a.key === attrKey && a.values.includes(attrValue)) &&
-        vv.image_url
-    );
-    return v?.image_url || null;
-  };
-
-  /**
-   * Detecta si este atributo se debe mostrar como swatches visuales
-   * (para colores) o como chips de texto (para tallas, capacidad, etc.)
-   */
-  const shouldUseSwatchStyle = (attrKey) => {
-    // Heurística: si el nombre contiene "color" o hay imágenes disponibles
-    if (/color|colour/i.test(attrKey)) return true;
-    const values = getAttrValues(attrKey);
-    return values.some(val => getSwatchImage(attrKey, val));
-  };
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // 4. RENDER: Secciones de atributos
-  // ────────────────────────────────────────────────────────────────────────────
-
   return (
     <div className="space-y-5">
       {attrKeys.map(attrKey => {
         const values = getAttrValues(attrKey);
-        const selectedAttrGroup = selectedAttrs.find(a => a.key === attrKey);
-        const selectedValues = selectedAttrGroup?.values || [];
+        const selectedValue = selectedMap[attrKey] || '';
         const useSwatchStyle = shouldUseSwatchStyle(attrKey);
 
         return (
           <div key={attrKey} className="space-y-2.5">
-            {/* Header del atributo */}
             <div className="flex items-baseline gap-2">
               <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                 {attrKey}
               </p>
-              {selectedValues.length > 0 && (
+              {selectedValue && (
                 <span className="text-xs font-semibold text-foreground">
-                  {selectedValues.join(', ')}
+                  {selectedValue}
                 </span>
               )}
             </div>
 
-            {/* Opciones */}
             <div className="flex flex-wrap gap-2">
               {values.map(value => {
-                const isSelected = selectedValues.includes(value);
+                const isSelected = selectedValue === value;
                 const available = isValueAvailable(attrKey, value);
                 const imgUrl = getSwatchImage(attrKey, value);
 
                 if (useSwatchStyle) {
-                  // SWATCH: para colores e imágenes
                   return (
                     <SwatchButton
                       key={value}
@@ -274,7 +213,6 @@ export default function VariantSelector({ variants, selected, onSelect }) {
                   );
                 }
 
-                // CHIP: para tallas, capacidad, material, etc.
                 return (
                   <ChipButton
                     key={value}
@@ -293,10 +231,6 @@ export default function VariantSelector({ variants, selected, onSelect }) {
   );
 }
 
-/**
- * SwatchButton — Botón visual para atributos que se muestran con imagen/color
- * Usado para: Color, Estilo, Modelo (si tienen imágenes)
- */
 function SwatchButton({ label, imgUrl, isSelected, isAvailable, onClick }) {
   return (
     <button
@@ -314,7 +248,6 @@ function SwatchButton({ label, imgUrl, isSelected, isAvailable, onClick }) {
             : 'border-border opacity-50',
       ].join(' ')}
     >
-      {/* Imagen/Color del swatch */}
       <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-secondary border border-border/50">
         {imgUrl ? (
           <img
@@ -328,7 +261,6 @@ function SwatchButton({ label, imgUrl, isSelected, isAvailable, onClick }) {
           </div>
         )}
 
-        {/* Check badge (seleccionado) */}
         {isSelected && (
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-primary/5 pointer-events-none" />
         )}
@@ -338,7 +270,6 @@ function SwatchButton({ label, imgUrl, isSelected, isAvailable, onClick }) {
           </div>
         )}
 
-        {/* Línea diagonal (sin stock) */}
         {!isAvailable && (
           <>
             <div className="absolute inset-0 bg-background/20 pointer-events-none" />
@@ -360,7 +291,6 @@ function SwatchButton({ label, imgUrl, isSelected, isAvailable, onClick }) {
         )}
       </div>
 
-      {/* Etiqueta */}
       <span
         className={[
           'text-[10px] font-medium leading-tight text-center w-full truncate',
@@ -373,9 +303,6 @@ function SwatchButton({ label, imgUrl, isSelected, isAvailable, onClick }) {
   );
 }
 
-/**
- * ChipButton — Botón de texto para atributos sin imagen (Talla, Capacidad, Material)
- */
 function ChipButton({ label, isSelected, isAvailable, onClick }) {
   return (
     <button
@@ -394,8 +321,7 @@ function ChipButton({ label, isSelected, isAvailable, onClick }) {
       ].join(' ')}
     >
       {label}
-      
-      {/* Línea diagonal (sin stock) */}
+
       {!isAvailable && (
         <span className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden rounded-full">
           <svg
@@ -418,9 +344,6 @@ function ChipButton({ label, isSelected, isAvailable, onClick }) {
   );
 }
 
-/**
- * OptionChip — Para fallback de variantes sin atributos
- */
 function OptionChip({ label, imgUrl, isSelected, isAvailable, onClick }) {
   return (
     <button
@@ -442,7 +365,7 @@ function OptionChip({ label, imgUrl, isSelected, isAvailable, onClick }) {
       {imgUrl && (
         <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-secondary border border-border/50">
           <img src={imgUrl} alt={label} className="w-full h-full object-cover" />
-          
+
           {isSelected && (
             <div className="absolute bottom-1 right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center shadow-md">
               <Check className="w-3 h-3 text-primary-foreground" />
@@ -460,10 +383,12 @@ function OptionChip({ label, imgUrl, isSelected, isAvailable, onClick }) {
         </div>
       )}
 
-      <span className={[
-        'text-xs font-medium leading-tight text-center',
-        isSelected ? 'text-primary' : isAvailable ? 'text-foreground' : 'text-muted-foreground',
-      ].join(' ')}>
+      <span
+        className={[
+          'text-xs font-medium leading-tight text-center',
+          isSelected ? 'text-primary' : isAvailable ? 'text-foreground' : 'text-muted-foreground',
+        ].join(' ')}
+      >
         {label}
       </span>
     </button>
