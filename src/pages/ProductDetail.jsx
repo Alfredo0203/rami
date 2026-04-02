@@ -246,7 +246,9 @@ export default function ProductDetail() {
             <span className="text-xs text-success font-medium flex items-center gap-1">
               <Check className="w-3 h-3" />
               {hasVariants && selectedVariant
-                ? `${Object.values(selectedVariant.attributes || {}).join(' / ')} — ${effectiveStock} disponibles`
+                ? `${Array.isArray(selectedVariant.attributes) 
+                    ? selectedVariant.attributes.map(a => `${a.key}: ${a.values.join(', ')}`).join(' / ') 
+                    : selectedVariant.name} — ${effectiveStock} disponibles`
                 : `En stock (${effectiveStock})`}
             </span>
           ) : (

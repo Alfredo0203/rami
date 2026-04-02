@@ -119,22 +119,23 @@ export default function VariantSelector({ variants, selected, onSelect }) {
    * Valida si un valor específico de un atributo es válido
    */
   const isValueAvailable = (attrKey, attrValue) => {
-   const selectedWithNewValue = selectedAttrs.map(a => 
-     a.key === attrKey ? { ...a, values: [attrValue] } : a
-   );
-   const keysToCheck = selectedWithNewValue.filter(a => a.values.length > 0).map(a => a.key);
+   // Crear nueva selección con este valor
+   const newSelection = selectedAttrs.length > 0
+     ? selectedAttrs.map(a => a.key === attrKey ? { ...a, values: [attrValue] } : a)
+     : [{ key: attrKey, values: [attrValue] }];
+
+   // Agregar si no existe
+   if (!newSelection.some(a => a.key === attrKey)) {
+     newSelection.push({ key: attrKey, values: [attrValue] });
+   }
 
    return variants.some(v => {
-     const testAttrs = selectedWithNewValue;
-     const testAttrsLookup = {};
-     testAttrs.forEach(a => {
-       if (a.values.length > 0) testAttrsLookup[a.key] = a.values;
-     });
+     if (!Array.isArray(v.attributes)) return false;
 
-     const matches = v.attributes?.every(vattr => {
-       const selectedValues = testAttrsLookup[vattr.key];
-       if (!selectedValues) return true;
-       return selectedValues.some(val => vattr.values.includes(val));
+     // Verificar que coincida con todos los atributos seleccionados
+     const matches = newSelection.every(sel => {
+       const vAttr = v.attributes.find(a => a.key === sel.key);
+       return vAttr && sel.values.some(val => vAttr.values.includes(val));
      });
 
      return matches && (v.stock ?? 0) > 0 && v.is_active !== false;
@@ -146,16 +147,18 @@ export default function VariantSelector({ variants, selected, onSelect }) {
    */
   const handleSelect = (attrKey, attrValue) => {
     // Construir nuevos atributos seleccionados
-    const newAttrs = selectedAttrs.map(a => 
-      a.key === attrKey ? { ...a, values: [attrValue] } : a
-    );
+    const newAttrs = selectedAttrs.length > 0
+      ? selectedAttrs.map(a => 
+          a.key === attrKey ? { ...a, values: [attrValue] } : a
+        )
+      : [{ key: attrKey, values: [attrValue] }];
 
     // Si este atributo no existe, agregarlo
     if (!newAttrs.some(a => a.key === attrKey)) {
       newAttrs.push({ key: attrKey, values: [attrValue] });
     }
 
-    // Busca variante que coincide con TODOS los atributos seleccionados
+    // Busca primera variante que coincida (incluso parcial)
     const match = variants.find(v => {
       if (!Array.isArray(v.attributes)) return false;
 
@@ -165,8 +168,17 @@ export default function VariantSelector({ variants, selected, onSelect }) {
       });
     });
 
+    // Si encuentra match, selecciona; sino intenta solo con este atributo
     if (match && (match.stock ?? 0) > 0 && match.is_active !== false) {
       onSelect(match);
+    } else {
+      // Fallback: intenta encontrar con solo este atributo
+      const singleAttrMatch = variants.find(v => {
+        if (!Array.isArray(v.attributes)) return false;
+        return v.attributes.some(a => a.key === attrKey && a.values.includes(attrValue)) &&
+               (v.stock ?? 0) > 0 && v.is_active !== false;
+      });
+      if (singleAttrMatch) onSelect(singleAttrMatch);
     }
   };
 
