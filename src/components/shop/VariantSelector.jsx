@@ -145,18 +145,29 @@ export default function VariantSelector({ variants, selected, onSelect }) {
    * Al seleccionar un valor, busca variante que lo contiene
    */
   const handleSelect = (attrKey, attrValue) => {
-    // Busca variante que contiene este atributo con este valor
+    // Construir nuevos atributos seleccionados
+    const newAttrs = selectedAttrs.map(a => 
+      a.key === attrKey ? { ...a, values: [attrValue] } : a
+    );
+
+    // Si este atributo no existe, agregarlo
+    if (!newAttrs.some(a => a.key === attrKey)) {
+      newAttrs.push({ key: attrKey, values: [attrValue] });
+    }
+
+    // Busca variante que coincide con TODOS los atributos seleccionados
     const match = variants.find(v => {
       if (!Array.isArray(v.attributes)) return false;
-      const attrGroup = v.attributes.find(a => a.key === attrKey);
-      return (
-        attrGroup &&
-        attrGroup.values.includes(attrValue) &&
-        (v.stock ?? 0) > 0 &&
-        v.is_active !== false
-      );
+
+      return newAttrs.every(selectedAttr => {
+        const variantAttr = v.attributes.find(a => a.key === selectedAttr.key);
+        return variantAttr && variantAttr.values.some(val => selectedAttr.values.includes(val));
+      });
     });
-    if (match) onSelect(match);
+
+    if (match && (match.stock ?? 0) > 0 && match.is_active !== false) {
+      onSelect(match);
+    }
   };
 
   /**
@@ -361,7 +372,7 @@ function ChipButton({ label, isSelected, isAvailable, onClick }) {
       disabled={!isAvailable}
       aria-pressed={isSelected}
       className={[
-        'relative px-4 py-2 rounded-full text-sm font-medium border-2 transition-all select-none',
+        'relative px-2.5 py-1 rounded-full text-xs font-medium border-2 transition-all select-none',
         'hover:border-primary/60 active:scale-95 disabled:cursor-not-allowed',
         isSelected
           ? 'border-primary bg-primary text-primary-foreground shadow-sm'
