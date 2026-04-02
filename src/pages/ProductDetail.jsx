@@ -86,7 +86,7 @@ export default function ProductDetail() {
 
   const addToCartMutation = useMutation({
     mutationFn: async () => {
-      const variantId = product?.has_variants ? selectedVariant?.id : null;
+      const variantId = hasVariants ? selectedVariant?.id : null;
       const key = variantId ? `${productId}-${variantId}` : productId;
       const existingItem = cartItems.find(item =>
         item.product_id === productId && item.variant_id === variantId
