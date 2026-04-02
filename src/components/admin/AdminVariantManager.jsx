@@ -164,10 +164,17 @@ export default function AdminVariantManager({ product }) {
           {/* Info */}
           <div className="flex gap-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-3">
             <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-              Cada variante representa una combinación seleccionable (ej: <strong>Color: Rojo / Talla: XL</strong> o <strong>Almacenamiento: 256GB</strong>).
-              Puedes usar los atributos que apliquen a cada producto.
-            </p>
+            <div className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed space-y-1">
+              <p>
+                Cada variante = 1 combinación específica que el cliente puede seleccionar.
+              </p>
+              <p>
+                Ejemplo — Para una camisa: <strong>Color: Verde + Talla: M</strong> es una variante. <strong>Color: Verde + Talla: L</strong> es otra.
+              </p>
+              <p>
+                <strong>Sin límite</strong> de atributos: Color + Talla + Material + lo que necesites.
+              </p>
+            </div>
           </div>
 
           {isLoading ? (
@@ -205,7 +212,7 @@ export default function AdminVariantManager({ product }) {
                 <p className="text-xs font-medium text-foreground">
                   Atributos <span className="text-destructive">*</span>
                   <span className="font-normal text-muted-foreground ml-1">
-                    (define las opciones que el cliente verá)
+                    (Sin límite — agrega los que necesites: Color, Talla, Material, etc.)
                   </span>
                 </p>
 
@@ -253,12 +260,12 @@ export default function AdminVariantManager({ product }) {
                 ))}
 
                 <button
-                  type="button"
-                  onClick={addAttr}
-                  className="text-[11px] text-primary font-medium flex items-center gap-1 hover:underline"
-                >
-                  <Plus className="w-3 h-3" /> Añadir otro atributo
-                </button>
+                   type="button"
+                   onClick={addAttr}
+                   className="w-full text-[11px] text-primary font-medium flex items-center justify-center gap-1.5 px-3 py-2 border border-primary/30 rounded-lg hover:bg-primary/5 transition-colors"
+                 >
+                   <Plus className="w-3.5 h-3.5" /> Agregar otro atributo
+                 </button>
 
                 {previewLabel && (
                   <p className="text-[11px] text-primary font-medium bg-primary/5 rounded-lg px-2 py-1">

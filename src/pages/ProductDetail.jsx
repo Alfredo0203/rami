@@ -60,8 +60,8 @@ export default function ProductDetail() {
 
   // Auto-select first in-stock variant when data loads
   useEffect(() => {
-    if (variants.length > 0) {
-      const firstInStock = variants.find(v => (v.stock ?? 0) > 0) || variants[0];
+    if (variants.length > 0 && !selectedVariant) {
+      const firstInStock = variants.find(v => v.is_active !== false && (v.stock ?? 0) > 0) || variants[0];
       handleVariantSelect(firstInStock);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
