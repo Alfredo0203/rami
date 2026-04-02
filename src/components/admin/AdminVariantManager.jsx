@@ -426,7 +426,7 @@ export default function AdminVariantManager({ product }) {
               <div className="flex gap-2 pt-1">
                 <Button
                   onClick={editing ? handleUpdate : handleCreate}
-                  disabled={(editing ? updateMutation.isPending : createMutation.isPending) || form.attrs.every(a => !a.key.trim() || !a.value.trim())}
+                  disabled={(editing ? updateMutation.isPending : createMutation.isPending) || form.attrs.every(a => !a.key?.trim?.() || !a.values?.length)}
                   size="sm"
                   className="flex-1 h-9 text-xs bg-primary text-primary-foreground rounded-full"
                 >
