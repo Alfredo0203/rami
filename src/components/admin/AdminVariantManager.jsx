@@ -102,6 +102,15 @@ export default function AdminVariantManager({ product }) {
       toast.error('Agrega al menos una opción con tipo y valor');
       return null;
     }
+    
+    // Validar: no permitir claves duplicadas
+    const keys = validAttrs.map(a => a.key.trim());
+    const duplicates = keys.filter((k, i) => keys.indexOf(k) !== i);
+    if (duplicates.length > 0) {
+      toast.error(`No puedes repetir: ${[...new Set(duplicates)].join(', ')}. Cada tipo de atributo debe ser único.`);
+      return null;
+    }
+    
     const attributesObj = Object.fromEntries(validAttrs.map(a => [a.key.trim(), a.value.trim()]));
     const name = validAttrs.map(a => `${a.key.trim()}: ${a.value.trim()}`).join(' / ');
 
