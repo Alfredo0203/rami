@@ -13,6 +13,7 @@ import VariantSelector from '@/components/shop/VariantSelector';
 export default function ProductDetail() {
   const urlParams = new URLSearchParams(window.location.search);
   const productId = urlParams.get('id');
+  const preselectedVariantId = urlParams.get('variant_id');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, isGuest } = useCurrentUser();
@@ -58,9 +59,16 @@ export default function ProductDetail() {
   // Show variant selector whenever there are variants, regardless of has_variants flag
   const hasVariants = variants.length > 0;
 
-  // Auto-select first in-stock variant when data loads
+  // Auto-select variant: preselected from URL or first in-stock
   useEffect(() => {
     if (variants.length > 0 && !selectedVariant) {
+      if (preselectedVariantId) {
+        const preselected = variants.find(v => v.id === preselectedVariantId);
+        if (preselected) {
+          handleVariantSelect(preselected);
+          return;
+        }
+      }
       const firstInStock = variants.find(v => v.is_active !== false && (v.stock ?? 0) > 0) || variants[0];
       handleVariantSelect(firstInStock);
     }

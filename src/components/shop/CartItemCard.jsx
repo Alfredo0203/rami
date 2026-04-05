@@ -1,8 +1,17 @@
 import React from 'react';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 
 export default function CartItemCard({ item, onUpdateQty, onRemove }) {
+  const navigate = useNavigate();
+
+  const goToProduct = () => {
+    const url = createPageUrl('ProductDetail') + `?id=${item.product_id}` + (item.variant_id ? `&variant_id=${item.variant_id}` : '');
+    navigate(url);
+  };
+
   return (
     <motion.div
       layout
@@ -11,13 +20,20 @@ export default function CartItemCard({ item, onUpdateQty, onRemove }) {
       exit={{ opacity: 0, x: 20 }}
       className="bg-card rounded-xl p-3 flex gap-3 shadow-sm"
     >
-      <img
-        src={item.product_image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200'}
-        alt={item.product_name}
-        className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
-      />
+      <button onClick={goToProduct} className="flex-shrink-0 focus:outline-none">
+        <img
+          src={item.product_image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200'}
+          alt={item.product_name}
+          className="w-20 h-20 rounded-lg object-cover"
+        />
+      </button>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground line-clamp-2 leading-tight">{item.product_name}</p>
+        <button onClick={goToProduct} className="text-left w-full focus:outline-none">
+          <p className="text-sm font-medium text-foreground line-clamp-2 leading-tight">{item.product_name}</p>
+          {item.variant_name && (
+            <p className="text-xs text-muted-foreground mt-0.5">{item.variant_name}</p>
+          )}
+        </button>
         <p className="text-base font-bold text-primary mt-1">${item.product_price?.toFixed(2)}</p>
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-center gap-0 bg-secondary rounded-full">
