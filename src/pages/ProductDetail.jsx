@@ -15,7 +15,6 @@ export default function ProductDetail() {
   const productId = urlParams.get('id');
   const preselectedVariantId = urlParams.get('variant_id');
   const preselectedQty = parseInt(urlParams.get('qty') || '1', 10);
-  const isFromCart = !!urlParams.get('qty');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, isGuest } = useCurrentUser();
@@ -33,9 +32,17 @@ export default function ProductDetail() {
       if (variantImgIndex >= 0) {
         setCurrentImage(variantImgIndex);
       } else {
-        // La imagen de variante no está en el array del producto → mostrarla igual
         setCurrentImage(-1);
       }
+    }
+    // If this variant is already in cart, sync quantity
+    const inCart = cartItems.find(item =>
+      item.product_id === productId && item.variant_id === variant?.id
+    );
+    if (inCart) {
+      setQuantity(inCart.quantity || 1);
+    } else {
+      setQuantity(1);
     }
   };
 
@@ -77,6 +84,14 @@ export default function ProductDetail() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
+  // Sync quantity when cart item found for current variant
+  useEffect(() => {
+    if (existingCartItem && !preselectedQty) {
+      setQuantity(existingCartItem.quantity || 1);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existingCartItem?.id]);
+
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart'],
     queryFn: () => base44.entities.CartItem.list().catch(() => []),
@@ -113,14 +128,14 @@ export default function ProductDetail() {
 
       if (existingItem) {
         return base44.entities.CartItem.update(existingItem.id, {
-          quantity: isFromCart ? quantity : (existingItem.quantity || 0) + quantity
+          quantity: quantity
         });
       }
 
       return base44.entities.CartItem.create(cartData);
     },
     onSuccess: () => {
-      toast.success('Agregado al carrito');
+      toast.success(isAlreadyInCart ? 'Carrito actualizado' : 'Agregado al carrito');
       queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
   });
@@ -160,6 +175,13 @@ export default function ProductDetail() {
     : 0;
 
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+
+  // Detect if this exact product+variant combo is already in cart
+  const currentVariantId = hasVariants ? selectedVariant?.id : null;
+  const existingCartItem = cartItems.find(item =>
+    item.product_id === productId && item.variant_id === (currentVariantId || undefined)
+  );
+  const isAlreadyInCart = !!existingCartItem;
 
   const needsVariantSelection = hasVariants && !selectedVariant;
 
@@ -273,6 +295,14 @@ export default function ProductDetail() {
           )}
         </div>
 
+        {/* In-cart badge */}
+        {isAlreadyInCart && (
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-primary bg-primary/10 px-3 py-1.5 rounded-full w-fit">
+            <ShoppingCart className="w-3.5 h-3.5" />
+            Ya en carrito · {existingCartItem.quantity} {existingCartItem.quantity === 1 ? 'unidad' : 'unidades'}
+          </div>
+        )}
+
         {/* Variant selector */}
         {hasVariants && (
           <VariantSelector
@@ -325,7 +355,7 @@ export default function ProductDetail() {
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : needsVariantSelection ? (
               'Selecciona una variante'
-            ) : isFromCart ? (
+            ) : isAlreadyInCart ? (
               <>
                 <ShoppingCart className="w-5 h-5 mr-2" />
                 Actualizar carrito
