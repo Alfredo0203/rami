@@ -15,6 +15,7 @@ export default function ProductDetail() {
   const productId = urlParams.get('id');
   const preselectedVariantId = urlParams.get('variant_id');
   const preselectedQty = parseInt(urlParams.get('qty') || '1', 10);
+  const isFromCart = !!urlParams.get('qty');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, isGuest } = useCurrentUser();
@@ -112,7 +113,7 @@ export default function ProductDetail() {
 
       if (existingItem) {
         return base44.entities.CartItem.update(existingItem.id, {
-          quantity: (existingItem.quantity || 0) + quantity
+          quantity: isFromCart ? quantity : (existingItem.quantity || 0) + quantity
         });
       }
 
@@ -324,6 +325,11 @@ export default function ProductDetail() {
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : needsVariantSelection ? (
               'Selecciona una variante'
+            ) : isFromCart ? (
+              <>
+                <ShoppingCart className="w-5 h-5 mr-2" />
+                Actualizar carrito
+              </>
             ) : (
               <>
                 <ShoppingCart className="w-5 h-5 mr-2" />
