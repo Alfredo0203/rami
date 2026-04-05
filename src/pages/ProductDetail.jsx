@@ -24,6 +24,32 @@ export default function ProductDetail() {
   const [selectedVariant, setSelectedVariant] = useState(null);
   const touchStartX = useRef(null);
 
+  const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
+  const handleTouchEnd = (e, images) => {
+    if (touchStartX.current === null) return;
+    const delta = touchStartX.current - e.changedTouches[0].clientX;
+    touchStartX.current = null;
+    if (Math.abs(delta) < 40) return;
+    if (delta > 0) setCurrentImage(i => Math.min(i + 1, images.length - 1));
+    else setCurrentImage(i => Math.max(i - 1, 0));
+  };
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['product', productId],
+    queryFn: () =>
+      base44.functions.invoke('getPublicProduct', { product_id: productId }).then(r => r.data),
+    enabled: !!productId,
+  });
+
+  const { data: cartItems = [] } = useQuery({
+    queryKey: ['cart'],
+    queryFn: () => base44.entities.CartItem.list().catch(() => []),
+  });
+
+  const product = data?.product;
+  const variants = data?.variants || [];
+  const hasVariants = variants.length > 0;
+
   // Al seleccionar una variante con imagen, cambiar la imagen principal
   const handleVariantSelect = (variant) => {
     setSelectedVariant(variant);
@@ -46,28 +72,6 @@ export default function ProductDetail() {
     }
   };
 
-  const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
-  const handleTouchEnd = (e, images) => {
-    if (touchStartX.current === null) return;
-    const delta = touchStartX.current - e.changedTouches[0].clientX;
-    touchStartX.current = null;
-    if (Math.abs(delta) < 40) return;
-    if (delta > 0) setCurrentImage(i => Math.min(i + 1, images.length - 1));
-    else setCurrentImage(i => Math.max(i - 1, 0));
-  };
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['product', productId],
-    queryFn: () =>
-      base44.functions.invoke('getPublicProduct', { product_id: productId }).then(r => r.data),
-    enabled: !!productId,
-  });
-
-  const product = data?.product;
-  const variants = data?.variants || [];
-  // Show variant selector whenever there are variants, regardless of has_variants flag
-  const hasVariants = variants.length > 0;
-
   // Auto-select variant: preselected from URL or first in-stock
   useEffect(() => {
     if (variants.length > 0 && !selectedVariant) {
@@ -83,19 +87,6 @@ export default function ProductDetail() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
-
-  // Sync quantity when cart item found for current variant
-  useEffect(() => {
-    if (existingCartItem && !preselectedQty) {
-      setQuantity(existingCartItem.quantity || 1);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [existingCartItem?.id]);
-
-  const { data: cartItems = [] } = useQuery({
-    queryKey: ['cart'],
-    queryFn: () => base44.entities.CartItem.list().catch(() => []),
-  });
 
   // Determine effective price and stock
   const effectivePrice = (hasVariants && selectedVariant)
