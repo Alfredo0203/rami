@@ -8,7 +8,7 @@ export default function CartItemCard({ item, onUpdateQty, onRemove }) {
   const navigate = useNavigate();
 
   const goToProduct = () => {
-    const url = createPageUrl('ProductDetail') + `?id=${item.product_id}` + (item.variant_id ? `&variant_id=${item.variant_id}` : '');
+    const url = createPageUrl('ProductDetail') + `?id=${item.product_id}` + (item.variant_id ? `&variant_id=${item.variant_id}` : '') + `&qty=${item.quantity}`;
     navigate(url);
   };
 

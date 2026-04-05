@@ -14,11 +14,12 @@ export default function ProductDetail() {
   const urlParams = new URLSearchParams(window.location.search);
   const productId = urlParams.get('id');
   const preselectedVariantId = urlParams.get('variant_id');
+  const preselectedQty = parseInt(urlParams.get('qty') || '1', 10);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, isGuest } = useCurrentUser();
   const [currentImage, setCurrentImage] = useState(0);
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(preselectedQty);
   const [liked, setLiked] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const touchStartX = useRef(null);
