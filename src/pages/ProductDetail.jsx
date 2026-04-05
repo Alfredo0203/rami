@@ -113,7 +113,7 @@ export default function ProductDetail() {
     mutationFn: async () => {
       const variantId = hasVariants ? selectedVariant?.id : null;
       const existingItem = cartItems.find(item =>
-        item.product_id === productId && item.variant_id === variantId
+        item.product_id === productId && item.variant_id === (variantId || undefined)
       );
 
       const cartData = {
@@ -156,6 +156,13 @@ export default function ProductDetail() {
     );
   }
 
+  // Detect if this exact product+variant combo is already in cart
+  const currentVariantId = hasVariants ? selectedVariant?.id : null;
+  const existingCartItem = cartItems.find(item =>
+    item.product_id === productId && item.variant_id === (currentVariantId || undefined)
+  );
+  const isAlreadyInCart = !!existingCartItem;
+
   const baseImages = product.images?.length > 0
     ? product.images
     : ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600'];
@@ -175,13 +182,6 @@ export default function ProductDetail() {
     : 0;
 
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
-
-  // Detect if this exact product+variant combo is already in cart
-  const currentVariantId = hasVariants ? selectedVariant?.id : null;
-  const existingCartItem = cartItems.find(item =>
-    item.product_id === productId && item.variant_id === (currentVariantId || undefined)
-  );
-  const isAlreadyInCart = !!existingCartItem;
 
   const needsVariantSelection = hasVariants && !selectedVariant;
 
