@@ -126,9 +126,11 @@ export default function VariantSelector({ variants, selected, onSelect, onSelect
   };
 
   const handleSelect = (attrKey, attrValue) => {
+    // Toggle: deselect if already selected
+    const currentValue = selectedMap[attrKey];
     const nextMap = {
       ...selectedMap,
-      [attrKey]: attrValue,
+      [attrKey]: currentValue === attrValue ? '' : attrValue,
     };
 
     setSelectedMap(nextMap);
@@ -139,6 +141,9 @@ export default function VariantSelector({ variants, selected, onSelect, onSelect
     if (allSelected) {
       const match = findBestMatchingVariant(nextMap);
       if (match) onSelect(match);
+    } else {
+      // Deselected something — clear the resolved variant
+      onSelect(null);
     }
   };
 

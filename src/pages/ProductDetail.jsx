@@ -53,7 +53,7 @@ export default function ProductDetail() {
 
   // Al seleccionar una variante con imagen, cambiar la imagen principal
   const handleVariantSelect = (variant, syncAttrMap = false) => {
-    setSelectedVariant(variant);
+    setSelectedVariant(variant || null);
     // Only sync attrMap when pre-selecting from URL/cart (not from user UI interaction)
     if (syncAttrMap && variant?.attributes) {
       const map = {};
