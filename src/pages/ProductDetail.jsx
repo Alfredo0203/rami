@@ -371,8 +371,6 @@ export default function ProductDetail() {
           >
             {addToCartMutation.isPending ? (
               <Loader2 className="w-5 h-5 animate-spin" />
-            ) : needsVariantSelection ? (
-              'Selecciona una variante'
             ) : isAlreadyInCart ? (
               <>
                 <ShoppingCart className="w-5 h-5 mr-2" />
