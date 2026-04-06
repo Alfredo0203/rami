@@ -52,10 +52,10 @@ export default function ProductDetail() {
   const hasVariants = variants.length > 0;
 
   // Al seleccionar una variante con imagen, cambiar la imagen principal
-  const handleVariantSelect = (variant) => {
+  const handleVariantSelect = (variant, syncAttrMap = false) => {
     setSelectedVariant(variant);
-    // Build attrMap from variant so needsVariantSelection calculates correctly
-    if (variant?.attributes) {
+    // Only sync attrMap when pre-selecting from URL/cart (not from user UI interaction)
+    if (syncAttrMap && variant?.attributes) {
       const map = {};
       variant.attributes.forEach(a => { if (a.key && a.values?.[0]) map[a.key] = a.values[0]; });
       setSelectedAttrMap(map);
@@ -87,7 +87,7 @@ export default function ProductDetail() {
     if (preselectedVariantId) {
       const preselected = variants.find(v => v.id === preselectedVariantId);
       if (preselected) {
-        handleVariantSelect(preselected);
+        handleVariantSelect(preselected, true);
         return;
       }
     }
@@ -97,7 +97,7 @@ export default function ProductDetail() {
     if (cartVariant) {
       const inCartVariant = variants.find(v => v.id === cartVariant.variant_id);
       if (inCartVariant) {
-        handleVariantSelect(inCartVariant);
+        handleVariantSelect(inCartVariant, true);
         return;
       }
     }

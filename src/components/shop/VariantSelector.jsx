@@ -134,9 +134,11 @@ export default function VariantSelector({ variants, selected, onSelect, onSelect
     setSelectedMap(nextMap);
     if (onSelectionChange) onSelectionChange(nextMap);
 
-    const match = findBestMatchingVariant(nextMap);
-    if (match) {
-      onSelect(match);
+    // Only resolve and emit a variant if ALL attribute keys have been selected
+    const allSelected = attrKeys.every(key => !!nextMap[key]);
+    if (allSelected) {
+      const match = findBestMatchingVariant(nextMap);
+      if (match) onSelect(match);
     }
   };
 
