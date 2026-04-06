@@ -12,7 +12,7 @@ import { Check } from 'lucide-react';
  * - Intenta resolver la variante exacta seleccionada y la manda por onSelect
  */
 
-export default function VariantSelector({ variants, selected, onSelect }) {
+export default function VariantSelector({ variants, selected, onSelect, onSelectionChange }) {
   if (!variants || variants.length === 0) return null;
 
   const attrKeys = useMemo(() => {
@@ -132,6 +132,7 @@ export default function VariantSelector({ variants, selected, onSelect }) {
     };
 
     setSelectedMap(nextMap);
+    if (onSelectionChange) onSelectionChange(nextMap);
 
     const match = findBestMatchingVariant(nextMap);
     if (match) {

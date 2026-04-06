@@ -22,6 +22,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(preselectedQty);
   const [liked, setLiked] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState(null);
+  const [selectedAttrMap, setSelectedAttrMap] = useState({});
   const touchStartX = useRef(null);
 
   const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
@@ -53,6 +54,12 @@ export default function ProductDetail() {
   // Al seleccionar una variante con imagen, cambiar la imagen principal
   const handleVariantSelect = (variant) => {
     setSelectedVariant(variant);
+    // Build attrMap from variant so needsVariantSelection calculates correctly
+    if (variant?.attributes) {
+      const map = {};
+      variant.attributes.forEach(a => { if (a.key && a.values?.[0]) map[a.key] = a.values[0]; });
+      setSelectedAttrMap(map);
+    }
     if (variant?.image_url && product?.images) {
       const variantImgIndex = product.images.indexOf(variant.image_url);
       if (variantImgIndex >= 0) {
@@ -185,7 +192,15 @@ export default function ProductDetail() {
 
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
 
-  const needsVariantSelection = hasVariants && !selectedVariant;
+  // All attribute keys that exist across variants
+  const allAttrKeys = hasVariants
+    ? [...new Set(variants.flatMap(v => (v.attributes || []).map(a => a.key)))]
+    : [];
+  // User must select a value for every attribute key before adding to cart
+  const needsVariantSelection = hasVariants && (
+    !selectedVariant ||
+    allAttrKeys.some(key => !selectedAttrMap[key])
+  );
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -311,6 +326,7 @@ export default function ProductDetail() {
             variants={variants}
             selected={selectedVariant}
             onSelect={handleVariantSelect}
+            onSelectionChange={setSelectedAttrMap}
           />
         )}
 
