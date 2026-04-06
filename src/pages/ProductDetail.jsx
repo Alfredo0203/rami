@@ -72,21 +72,32 @@ export default function ProductDetail() {
     }
   };
 
-  // Auto-select variant: preselected from URL or first in-stock
+  // Auto-select variant: only if coming from cart (variant_id in URL) or product is already in cart
   useEffect(() => {
-    if (variants.length > 0 && !selectedVariant) {
-      if (preselectedVariantId) {
-        const preselected = variants.find(v => v.id === preselectedVariantId);
-        if (preselected) {
-          handleVariantSelect(preselected);
-          return;
-        }
+    if (variants.length === 0 || selectedVariant) return;
+
+    // 1. Preselected via URL param (coming from cart)
+    if (preselectedVariantId) {
+      const preselected = variants.find(v => v.id === preselectedVariantId);
+      if (preselected) {
+        handleVariantSelect(preselected);
+        return;
       }
-      const firstInStock = variants.find(v => v.is_active !== false && (v.stock ?? 0) > 0) || variants[0];
-      handleVariantSelect(firstInStock);
     }
+
+    // 2. Product already in cart — preselect the variant that's in cart
+    const cartVariant = cartItems.find(item => item.product_id === productId && item.variant_id);
+    if (cartVariant) {
+      const inCartVariant = variants.find(v => v.id === cartVariant.variant_id);
+      if (inCartVariant) {
+        handleVariantSelect(inCartVariant);
+        return;
+      }
+    }
+
+    // 3. Otherwise: no preselection, user must choose
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+  }, [data, cartItems]);
 
   // Determine effective price and stock
   const effectivePrice = (hasVariants && selectedVariant)
