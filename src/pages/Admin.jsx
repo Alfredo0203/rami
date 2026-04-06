@@ -101,7 +101,9 @@ export default function Admin() {
           <TabsTrigger value="products" className="flex-1">Products</TabsTrigger>
           <TabsTrigger value="orders" className="flex-1">Orders</TabsTrigger>
           <TabsTrigger value="users" className="flex-1">Users</TabsTrigger>
-          <TabsTrigger value="settings" className="flex-1"><Settings className="w-3.5 h-3.5" /></TabsTrigger>
+          {user?.role === 'super_admin' && (
+            <TabsTrigger value="settings" className="flex-1"><Settings className="w-3.5 h-3.5" /></TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="products" className="space-y-3 mt-3">
@@ -186,9 +188,11 @@ export default function Admin() {
           )}
         </TabsContent>
 
-        <TabsContent value="settings">
-          <AdminSettingsTab currentUser={user} />
-        </TabsContent>
+        {user?.role === 'super_admin' && (
+          <TabsContent value="settings">
+            <AdminSettingsTab currentUser={user} />
+          </TabsContent>
+        )}
       </Tabs>
 
       {showProductForm && (
