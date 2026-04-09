@@ -77,7 +77,11 @@ Deno.serve(async (req) => {
     }
 
     const total = Math.max(0, subtotal - discountAmount + shipping);
-    const orderNumber = 'ORD-' + Date.now().toString(36).toUpperCase();
+
+    // Números únicos: timestamp + 4 chars aleatorios
+    const randomPart = () => Math.random().toString(36).substring(2, 6).toUpperCase();
+    const orderNumber = 'ORD-' + Date.now().toString(36).toUpperCase() + randomPart();
+    const trackingNumber = 'TRK-' + Date.now().toString(36).toUpperCase() + randomPart();
 
     // ── 3. Crear la orden ─────────────────────────────────────────────
     const order = await base44.asServiceRole.entities.Order.create({
@@ -100,6 +104,7 @@ Deno.serve(async (req) => {
       payment_status: 'pending_payment',
       payment_method: paymentMethod,
       shipping_address: shippingAddress,
+      tracking_number: trackingNumber,
       customer_email: user.email || '',
       customer_name: user.full_name || shippingAddress.full_name || '',
     });
