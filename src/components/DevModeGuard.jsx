@@ -5,7 +5,7 @@ import { createPageUrl } from '@/utils';
 import { useTranslation } from './i18n/useTranslation';
 import { Wrench } from 'lucide-react';
 
-const ADMIN_ROLES = ['admin', 'super_admin', 'owner'];
+const SUPER_ADMIN_ROLES = ['super_admin', 'owner'];
 const HOME_PATH = createPageUrl('Home');
 // Pages accessible without authentication (guest mode)
 const GUEST_ALLOWED_PATHS = ['/Home', '/Browse', '/ProductDetail', '/Account', '/'];
@@ -30,7 +30,7 @@ export default function DevModeGuard({ children }) {
 
         const devMode = settings?.development_mode === true;
         const disabledPages = settings?.disabled_pages || [];
-        const isAdmin = user && ADMIN_ROLES.includes(user.role);
+        const isAdmin = user && SUPER_ADMIN_ROLES.includes(user.role);
         const isGuest = !user;
         const isHome = location.pathname === HOME_PATH || location.pathname === '/';
         const isAccount = location.pathname === '/Account';
