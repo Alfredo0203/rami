@@ -61,7 +61,7 @@ export default function Checkout() {
       queryClient.invalidateQueries({ queryKey: ['addresses'] });
       setSelectedAddressId(data.id);
       setShowAddressForm(false);
-      toast.success('Address saved!');
+      toast.success('¡Dirección guardada!');
     },
   });
 
@@ -113,16 +113,16 @@ export default function Checkout() {
       navigate(createPageUrl('OrderConfirmation') + `?id=${order.id}`);
     },
     onError: (err) => {
-      toast.error(err.message || 'Failed to place order');
+      toast.error(err.message || 'Error al realizar el pedido');
     },
   });
 
   if (cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <p className="text-foreground font-semibold mb-4">Your cart is empty</p>
+        <p className="text-foreground font-semibold mb-4">Tu carrito está vacío</p>
         <Button onClick={() => navigate(createPageUrl('Home'))} className="bg-primary text-primary-foreground rounded-full">
-          Go Shopping
+          Ir a comprar
         </Button>
       </div>
     );
@@ -134,7 +134,7 @@ export default function Checkout() {
         <button onClick={() => navigate(-1)} className="p-2 bg-secondary rounded-full">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
-        <h1 className="text-lg font-bold text-foreground">Checkout</h1>
+        <h1 className="text-lg font-bold text-foreground">Finalizar Compra</h1>
       </div>
 
       <div className="px-4 py-4 space-y-4">
@@ -142,7 +142,7 @@ export default function Checkout() {
         <div className="bg-card rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <MapPin className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-bold text-foreground">Shipping Address</h2>
+            <h2 className="text-sm font-bold text-foreground">Dirección de Envío</h2>
           </div>
 
           {loadingAddresses ? (
@@ -154,7 +154,7 @@ export default function Checkout() {
               className="w-full border-dashed"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add Address
+              Agregar Dirección
             </Button>
           ) : (
             <>
@@ -182,7 +182,7 @@ export default function Checkout() {
                   onClick={() => setShowAddressForm(true)}
                   className="mt-2 text-primary"
                 >
-                  <Plus className="w-3 h-3 mr-1" /> Add New Address
+                  <Plus className="w-3 h-3 mr-1" /> Agregar nueva dirección
                 </Button>
               )}
             </>
@@ -192,41 +192,41 @@ export default function Checkout() {
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-3 mt-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs">Full Name</Label>
+                  <Label className="text-xs">Nombre Completo</Label>
                   <Input value={newAddress.full_name} onChange={e => setNewAddress({...newAddress, full_name: e.target.value})} className="h-9 text-sm" />
                 </div>
                 <div>
-                  <Label className="text-xs">Phone</Label>
+                  <Label className="text-xs">Teléfono</Label>
                   <Input value={newAddress.phone} onChange={e => setNewAddress({...newAddress, phone: e.target.value})} className="h-9 text-sm" />
                 </div>
               </div>
               <div>
-                <Label className="text-xs">Street Address</Label>
+                <Label className="text-xs">Dirección</Label>
                 <Input value={newAddress.street} onChange={e => setNewAddress({...newAddress, street: e.target.value})} className="h-9 text-sm" />
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <Label className="text-xs">City</Label>
+                  <Label className="text-xs">Ciudad</Label>
                   <Input value={newAddress.city} onChange={e => setNewAddress({...newAddress, city: e.target.value})} className="h-9 text-sm" />
                 </div>
                 <div>
-                  <Label className="text-xs">State</Label>
+                  <Label className="text-xs">Estado</Label>
                   <Input value={newAddress.state} onChange={e => setNewAddress({...newAddress, state: e.target.value})} className="h-9 text-sm" />
                 </div>
                 <div>
-                  <Label className="text-xs">ZIP</Label>
+                  <Label className="text-xs">Código Postal</Label>
                   <Input value={newAddress.zip_code} onChange={e => setNewAddress({...newAddress, zip_code: e.target.value})} className="h-9 text-sm" />
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => setShowAddressForm(false)}>Cancel</Button>
+                <Button variant="outline" size="sm" onClick={() => setShowAddressForm(false)}>Cancelar</Button>
                 <Button
                   size="sm"
                   className="bg-primary text-primary-foreground"
                   onClick={() => saveAddressMutation.mutate(newAddress)}
                   disabled={saveAddressMutation.isPending}
                 >
-                  {saveAddressMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Address'}
+                  {saveAddressMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar Dirección'}
                 </Button>
               </div>
             </motion.div>
@@ -237,12 +237,12 @@ export default function Checkout() {
         <div className="bg-card rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <CreditCard className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-bold text-foreground">Payment Method</h2>
+            <h2 className="text-sm font-bold text-foreground">Método de Pago</h2>
           </div>
           <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-2">
             {[
-              { value: 'credit_card', icon: CreditCard, label: 'Credit / Debit Card' },
-              { value: 'cash_on_delivery', icon: Banknote, label: 'Cash on Delivery (Contra Entrega)', description: 'Pay when your order arrives' },
+              { value: 'credit_card', icon: CreditCard, label: 'Tarjeta de Crédito / Débito' },
+              { value: 'cash_on_delivery', icon: Banknote, label: 'Contra Entrega', description: 'Pagas cuando recibes tu pedido' },
             ].filter(m => allowedPaymentMethods.includes(m.value)).map(method => {
               const Icon = method.icon;
               return (
@@ -263,7 +263,7 @@ export default function Checkout() {
 
         {/* Order Summary */}
         <div className="bg-card rounded-xl p-4 shadow-sm">
-          <h2 className="text-sm font-bold text-foreground mb-3">Order Summary</h2>
+          <h2 className="text-sm font-bold text-foreground mb-3">Resumen del Pedido</h2>
           {cartItems.map(item => (
             <div key={item.id} className="flex justify-between text-sm py-1.5">
               <span className="text-muted-foreground">{item.product_name} × {item.quantity}</span>
@@ -276,8 +276,8 @@ export default function Checkout() {
               <span className="text-foreground">${subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Shipping</span>
-              <span className={shipping === 0 ? 'text-success' : 'text-foreground'}>{shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}</span>
+              <span className="text-muted-foreground">Envío</span>
+              <span className={shipping === 0 ? 'text-success' : 'text-foreground'}>{shipping === 0 ? 'GRATIS' : `$${shipping.toFixed(2)}`}</span>
             </div>
             <div className="flex justify-between text-base font-bold pt-2 border-t border-border">
               <span className="text-foreground">Total</span>
@@ -291,7 +291,7 @@ export default function Checkout() {
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border px-4 py-3 safe-area-bottom">
         {paymentMethod === 'cash_on_delivery' && (
           <p className="text-xs text-muted-foreground text-center mb-2">
-            💵 You will pay <span className="font-semibold text-foreground">${total.toFixed(2)}</span> upon delivery
+            💵 Pagarás <span className="font-semibold text-foreground">${total.toFixed(2)}</span> al recibir tu pedido
           </p>
         )}
         <Button
@@ -302,9 +302,9 @@ export default function Checkout() {
           {placeOrderMutation.isPending ? (
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : paymentMethod === 'cash_on_delivery' ? (
-            `Place Order · Pay on Delivery`
+            `Confirmar Pedido · Pago contra entrega`
           ) : (
-            `Place Order · $${total.toFixed(2)}`
+            `Confirmar Pedido · $${total.toFixed(2)}`
           )}
         </Button>
       </div>

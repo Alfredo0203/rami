@@ -18,9 +18,9 @@ const ROLE_STYLES = {
 };
 
 const ROLE_LABELS = {
-  user: 'Customer',
+  user: 'Cliente',
   admin: 'Admin',
-  super_admin: 'Owner',
+  super_admin: 'Propietario',
 };
 
 export default function AdminUserCard({ targetUser, currentUser, orders = [] }) {
@@ -37,10 +37,10 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
     mutationFn: (data) => base44.entities.User.update(targetUser.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      toast.success('User updated');
+      toast.success('Usuario actualizado');
       setReason('');
     },
-    onError: () => toast.error('Failed to update user'),
+    onError: () => toast.error('Error al actualizar usuario'),
   });
 
   const userOrders = orders.filter(o => o.customer_email === targetUser.email);
@@ -53,7 +53,7 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
           <User className="w-5 h-5 text-muted-foreground" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground truncate">{targetUser.full_name || 'Unknown'}</p>
+          <p className="text-sm font-semibold text-foreground truncate">{targetUser.full_name || 'Sin nombre'}</p>
           <p className="text-xs text-muted-foreground truncate">{targetUser.email}</p>
           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
             <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${ROLE_STYLES[targetUser.role] || ROLE_STYLES.user}`}>
@@ -62,7 +62,7 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
             <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${STATUS_STYLES[targetUser.status || 'active']}`}>
               {targetUser.status || 'active'}
             </span>
-            {isSelf && <span className="text-[10px] text-muted-foreground">(you)</span>}
+            {isSelf && <span className="text-[10px] text-muted-foreground">(tú)</span>}
           </div>
         </div>
         <button onClick={() => setExpanded(e => !e)} className="p-1.5 bg-secondary rounded-lg">
@@ -77,11 +77,11 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
             <div className="flex-1 bg-secondary/50 rounded-lg p-2 text-center">
               <Package className="w-3.5 h-3.5 text-muted-foreground mx-auto mb-0.5" />
               <p className="text-sm font-bold text-foreground">{userOrders.length}</p>
-              <p className="text-[10px] text-muted-foreground">Orders</p>
+              <p className="text-[10px] text-muted-foreground">Pedidos</p>
             </div>
             <div className="flex-1 bg-secondary/50 rounded-lg p-2 text-center">
               <p className="text-xs font-bold text-primary">${totalSpent.toFixed(0)}</p>
-              <p className="text-[10px] text-muted-foreground">Total Spent</p>
+              <p className="text-[10px] text-muted-foreground">Total Gastado</p>
             </div>
           </div>
 
@@ -90,7 +90,7 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
             <div className="space-y-2">
               <input
                 type="text"
-                placeholder="Reason (optional)"
+                placeholder="Motivo (opcional)"
                 value={reason}
                 onChange={e => setReason(e.target.value)}
                 className="w-full text-xs px-3 py-2 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground"
@@ -104,7 +104,7 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
                     onClick={() => updateUser.mutate({ status: 'suspended', status_reason: reason || 'Suspended by admin', status_changed_at: new Date().toISOString() })}
                     disabled={updateUser.isPending}
                   >
-                    <Ban className="w-3 h-3 mr-1" /> Suspend
+                    <Ban className="w-3 h-3 mr-1" /> Suspender
                   </Button>
                 )}
                 {targetUser.status === 'suspended' && (
@@ -115,7 +115,7 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
                     onClick={() => updateUser.mutate({ status: 'active', status_reason: '', status_changed_at: new Date().toISOString() })}
                     disabled={updateUser.isPending}
                   >
-                    <CheckCircle2 className="w-3 h-3 mr-1" /> Reactivate
+                    <CheckCircle2 className="w-3 h-3 mr-1" /> Reactivar
                   </Button>
                 )}
                 {targetUser.status !== 'deactivated' && (
@@ -126,7 +126,7 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
                     onClick={() => updateUser.mutate({ status: 'deactivated', status_reason: reason || 'Deactivated by admin', status_changed_at: new Date().toISOString() })}
                     disabled={updateUser.isPending}
                   >
-                    <Trash2 className="w-3 h-3 mr-1" /> Deactivate
+                    <Trash2 className="w-3 h-3 mr-1" /> Desactivar
                   </Button>
                 )}
                 {targetUser.status === 'deactivated' && (
@@ -137,7 +137,7 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
                     onClick={() => updateUser.mutate({ status: 'active', status_reason: '', status_changed_at: new Date().toISOString() })}
                     disabled={updateUser.isPending}
                   >
-                    <CheckCircle2 className="w-3 h-3 mr-1" /> Restore
+                    <CheckCircle2 className="w-3 h-3 mr-1" /> Restaurar
                   </Button>
                 )}
               </div>
@@ -147,7 +147,7 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
           {/* Role management — owners only, cannot assign owner role */}
           {!isSelf && isOwner && !isSuperAdmin && (
             <div className="flex flex-wrap gap-2 pt-1 border-t border-border">
-              <p className="w-full text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Role</p>
+              <p className="w-full text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Rol</p>
               {['user', 'admin'].map(role => (
                 <Button
                   key={role}

@@ -17,8 +17,8 @@ const PAGES_CONFIG = [
 ];
 
 const PAYMENT_METHODS = [
-  { value: 'credit_card', label: 'Card Payment', description: 'Credit / Debit card via payment gateway', icon: CreditCard },
-  { value: 'cash_on_delivery', label: 'Cash on Delivery', description: 'Customer pays when order is delivered', icon: Banknote },
+  { value: 'credit_card', label: 'Pago con Tarjeta', description: 'Tarjeta de crédito / débito vía pasarela de pago', icon: CreditCard },
+  { value: 'cash_on_delivery', label: 'Contra Entrega', description: 'El cliente paga cuando recibe el pedido', icon: Banknote },
 ];
 
 export default function AdminSettingsTab({ currentUser }) {
@@ -50,9 +50,9 @@ export default function AdminSettingsTab({ currentUser }) {
         const created = await base44.entities.AppSettings.create(payload);
         setSettings(created);
       }
-      toast.success('Settings updated');
+      toast.success('Configuración actualizada');
     } catch {
-      toast.error('Failed to update settings');
+      toast.error('Error al actualizar la configuración');
     } finally {
       setSaving(false);
     }
@@ -75,7 +75,7 @@ export default function AdminSettingsTab({ currentUser }) {
       : current.filter(m => m !== method);
     // Must keep at least one
     if (updated.length === 0) {
-      toast.error('At least one payment method must be enabled');
+      toast.error('Debe haber al menos un método de pago habilitado');
       return;
     }
     saveSettings({ allowed_payment_methods: updated });
@@ -111,12 +111,12 @@ export default function AdminSettingsTab({ currentUser }) {
           <p className="text-xs text-muted-foreground mt-1">{t('admin_dev_mode_desc')}</p>
           {devMode && (
             <p className="text-xs text-warning font-medium mt-2">
-              ⚠️ Development mode is currently ON. Regular users are restricted to the Home screen.
+              ⚠️ El modo desarrollo está activo. Los usuarios regulares solo pueden acceder al Inicio.
             </p>
           )}
           {settings?.updated_by && (
             <p className="text-[10px] text-muted-foreground mt-1">
-              Last updated by {settings.updated_by}
+              Última actualización por {settings.updated_by}
             </p>
           )}
         </div>
@@ -154,9 +154,9 @@ export default function AdminSettingsTab({ currentUser }) {
       <div className="bg-card rounded-xl p-4 shadow-sm">
         <div className="flex items-center gap-2 mb-3">
           <CreditCard className="w-4 h-4 text-primary" />
-          <p className="text-sm font-semibold text-foreground">Allowed Payment Methods</p>
+          <p className="text-sm font-semibold text-foreground">Métodos de Pago Habilitados</p>
         </div>
-        <p className="text-xs text-muted-foreground mb-3">Enable or disable payment methods available at checkout.</p>
+        <p className="text-xs text-muted-foreground mb-3">Habilita o deshabilita los métodos de pago disponibles en el checkout.</p>
         <div className="space-y-3">
           {PAYMENT_METHODS.map(({ value, label, description, icon: Icon }) => {
             const isEnabled = allowedMethods.includes(value);

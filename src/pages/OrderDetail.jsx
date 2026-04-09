@@ -8,10 +8,10 @@ import { ArrowLeft, MapPin, CreditCard, Package, Truck, CheckCircle2, Clock, Loa
 import { format } from 'date-fns';
 
 const steps = [
-  { key: 'pending', icon: Clock, label: 'Order Placed' },
-  { key: 'processing', icon: Package, label: 'Processing' },
-  { key: 'shipped', icon: Truck, label: 'Shipped' },
-  { key: 'delivered', icon: CheckCircle2, label: 'Delivered' },
+  { key: 'pending', icon: Clock, label: 'Pedido realizado' },
+  { key: 'processing', icon: Package, label: 'En proceso' },
+  { key: 'shipped', icon: Truck, label: 'Enviado' },
+  { key: 'delivered', icon: CheckCircle2, label: 'Entregado' },
 ];
 
 const stepOrder = ['pending', 'processing', 'shipped', 'delivered'];
@@ -52,7 +52,7 @@ export default function OrderDetail() {
   if (!order) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Order not found</p>
+        <p className="text-muted-foreground">Pedido no encontrado</p>
       </div>
     );
   }
@@ -89,7 +89,7 @@ export default function OrderDetail() {
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div>
-          <h1 className="text-base font-bold text-foreground">Order {order.order_number}</h1>
+          <h1 className="text-base font-bold text-foreground">Pedido {order.order_number}</h1>
           <p className="text-xs text-muted-foreground">
             {order.created_date ? format(new Date(order.created_date), 'MMM d, yyyy h:mm a') : ''}
           </p>
@@ -105,7 +105,7 @@ export default function OrderDetail() {
           className="w-full flex items-center justify-center gap-2 py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm disabled:opacity-60 transition-opacity"
         >
           {reordering ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
-          {reordering ? 'Adding to Cart…' : 'Reorder'}
+          {reordering ? 'Agregando al carrito…' : 'Volver a pedir'}
         </button>
       </div>
 
@@ -114,7 +114,7 @@ export default function OrderDetail() {
         {!isCancelled && (
           <div className="bg-card rounded-xl p-4 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-bold text-foreground">Order Tracking</h2>
+              <h2 className="text-sm font-bold text-foreground">Seguimiento del Pedido</h2>
               <span className="flex items-center gap-1.5 text-[10px] text-success font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse inline-block" />
                 Live
@@ -153,7 +153,7 @@ export default function OrderDetail() {
 
         {/* Items */}
         <div className="bg-card rounded-xl p-4 shadow-sm">
-          <h2 className="text-sm font-bold text-foreground mb-3">Items</h2>
+          <h2 className="text-sm font-bold text-foreground mb-3">Productos</h2>
           <div className="space-y-3">
             {order.items?.map((item, i) => (
               <div key={i} className="flex gap-3">
@@ -164,7 +164,7 @@ export default function OrderDetail() {
                 />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-foreground line-clamp-1">{item.product_name}</p>
-                  <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                  <p className="text-xs text-muted-foreground">Cant: {item.quantity}</p>
                 </div>
                 <span className="text-sm font-bold text-foreground">${(item.price * item.quantity).toFixed(2)}</span>
               </div>
@@ -180,9 +180,9 @@ export default function OrderDetail() {
               <span className="text-foreground">${order.subtotal?.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Shipping</span>
+              <span className="text-muted-foreground">Envío</span>
               <span className={order.shipping_cost === 0 ? 'text-success' : 'text-foreground'}>
-                {order.shipping_cost === 0 ? 'FREE' : `$${order.shipping_cost?.toFixed(2)}`}
+                {order.shipping_cost === 0 ? 'GRATIS' : `$${order.shipping_cost?.toFixed(2)}`}
               </span>
             </div>
             <div className="border-t border-border pt-2 flex justify-between font-bold">
@@ -197,7 +197,7 @@ export default function OrderDetail() {
           <div className="bg-card rounded-xl p-4 shadow-sm">
             <div className="flex items-center gap-2 mb-2">
               <MapPin className="w-4 h-4 text-primary" />
-              <h2 className="text-sm font-bold text-foreground">Shipping Address</h2>
+              <h2 className="text-sm font-bold text-foreground">Dirección de Envío</h2>
             </div>
             <p className="text-sm text-foreground">{order.shipping_address.full_name}</p>
             <p className="text-xs text-muted-foreground">{order.shipping_address.street}</p>
@@ -211,7 +211,7 @@ export default function OrderDetail() {
         <div className="bg-card rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <CreditCard className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-bold text-foreground">Payment</h2>
+            <h2 className="text-sm font-bold text-foreground">Pago</h2>
           </div>
           <p className="text-sm text-foreground capitalize">{order.payment_method?.replace('_', ' ')}</p>
         </div>

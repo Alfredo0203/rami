@@ -14,7 +14,7 @@ import { useTranslation } from '../components/i18n/useTranslation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 
-const ROLE_LABELS = { user: 'Customer', admin: 'Admin', super_admin: 'Owner' };
+const ROLE_LABELS = { user: 'Cliente', admin: 'Admin', super_admin: 'Propietario' };
 const STATUS_STYLES = {
   active: null,
   suspended: 'bg-warning/10 border border-warning/30 text-warning',
@@ -68,7 +68,7 @@ export default function Account() {
 
   const handleDeleteAccount = async () => {
     if (deleteEmail.trim().toLowerCase() !== user?.email?.toLowerCase()) {
-      toast.error('Email does not match your account email');
+      toast.error('El correo no coincide con el de tu cuenta');
       return;
     }
     setDeleting(true);
@@ -78,10 +78,10 @@ export default function Account() {
         status_reason: 'Self-requested account deactivation',
         status_changed_at: new Date().toISOString(),
       });
-      toast.success('Account deactivated. Your data is retained for auditing.');
+      toast.success('Cuenta desactivada. Tus datos se conservan para auditoría.');
       setTimeout(() => base44.auth.logout(), 1500);
     } catch {
-      toast.error('Failed to deactivate account');
+      toast.error('Error al desactivar la cuenta');
       setDeleting(false);
     }
   };
@@ -131,10 +131,10 @@ export default function Account() {
             <User className="w-8 h-8 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-primary-foreground">{user?.full_name || 'Guest User'}</h1>
+            <h1 className="text-lg font-bold text-primary-foreground">{user?.full_name || 'Invitado'}</h1>
             <p className="text-sm text-primary-foreground/70">{user?.email || ''}</p>
             <span className="text-[11px] font-medium text-primary-foreground/60 bg-primary-foreground/10 px-2 py-0.5 rounded-full mt-1 inline-block">
-              {ROLE_LABELS[user?.role] || 'Customer'}
+              {ROLE_LABELS[user?.role] || 'Cliente'}
             </span>
           </div>
         </div>

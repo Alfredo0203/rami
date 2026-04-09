@@ -14,7 +14,7 @@ export default function AdminOrderCard({ order }) {
     mutationFn: (data) => base44.entities.Order.update(order.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-      toast.success('Order updated');
+      toast.success('Pedido actualizado');
     },
   });
 
@@ -51,15 +51,15 @@ export default function AdminOrderCard({ order }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="processing">Processing</SelectItem>
-            <SelectItem value="shipped">Shipped</SelectItem>
-            <SelectItem value="delivered">Delivered</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
+            <SelectItem value="pending">Pendiente</SelectItem>
+            <SelectItem value="processing">En proceso</SelectItem>
+            <SelectItem value="shipped">Enviado</SelectItem>
+            <SelectItem value="delivered">Entregado</SelectItem>
+            <SelectItem value="cancelled">Cancelado</SelectItem>
           </SelectContent>
         </Select>
         <Input
-          placeholder="Tracking #"
+          placeholder="Nº de rastreo"
           defaultValue={order.tracking_number || ''}
           onBlur={(e) => {
             if (e.target.value !== (order.tracking_number || '')) {

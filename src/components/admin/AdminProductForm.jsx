@@ -44,7 +44,7 @@ export default function AdminProductForm({ product, categories, onClose }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
-      toast.success(isEditing ? 'Product updated!' : 'Product created!');
+      toast.success(isEditing ? '¡Producto actualizado!' : '¡Producto creado!');
       onClose();
     },
   });
@@ -77,29 +77,29 @@ export default function AdminProductForm({ product, categories, onClose }) {
     <div className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm flex items-end sm:items-center justify-center">
       <div className="bg-card w-full max-w-md max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-foreground">{isEditing ? 'Edit Product' : 'Add Product'}</h2>
+          <h2 className="text-lg font-bold text-foreground">{isEditing ? 'Editar Producto' : 'Agregar Producto'}</h2>
           <button onClick={onClose} className="p-2 bg-secondary rounded-full"><X className="w-4 h-4 text-foreground" /></button>
         </div>
 
-        <div><Label className="text-xs">Name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="h-9 text-sm" /></div>
-        <div><Label className="text-xs">Description</Label><Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="text-sm h-20" /></div>
+        <div><Label className="text-xs">Nombre</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="h-9 text-sm" /></div>
+        <div><Label className="text-xs">Descripción</Label><Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="text-sm h-20" /></div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div><Label className="text-xs">Price ($)</Label><Input type="number" value={form.price} onChange={e => setForm({...form, price: e.target.value})} className="h-9 text-sm" /></div>
-          <div><Label className="text-xs">Original Price ($)</Label><Input type="number" value={form.original_price} onChange={e => setForm({...form, original_price: e.target.value})} className="h-9 text-sm" /></div>
+          <div><Label className="text-xs">Precio ($)</Label><Input type="number" value={form.price} onChange={e => setForm({...form, price: e.target.value})} className="h-9 text-sm" /></div>
+          <div><Label className="text-xs">Precio Original ($)</Label><Input type="number" value={form.original_price} onChange={e => setForm({...form, original_price: e.target.value})} className="h-9 text-sm" /></div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label className="text-xs">Category</Label>
+            <Label className="text-xs">Categoría</Label>
             <Select value={form.category_id} onValueChange={v => setForm({...form, category_id: v})}>
-              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
               <SelectContent>
                 {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-          <div><Label className="text-xs">Stock</Label><Input type="number" value={form.stock} onChange={e => setForm({...form, stock: e.target.value})} className="h-9 text-sm" /></div>
+          <div><Label className="text-xs">Inventario</Label><Input type="number" value={form.stock} onChange={e => setForm({...form, stock: e.target.value})} className="h-9 text-sm" /></div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -107,11 +107,11 @@ export default function AdminProductForm({ product, categories, onClose }) {
           <div><Label className="text-xs">Color</Label><Input value={form.color} onChange={e => setForm({...form, color: e.target.value})} className="h-9 text-sm" placeholder="Rojo, Azul…" /></div>
         </div>
 
-        <div><Label className="text-xs">Tags (comma-separated)</Label><Input value={form.tags} onChange={e => setForm({...form, tags: e.target.value})} className="h-9 text-sm" placeholder="fashion, summer" /></div>
+        <div><Label className="text-xs">Etiquetas (separadas por coma)</Label><Input value={form.tags} onChange={e => setForm({...form, tags: e.target.value})} className="h-9 text-sm" placeholder="moda, verano" /></div>
 
-        {/* Images */}
+        {/* Imágenes */}
         <div>
-          <Label className="text-xs">Images</Label>
+          <Label className="text-xs">Imágenes</Label>
           <div className="flex gap-2 mt-1 flex-wrap">
             {form.images.map((url, i) => (
               <div key={i} className="relative w-16 h-16 rounded-lg overflow-hidden">
@@ -131,11 +131,11 @@ export default function AdminProductForm({ product, categories, onClose }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Switch checked={form.is_featured} onCheckedChange={v => setForm({...form, is_featured: v})} />
-            <Label className="text-xs">Featured</Label>
+            <Label className="text-xs">Destacado</Label>
           </div>
           <div className="flex items-center gap-2">
             <Switch checked={form.is_active} onCheckedChange={v => setForm({...form, is_active: v})} />
-            <Label className="text-xs">Active</Label>
+            <Label className="text-xs">Activo</Label>
           </div>
         </div>
 
@@ -149,7 +149,7 @@ export default function AdminProductForm({ product, categories, onClose }) {
         )}
 
         <Button onClick={handleSubmit} disabled={saveMutation.isPending} className="w-full bg-primary text-primary-foreground rounded-full h-11 font-bold">
-          {saveMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : (isEditing ? 'Update Product' : 'Create Product')}
+          {saveMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : (isEditing ? 'Actualizar Producto' : 'Crear Producto')}
         </Button>
       </div>
     </div>

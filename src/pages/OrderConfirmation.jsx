@@ -44,8 +44,8 @@ export default function OrderConfirmation() {
         transition={{ delay: 0.3 }}
         className="text-center"
       >
-        <h1 className="text-2xl font-extrabold text-foreground mb-2">Order Placed!</h1>
-        <p className="text-muted-foreground text-sm mb-1">Thank you for your purchase</p>
+        <h1 className="text-2xl font-extrabold text-foreground mb-2">¡Pedido Realizado!</h1>
+        <p className="text-muted-foreground text-sm mb-1">Gracias por tu compra</p>
         {order && (
           <p className="text-xs text-muted-foreground">
             Order #{order.order_number}
@@ -62,7 +62,7 @@ export default function OrderConfirmation() {
         >
           <div className="flex items-center gap-2 mb-3">
             <Package className="w-4 h-4 text-primary" />
-            <span className="text-sm font-bold text-foreground">Order Details</span>
+            <span className="text-sm font-bold text-foreground">Detalle del Pedido</span>
           </div>
           {order.items?.map((item, i) => (
             <div key={i} className="flex justify-between text-sm py-1">
@@ -87,14 +87,14 @@ export default function OrderConfirmation() {
           onClick={() => navigate(createPageUrl('Orders'))}
           className="bg-primary text-primary-foreground rounded-full h-12 font-bold"
         >
-          View My Orders <ArrowRight className="w-4 h-4 ml-2" />
+          Ver Mis Pedidos <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
         <Button
           variant="outline"
           onClick={() => navigate(createPageUrl('Home'))}
           className="rounded-full h-12 font-medium"
         >
-          Continue Shopping
+          Seguir Comprando
         </Button>
       </motion.div>
     </div>

@@ -53,7 +53,7 @@ export default function Admin() {
     mutationFn: (id) => base44.entities.Product.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
-      toast.success('Product deleted');
+      toast.success('Producto eliminado');
     },
   });
 
@@ -62,10 +62,10 @@ export default function Admin() {
   const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'processing').length;
 
   const stats = [
-    { label: 'Revenue', value: `$${totalRevenue.toFixed(0)}`, icon: DollarSign, color: 'bg-success/10 text-success' },
-    { label: 'Products', value: activeProducts, icon: Package, color: 'bg-primary/10 text-primary' },
-    { label: 'Orders', value: orders.length, icon: ShoppingBag, color: 'bg-chart-5/10 text-chart-5' },
-    { label: 'Pending', value: pendingOrders, icon: TrendingUp, color: 'bg-warning/10 text-warning' },
+    { label: 'Ingresos', value: `$${totalRevenue.toFixed(0)}`, icon: DollarSign, color: 'bg-success/10 text-success' },
+    { label: 'Productos', value: activeProducts, icon: Package, color: 'bg-primary/10 text-primary' },
+    { label: 'Pedidos', value: orders.length, icon: ShoppingBag, color: 'bg-chart-5/10 text-chart-5' },
+    { label: 'Pendientes', value: pendingOrders, icon: TrendingUp, color: 'bg-warning/10 text-warning' },
   ];
 
   return (
@@ -74,7 +74,7 @@ export default function Admin() {
         <button onClick={() => navigate(-1)} className="p-2 bg-secondary rounded-full">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
-        <h1 className="text-lg font-bold text-foreground">Admin Panel</h1>
+        <h1 className="text-lg font-bold text-foreground">Panel de Administración</h1>
       </div>
 
       {/* Stats */}
@@ -98,9 +98,9 @@ export default function Admin() {
 
       <Tabs defaultValue="products" className="px-4">
         <TabsList className="w-full">
-          <TabsTrigger value="products" className="flex-1">Products</TabsTrigger>
-          <TabsTrigger value="orders" className="flex-1">Orders</TabsTrigger>
-          <TabsTrigger value="users" className="flex-1">Users</TabsTrigger>
+          <TabsTrigger value="products" className="flex-1">Productos</TabsTrigger>
+          <TabsTrigger value="orders" className="flex-1">Pedidos</TabsTrigger>
+          <TabsTrigger value="users" className="flex-1">Usuarios</TabsTrigger>
           {user?.role === 'super_admin' && (
             <TabsTrigger value="settings" className="flex-1"><Settings className="w-3.5 h-3.5" /></TabsTrigger>
           )}
@@ -111,7 +111,7 @@ export default function Admin() {
             onClick={() => { setEditingProduct(null); setShowProductForm(true); }}
             className="w-full bg-primary text-primary-foreground rounded-full h-10"
           >
-            <Plus className="w-4 h-4 mr-2" /> Add Product
+            <Plus className="w-4 h-4 mr-2" /> Agregar Producto
           </Button>
 
           {loadingProducts ? (
@@ -140,7 +140,7 @@ export default function Admin() {
                   </div>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-[10px] text-muted-foreground">Stock: {product.stock || 0}</span>
-                    <span className="text-[10px] text-muted-foreground">Sold: {product.sold_count || 0}</span>
+                    <span className="text-[10px] text-muted-foreground">Vendidos: {product.sold_count || 0}</span>
                   </div>
                 </div>
                 <div className="flex flex-col gap-1">
@@ -167,7 +167,7 @@ export default function Admin() {
             <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
           ) : orders.length === 0 ? (
             <div className="text-center py-10">
-              <p className="text-muted-foreground text-sm">No orders yet</p>
+              <p className="text-muted-foreground text-sm">Aún no hay pedidos</p>
             </div>
           ) : (
             orders.map(order => <AdminOrderCard key={order.id} order={order} />)
@@ -179,7 +179,7 @@ export default function Admin() {
             <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
           ) : allUsers.length === 0 ? (
             <div className="text-center py-10">
-              <p className="text-muted-foreground text-sm">No users found</p>
+              <p className="text-muted-foreground text-sm">No se encontraron usuarios</p>
             </div>
           ) : (
             allUsers.map(u => (
