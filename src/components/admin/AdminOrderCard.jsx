@@ -45,7 +45,16 @@ export default function AdminOrderCard({ order }) {
       <div className="flex items-center gap-2">
         <Select
           value={order.status}
-          onValueChange={(status) => updateMutation.mutate({ status })}
+          onValueChange={(status) => {
+            const update = { status };
+            // Generar rastreo automático al marcar como enviado (solo si no tiene uno ya)
+            if (status === 'shipped' && !order.tracking_number) {
+              const ts = Date.now().toString(36).toUpperCase();
+              const rand = Math.random().toString(36).substring(2, 8).toUpperCase();
+              update.tracking_number = 'RA' + ts + rand;
+            }
+            updateMutation.mutate(update);
+          }}
         >
           <SelectTrigger className="h-8 text-xs flex-1">
             <SelectValue />
