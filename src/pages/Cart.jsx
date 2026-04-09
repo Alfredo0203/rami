@@ -103,7 +103,7 @@ export default function Cart() {
         <button onClick={() => navigate(-1)} className="p-2 bg-secondary rounded-full">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
-        <h1 className="text-lg font-bold text-foreground">Shopping Cart</h1>
+        <h1 className="text-lg font-bold text-foreground">Mi Carrito</h1>
         <span className="text-sm text-muted-foreground">({cartItems.length})</span>
       </div>
 
@@ -116,13 +116,13 @@ export default function Cart() {
           <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
             <ShoppingBag className="w-10 h-10 text-muted-foreground" />
           </div>
-          <p className="text-foreground font-semibold text-lg mb-1">Your cart is empty</p>
-          <p className="text-muted-foreground text-sm mb-6">Start shopping to add items</p>
+          <p className="text-foreground font-semibold text-lg mb-1">Tu carrito está vacío</p>
+          <p className="text-muted-foreground text-sm mb-6">Agrega productos para comenzar</p>
           <Button
             onClick={() => navigate(createPageUrl('Home'))}
             className="bg-primary text-primary-foreground rounded-full px-8"
           >
-            Browse Products
+            Ver productos
           </Button>
         </div>
       ) : (
@@ -154,13 +154,13 @@ export default function Cart() {
               <span className="text-foreground font-medium">${subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Shipping</span>
+              <span className="text-muted-foreground">Envío</span>
               <span className={shipping === 0 ? 'text-success font-medium' : 'text-foreground font-medium'}>
-                {shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}
+                {shipping === 0 ? 'GRATIS' : `$${shipping.toFixed(2)}`}
               </span>
             </div>
             {shipping > 0 && (
-              <p className="text-[10px] text-primary">Free shipping on orders over $50!</p>
+              <p className="text-[10px] text-primary">¡Envío gratis en pedidos mayores a $50!</p>
             )}
             <div className="border-t border-border pt-2.5 flex justify-between">
               <span className="text-foreground font-bold">Total</span>

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Plus, Trash2, Loader2, ChevronDown, ChevronUp, ImagePlus, Info, X, Edit2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -32,6 +33,7 @@ export default function AdminVariantManager({ product }) {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [uploadingImg, setUploadingImg] = useState(false);
+  const [deletingVariantId, setDeletingVariantId] = useState(null);
 
   const { data: variants = [], isLoading } = useQuery({
     queryKey: ['variants', product.id],
@@ -227,7 +229,7 @@ export default function AdminVariantManager({ product }) {
                   product={product}
                   onEdit={() => startEdit(v)}
                   onToggle={(val) => toggleMutation.mutate({ id: v.id, is_active: val })}
-                  onDelete={() => deleteMutation.mutate(v.id)}
+                  onDelete={() => setDeletingVariantId(v.id)}
                 />
               ))}
             </div>
@@ -458,6 +460,25 @@ export default function AdminVariantManager({ product }) {
           )}
         </div>
       )}
+      <AlertDialog open={!!deletingVariantId} onOpenChange={(open) => { if (!open) setDeletingVariantId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar variante?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. La variante será eliminada permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { deleteMutation.mutate(deletingVariantId); setDeletingVariantId(null); }}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
