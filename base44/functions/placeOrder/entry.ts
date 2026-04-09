@@ -78,10 +78,15 @@ Deno.serve(async (req) => {
 
     const total = Math.max(0, subtotal - discountAmount + shipping);
 
-    // Números únicos: timestamp + 4 chars aleatorios
-    const randomPart = () => Math.random().toString(36).substring(2, 6).toUpperCase();
-    const orderNumber = 'ORD-' + Date.now().toString(36).toUpperCase() + randomPart();
-    const trackingNumber = 'TRK-' + Date.now().toString(36).toUpperCase() + randomPart();
+    // Genera ID único: timestamp en base36 (ms precisión) + 6 chars aleatorios
+    // Escala a millones de órdenes sin colisiones
+    const uniqueId = () => {
+      const ts = Date.now().toString(36).toUpperCase();           // ~8 chars, crece con el tiempo
+      const rand = Math.random().toString(36).substring(2, 8).toUpperCase(); // 6 chars aleatorios
+      return ts + rand;                                           // 14 chars totales, prácticamente imposible de colisionar
+    };
+    const orderNumber = 'ORD-' + uniqueId();
+    const trackingNumber = 'RA' + uniqueId();
 
     // ── 3. Crear la orden ─────────────────────────────────────────────
     const order = await base44.asServiceRole.entities.Order.create({
