@@ -51,7 +51,7 @@ export default function AdminOrderCard({ order }) {
             if (status === 'shipped' && !order.tracking_number) {
               const ts = Date.now().toString(36).toUpperCase();
               const rand = Math.random().toString(36).substring(2, 8).toUpperCase();
-              update.tracking_number = 'RA' + ts + rand;
+              update.tracking_number = 'RA-' + ts + rand;
             }
             updateMutation.mutate(update);
           }}
