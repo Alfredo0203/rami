@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import CartItemCard from '../components/shop/CartItemCard';
-import { ArrowLeft, ShoppingBag, Loader2 } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AnimatePresence } from 'framer-motion';
 
@@ -48,6 +48,50 @@ export default function Cart() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['cart'] }),
   });
 
+  // Cargar stock actual del catálogo para validar en carrito
+  const { data: catalogData } = useQuery({
+    queryKey: ['public-catalog'],
+    queryFn: () => base44.functions.invoke('getPublicCatalog', {}).then(r => r.data),
+    enabled: cartItems.length > 0,
+  });
+
+  // Cargar variantes activas de productos en carrito que tienen variant_id
+  const variantIds = cartItems.map(i => i.variant_id).filter(Boolean);
+  const { data: variantsData = [] } = useQuery({
+    queryKey: ['cart-variants', variantIds.join(',')],
+    queryFn: async () => {
+      if (!variantIds.length) return [];
+      // Fetch all variants for products in cart
+      const productIds = [...new Set(cartItems.filter(i => i.variant_id).map(i => i.product_id))];
+      const results = await Promise.all(
+        productIds.map(pid => base44.asServiceRole?.entities?.ProductVariant?.filter({ product_id: pid }).catch(() => []))
+      );
+      return results.flat().filter(Boolean);
+    },
+    enabled: variantIds.length > 0,
+  });
+
+  // Mapa: item.id → { available: number }
+  const stockInfoMap = useMemo(() => {
+    const map = {};
+    const products = catalogData?.products || [];
+    for (const item of cartItems) {
+      if (item.variant_id) {
+        const variant = variantsData.find(v => v.id === item.variant_id);
+        map[item.id] = { available: variant?.stock ?? Infinity };
+      } else {
+        const product = products.find(p => p.id === item.product_id);
+        map[item.id] = { available: product?.stock ?? Infinity };
+      }
+    }
+    return map;
+  }, [cartItems, catalogData, variantsData]);
+
+  const hasStockIssues = cartItems.some(item => {
+    const info = stockInfoMap[item.id];
+    return info && info.available !== Infinity && item.quantity > info.available;
+  });
+
   const subtotal = cartItems.reduce((sum, item) => sum + (item.product_price || 0) * (item.quantity || 0), 0);
   const shipping = subtotal > 50 ? 0 : 4.99;
   const total = subtotal + shipping;
@@ -84,6 +128,12 @@ export default function Cart() {
       ) : (
         <>
           <div className="px-4 py-3 space-y-3">
+            {hasStockIssues && (
+              <div className="flex items-start gap-2 bg-destructive/10 border border-destructive/20 rounded-xl p-3">
+                <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-xs text-destructive font-medium">Algunos productos tienen menos stock del que pediste. Ajusta las cantidades antes de continuar.</p>
+              </div>
+            )}
             <AnimatePresence>
               {cartItems.map(item => (
                 <CartItemCard
@@ -91,6 +141,7 @@ export default function Cart() {
                   item={item}
                   onUpdateQty={(item, newQty) => updateQtyMutation.mutate({ item, newQty })}
                   onRemove={(item) => removeMutation.mutate(item)}
+                  stockInfo={stockInfoMap[item.id]}
                 />
               ))}
             </AnimatePresence>
@@ -124,9 +175,10 @@ export default function Cart() {
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border px-4 py-3 safe-area-bottom">
           <Button
             onClick={() => navigate(createPageUrl('Checkout'))}
-            className="w-full bg-primary text-primary-foreground font-bold h-12 rounded-full text-base max-w-lg mx-auto block"
+            disabled={hasStockIssues}
+            className="w-full bg-primary text-primary-foreground font-bold h-12 rounded-full text-base max-w-lg mx-auto block disabled:opacity-50"
           >
-            Checkout · ${total.toFixed(2)}
+            Ir a pagar · ${total.toFixed(2)}
           </Button>
         </div>
       )}

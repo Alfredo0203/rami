@@ -1,11 +1,15 @@
 import React from 'react';
-import { Minus, Plus, Trash2 } from 'lucide-react';
+import { Minus, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
-export default function CartItemCard({ item, onUpdateQty, onRemove }) {
+export default function CartItemCard({ item, onUpdateQty, onRemove, stockInfo }) {
   const navigate = useNavigate();
+
+  // stockInfo: { available: number } — si no se pasa, no mostramos alerta
+  const available = stockInfo?.available ?? Infinity;
+  const isOverStock = item.quantity > available;
 
   const goToProduct = () => {
     const url = createPageUrl('ProductDetail') + `?id=${item.product_id}` + (item.variant_id ? `&variant_id=${item.variant_id}` : '') + `&qty=${item.quantity}`;
@@ -35,6 +39,12 @@ export default function CartItemCard({ item, onUpdateQty, onRemove }) {
           )}
         </button>
         <p className="text-base font-bold text-primary mt-1">${item.product_price?.toFixed(2)}</p>
+        {isOverStock && (
+          <p className="flex items-center gap-1 text-[10px] text-destructive font-medium mt-1">
+            <AlertTriangle className="w-3 h-3" />
+            Solo {available} disponible{available !== 1 ? 's' : ''}
+          </p>
+        )}
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-center gap-0 bg-secondary rounded-full">
             <button
@@ -46,7 +56,8 @@ export default function CartItemCard({ item, onUpdateQty, onRemove }) {
             <span className="text-sm font-semibold w-7 text-center text-foreground">{item.quantity}</span>
             <button
               onClick={() => onUpdateQty(item, item.quantity + 1)}
-              className="p-1.5 rounded-full hover:bg-muted transition-colors"
+              disabled={item.quantity >= available}
+              className="p-1.5 rounded-full hover:bg-muted transition-colors disabled:opacity-30"
             >
               <Plus className="w-3.5 h-3.5 text-foreground" />
             </button>

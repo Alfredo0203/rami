@@ -360,7 +360,11 @@ export default function ProductDetail() {
               <Minus className="w-4 h-4 text-foreground" />
             </button>
             <span className="text-sm font-bold w-8 text-center text-foreground">{quantity}</span>
-            <button onClick={() => setQuantity(quantity + 1)} className="p-2.5 rounded-full">
+            <button
+              onClick={() => setQuantity(Math.min(effectiveStock || 1, quantity + 1))}
+              disabled={inStock && quantity >= effectiveStock}
+              className="p-2.5 rounded-full disabled:opacity-30"
+            >
               <Plus className="w-4 h-4 text-foreground" />
             </button>
           </div>

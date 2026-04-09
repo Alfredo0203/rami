@@ -33,9 +33,14 @@ export default function ProductCard({ product, index = 0 }) {
                 -{discount}%
               </span>
             )}
-            {product.is_featured && (
+            {product.is_featured && (product.effective_stock ?? product.stock ?? 0) > 0 && (
               <span className="absolute top-2 right-2 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
                 HOT
+              </span>
+            )}
+            {(product.effective_stock ?? product.stock ?? 0) === 0 && (
+              <span className="absolute top-2 right-2 bg-muted text-muted-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
+                Agotado
               </span>
             )}
           </div>

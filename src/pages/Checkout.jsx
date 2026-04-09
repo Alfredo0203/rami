@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { ArrowLeft, MapPin, CreditCard, Wallet, Smartphone, Banknote, Loader2, Plus } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Banknote, Loader2, Plus, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -68,48 +68,31 @@ export default function Checkout() {
   const placeOrderMutation = useMutation({
     mutationFn: async () => {
       const address = addresses.find(a => a.id === selectedAddressId);
-      if (!address) throw new Error('Please select a shipping address');
+      if (!address) throw new Error('Selecciona una dirección de envío');
 
-      const orderNumber = 'ORD-' + Date.now().toString(36).toUpperCase();
+      const shippingAddress = {
+        full_name: address.first_name ? `${address.first_name} ${address.last_name}` : (address.full_name || ''),
+        phone: address.phone,
+        street: `${address.street}${address.house_number ? ' #' + address.house_number : ''}`,
+        city: address.municipio || address.city || '',
+        state: address.departamento || address.state || '',
+        zip_code: address.zip_code || '',
+        country: address.country || 'El Salvador',
+      };
 
-      const order = await base44.entities.Order.create({
-        order_number: orderNumber,
-        items: cartItems.map(item => ({
-          product_id: item.product_id,
-          product_name: item.product_name,
-          product_image: item.product_image,
-          price: item.product_price,
-          quantity: item.quantity,
-        })),
-        subtotal,
-        shipping_cost: shipping,
-        total,
-        status: 'pending',
-        payment_status: paymentMethod === 'cash_on_delivery' ? 'pending_payment' : 'pending_payment',
-        shipping_address: {
-          full_name: address.full_name,
-          phone: address.phone,
-          street: address.street,
-          city: address.city,
-          state: address.state,
-          zip_code: address.zip_code,
-          country: address.country,
-        },
-        payment_method: paymentMethod,
-        customer_email: user?.email || '',
-        customer_name: user?.full_name || address.full_name,
+      const res = await base44.functions.invoke('placeOrder', {
+        cartItems,
+        shippingAddress,
+        paymentMethod,
       });
 
-      // Clear cart
-      for (const item of cartItems) {
-        await base44.entities.CartItem.delete(item.id);
-      }
-
-      return order;
+      if (res.data?.error) throw new Error(res.data.details?.join('\n') || res.data.error);
+      return res.data.order;
     },
     onSuccess: (order) => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
       navigate(createPageUrl('OrderConfirmation') + `?id=${order.id}`);
     },
     onError: (err) => {

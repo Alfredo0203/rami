@@ -78,7 +78,8 @@ export default function Browse() {
     }
 
     if (onlyInStock) {
-      filtered = filtered.filter(p => (p.stock || 0) > 0);
+      // Usa effective_stock (calculado en backend): suma variantes si has_variants, o stock base
+      filtered = filtered.filter(p => (p.effective_stock ?? p.stock ?? 0) > 0);
     }
 
     if (selectedBrand !== 'all') {

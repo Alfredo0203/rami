@@ -1,15 +1,33 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    const [products, categories] = await Promise.all([
+    const [products, categories, variants] = await Promise.all([
       base44.asServiceRole.entities.Product.list(),
       base44.asServiceRole.entities.Category.list('sort_order'),
+      base44.asServiceRole.entities.ProductVariant.filter({ is_active: true }),
     ]);
 
-    return Response.json({ products, categories });
+    // Calcular stock efectivo para cada producto:
+    // - Si tiene variantes → suma el stock de todas sus variantes activas
+    // - Si no tiene variantes → usa product.stock directamente
+    const variantsByProduct = {};
+    for (const v of variants) {
+      if (!variantsByProduct[v.product_id]) variantsByProduct[v.product_id] = [];
+      variantsByProduct[v.product_id].push(v);
+    }
+
+    const enrichedProducts = products.map(p => {
+      const productVariants = variantsByProduct[p.id] || [];
+      const effectiveStock = p.has_variants
+        ? productVariants.reduce((sum, v) => sum + (v.stock || 0), 0)
+        : (p.stock || 0);
+      return { ...p, effective_stock: effectiveStock };
+    });
+
+    return Response.json({ products: enrichedProducts, categories });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
