@@ -43,6 +43,34 @@ export default function Admin() {
     queryFn: () => base44.entities.Category.list('sort_order'),
   });
 
+  // Para calcular stock real de productos con variantes
+  const { data: allVariants = [] } = useQuery({
+    queryKey: ['admin-all-variants'],
+    queryFn: () => base44.entities.ProductVariant.list(),
+    enabled: products.length > 0,
+  });
+
+  const getProductStock = (product) => {
+    if (product.has_variants) {
+      return allVariants
+        .filter(v => v.product_id === product.id && v.is_active !== false)
+        .reduce((sum, v) => sum + (v.stock || 0), 0);
+    }
+    return product.stock || 0;
+  };
+
+  const getProductSold = (product) => {
+    if (product.has_variants) {
+      // sold_count no está en variantes, usamos el de la orden
+      return orders
+        .filter(o => o.status !== 'cancelled')
+        .flatMap(o => o.items || [])
+        .filter(i => i.product_id === product.id)
+        .reduce((sum, i) => sum + (i.quantity || 0), 0);
+    }
+    return product.sold_count || 0;
+  };
+
   const { data: allUsers = [], isLoading: loadingUsers } = useQuery({
     queryKey: ['admin-users'],
     queryFn: () => base44.entities.User.list('-created_date'),
@@ -139,8 +167,9 @@ export default function Admin() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[10px] text-muted-foreground">Stock: {product.stock || 0}</span>
-                    <span className="text-[10px] text-muted-foreground">Vendidos: {product.sold_count || 0}</span>
+                    <span className="text-[10px] text-muted-foreground">Stock: {getProductStock(product)}</span>
+                    <span className="text-[10px] text-muted-foreground">Vendidos: {getProductSold(product)}</span>
+                    {product.has_variants && <span className="text-[10px] text-primary/70">variantes</span>}
                   </div>
                 </div>
                 <div className="flex flex-col gap-1">
