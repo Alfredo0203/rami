@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Minus, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 export default function CartItemCard({ item, onUpdateQty, onRemove, stockInfo }) {
   const navigate = useNavigate();
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   // stockInfo: { available: number } — si no se pasa, no mostramos alerta
   const available = stockInfo?.available ?? Infinity;
@@ -63,13 +65,33 @@ export default function CartItemCard({ item, onUpdateQty, onRemove, stockInfo })
             </button>
           </div>
           <button
-            onClick={() => onRemove(item)}
+            onClick={() => setConfirmOpen(true)}
             className="p-2 text-muted-foreground hover:text-destructive transition-colors"
           >
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar del carrito?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminará <strong>{item.product_name}</strong>{item.variant_name ? ` (${item.variant_name})` : ''} de tu carrito.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => onRemove(item)}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 }

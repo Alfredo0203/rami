@@ -160,7 +160,7 @@ export default function ProductDetail() {
   if (!product) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Product not found</p>
+        <p className="text-muted-foreground">Producto no encontrado</p>
       </div>
     );
   }
@@ -293,7 +293,7 @@ export default function ProductDetail() {
             </div>
           )}
           {product.sold_count > 0 && (
-            <span className="text-xs text-muted-foreground">{product.sold_count}+ sold</span>
+            <span className="text-xs text-muted-foreground">{product.sold_count}+ vendidos</span>
           )}
           {inStock ? (
             <span className="text-xs text-success font-medium flex items-center gap-1">
