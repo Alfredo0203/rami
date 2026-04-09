@@ -31,36 +31,40 @@ export default function DevModeGuard({ children }) {
 
         const devMode = settings?.development_mode === true;
         const disabledPages = settings?.disabled_pages || [];
-        const isSuperAdmin = user && SUPER_ADMIN_ROLES.includes(user.role);
-        const isRegularAdmin = user && ADMIN_ROLES.includes(user.role);
+        const userRole = user?.role;
+        const isSuperAdmin = userRole === 'super_admin' || userRole === 'owner';
+        const isAnyAdmin = userRole === 'admin' || isSuperAdmin;
         const isGuest = !user;
-        const isHome = location.pathname === HOME_PATH || location.pathname === '/';
-        const isAccount = location.pathname === '/Account';
-        const isAdminPanel = location.pathname === '/Admin';
+        const currentPage = location.pathname.replace('/', '');
+        const isHome = location.pathname === '/' || currentPage === 'Home';
+        const isAccount = currentPage === 'Account';
+        const isAdminPanel = currentPage === 'Admin';
 
-        // Regular admins can always access the Admin panel
-        if (isRegularAdmin && isAdminPanel) {
+        // Any admin can always access the Admin panel (super_admin sees Settings tab within it)
+        if (isAnyAdmin && isAdminPanel) {
           setBlocked(false);
           return;
         }
 
-        // Disabled pages: block non-super-admins from disabled pages (applies both in dev mode and normal mode)
-        if (!isSuperAdmin) {
-          const currentPage = location.pathname.replace('/', '');
-          if (disabledPages.includes(currentPage)) {
+        // Super admins bypass all other restrictions
+        if (isSuperAdmin) {
+          setBlocked(false);
+          return;
+        }
+
+        // For everyone else (including regular admin on non-Admin pages):
+        // Block disabled pages
+        if (disabledPages.includes(currentPage)) {
+          setBlocked(true);
+          return;
+        }
+
+        // Dev mode: block unknown pages (non-admin users only)
+        if (devMode && !isAnyAdmin && !isHome && !isAccount) {
+          const PAGES_CONFIG_PATHS = ['Browse', 'Cart', 'Orders', 'Checkout', 'Addresses', 'ProductDetail', 'OrderDetail', 'OrderConfirmation'];
+          if (!PAGES_CONFIG_PATHS.includes(currentPage)) {
             setBlocked(true);
             return;
-          }
-          // Dev mode: additionally block pages that are NOT explicitly listed (i.e. not in PAGES_CONFIG) when devMode is on
-          // But Home and Account are always allowed
-          if (devMode && !isHome && !isAccount) {
-            const PAGES_CONFIG_PATHS = ['Browse', 'Cart', 'Orders', 'Checkout', 'Addresses', 'ProductDetail', 'OrderDetail', 'OrderConfirmation'];
-            const isKnownPage = PAGES_CONFIG_PATHS.includes(currentPage);
-            // If it's a known page and NOT disabled, allow it. If it's unknown (not in config), block it.
-            if (!isKnownPage) {
-              setBlocked(true);
-              return;
-            }
           }
         }
 
