@@ -115,7 +115,9 @@ export default function ProductDetail() {
     : product?.original_price;
   const effectiveStock = (hasVariants && selectedVariant)
     ? (selectedVariant.stock ?? 0)
-    : (product?.stock ?? 0);
+    : hasVariants
+      ? variants.reduce((sum, v) => sum + (v.stock || 0), 0)
+      : (product?.stock ?? 0);
   const inStock = effectiveStock > 0;
 
   const addToCartMutation = useMutation({
