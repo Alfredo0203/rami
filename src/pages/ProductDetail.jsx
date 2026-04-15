@@ -123,8 +123,11 @@ export default function ProductDetail() {
   const addToCartMutation = useMutation({
     mutationFn: async () => {
       const variantId = hasVariants ? selectedVariant?.id : null;
+      // Normalize: treat null, undefined, and empty string as "no variant"
+      const normalizeVariantId = (v) => v || null;
       const existingItem = cartItems.find(item =>
-        item.product_id === productId && item.variant_id === (variantId || undefined)
+        item.product_id === productId &&
+        normalizeVariantId(item.variant_id) === normalizeVariantId(variantId)
       );
 
       const cartData = {
@@ -170,7 +173,8 @@ export default function ProductDetail() {
   // Detect if this exact product+variant combo is already in cart
   const currentVariantId = hasVariants ? selectedVariant?.id : null;
   const existingCartItem = cartItems.find(item =>
-    item.product_id === productId && item.variant_id === (currentVariantId || undefined)
+    item.product_id === productId &&
+    (item.variant_id || null) === (currentVariantId || null)
   );
   const isAlreadyInCart = !!existingCartItem;
 
