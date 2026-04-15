@@ -13,9 +13,20 @@ import { Check } from 'lucide-react';
  */
 
 export default function VariantSelector({ variants, selected, onSelect, onSelectionChange }) {
-  if (!variants || variants.length === 0) return null;
+  const normalizeVariantToSelectionMap = (variant) => {
+    const map = {};
+    if (!variant || !Array.isArray(variant.attributes)) return map;
+    variant.attributes.forEach(attr => {
+      if (!attr?.key) return;
+      if (Array.isArray(attr.values) && attr.values.length > 0) {
+        map[attr.key] = attr.values[0];
+      }
+    });
+    return map;
+  };
 
   const attrKeys = useMemo(() => {
+    if (!variants || variants.length === 0) return [];
     const keys = new Set();
     variants.forEach(v => {
       if (Array.isArray(v.attributes)) {
@@ -27,20 +38,6 @@ export default function VariantSelector({ variants, selected, onSelect, onSelect
     return Array.from(keys);
   }, [variants]);
 
-  const normalizeVariantToSelectionMap = (variant) => {
-    const map = {};
-    if (!variant || !Array.isArray(variant.attributes)) return map;
-
-    variant.attributes.forEach(attr => {
-      if (!attr?.key) return;
-      if (Array.isArray(attr.values) && attr.values.length > 0) {
-        map[attr.key] = attr.values[0];
-      }
-    });
-
-    return map;
-  };
-
   const [selectedMap, setSelectedMap] = useState(() =>
     normalizeVariantToSelectionMap(selected)
   );
@@ -50,6 +47,8 @@ export default function VariantSelector({ variants, selected, onSelect, onSelect
       setSelectedMap(normalizeVariantToSelectionMap(selected));
     }
   }, [selected]);
+
+  if (!variants || variants.length === 0) return null;
 
   const getAttrValues = (attrKey) => {
     const values = [];
