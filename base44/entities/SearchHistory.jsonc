@@ -1,0 +1,23 @@
+{
+  "name": "SearchHistory",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email del usuario que realiz\u00f3 la b\u00fasqueda"
+    },
+    "query": {
+      "type": "string",
+      "description": "T\u00e9rminos de b\u00fasqueda"
+    },
+    "search_count": {
+      "type": "number",
+      "default": 1,
+      "description": "N\u00famero de veces que se ha hecho esta b\u00fasqueda"
+    }
+  },
+  "required": [
+    "user_email",
+    "query"
+  ]
+}

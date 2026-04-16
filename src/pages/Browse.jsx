@@ -4,7 +4,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import PullToRefresh from '../components/shop/PullToRefresh';
 import ProductCard from '../components/shop/ProductCard';
 import BottomNav from '../components/shop/BottomNav';
-import { Search, SlidersHorizontal, X, Loader2, Star, Tag, Package } from 'lucide-react';
+import SearchHeaderWithHistory from '../components/shop/SearchHeaderWithHistory';
+import { SlidersHorizontal, X, Loader2, Star, Tag, Package } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -131,24 +132,14 @@ export default function Browse() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 safe-area-top">
-        <div className="flex items-center gap-2 max-w-lg mx-auto pt-0">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('search_placeholder_all')}
-              className="w-full bg-secondary rounded-full pl-9 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-                <X className="w-4 h-4 text-muted-foreground" />
-              </button>
-            )}
-          </div>
+      <SearchHeaderWithHistory 
+        searchQuery={searchQuery} 
+        setSearchQuery={setSearchQuery} 
+        cartCount={cartCount}
+      />
 
+      <div className="sticky top-16 z-40 bg-card/95 backdrop-blur-lg border-b border-border px-4">
+        <div className="flex items-center gap-2 max-w-lg mx-auto pt-0">
           <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
             <SheetTrigger asChild>
               <button className="relative p-2.5 bg-secondary rounded-full">
