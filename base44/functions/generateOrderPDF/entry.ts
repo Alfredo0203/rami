@@ -152,12 +152,12 @@ Deno.serve(async (req) => {
         align: 'center',
       });
     }
-
+/*
     text(appSettings.store_name || 'RAmi', marginX + 18, y + 5.5, {
       size: 16,
       style: 'bold',
       color: colors.text,
-    });
+    }); */
 
     text(`Factura #${order.order_number || 'N/A'}`, pageWidth - marginX, y + 5.5, {
       size: 10,
