@@ -293,20 +293,20 @@ export default function ProductDetail() {
 
       {/* Top bar */}
       <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg flex items-center justify-between px-4 safe-area-top">
-        <button onClick={() => navigate(-1)} className="p-2 bg-secondary rounded-full">
+        <button onClick={() => navigate(-1)} className="w-11 h-11 flex items-center justify-center bg-secondary rounded-full active:opacity-70 touch-manipulation">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div className="flex gap-2">
           <button
             onClick={() => isGuest ? base44.auth.redirectToLogin(window.location.href) : toggleWishlistMutation.mutate()}
-            className="p-2 bg-secondary rounded-full"
+            className="w-11 h-11 flex items-center justify-center bg-secondary rounded-full active:opacity-70 touch-manipulation"
           >
             <Heart className={`w-5 h-5 transition-colors ${isWishlisted ? 'fill-sale text-sale' : 'text-foreground'}`} />
           </button>
-          <button onClick={() => navigate(createPageUrl('Cart'))} className="p-2 bg-secondary rounded-full relative">
+          <button onClick={() => navigate(createPageUrl('Cart'))} className="w-11 h-11 flex items-center justify-center bg-secondary rounded-full relative active:opacity-70 touch-manipulation">
             <ShoppingCart className="w-5 h-5 text-foreground" />
             {cartCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[9px] font-bold rounded-full flex items-center justify-center">
+              <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[9px] font-bold rounded-full flex items-center justify-center">
                 {cartCount}
               </span>
             )}
