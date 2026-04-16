@@ -155,17 +155,15 @@ Deno.serve(async (req) => {
 
     // ── 7. Generar PDF de factura y enviar email ─────────────────
     try {
-      const pdfRes = await base44.asServiceRole.functions.invoke('getPDFLink', {
-        orderId: order.id,
-      });
-
-      const pdfLink = pdfRes.pdfUrl || '';
+      const appBaseUrl = Deno.env.get('APP_BASE_URL') || 'https://app.example.com';
+      const downloadLink = `${appBaseUrl}/api/downloadOrderPDF?orderId=${order.id}`;
       
       const emailBody = `Hola, ${order.customer_name || 'Estimado Cliente'}.
 
-Gracias por tu compra. Tu pedido fue recibido correctamente y en este correo encontrarás tu factura en PDF con el detalle de la orden.
+Gracias por tu compra. Tu pedido fue recibido correctamente.
 
-${pdfLink ? `📄 Descargar Factura: ${pdfLink}\n\n` : ''}
+📄 Descargar Factura: ${downloadLink}
+
 Estamos preparando tu pedido y te notificaremos cualquier actualización.
 
 Saludos,
