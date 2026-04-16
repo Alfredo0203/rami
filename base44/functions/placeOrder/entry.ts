@@ -160,11 +160,62 @@ Deno.serve(async (req) => {
       });
 
       if (pdfRes.pdfData) {
-        // Send invoice email with PDF
+        // Format items for email
+        const itemsList = cleanedItems.map(item => 
+          `${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} - Cantidad: ${item.quantity} - $${(item.price * item.quantity).toFixed(2)}`
+        ).join('\n');
+
+        const emailBody = `Hola ${order.customer_name || 'Estimado Cliente'},
+
+¡Gracias por tu compra en RAmi!
+
+═══════════════════════════════════════════════════════════
+CONFIRMACIÓN DE PEDIDO
+═══════════════════════════════════════════════════════════
+
+Número de Orden: ${order.order_number}
+Fecha: ${new Date(order.created_date).toLocaleDateString('es-SV')}
+Estado: Pendiente
+
+───────────────────────────────────────────────────────────
+PRODUCTOS
+───────────────────────────────────────────────────────────
+${itemsList}
+
+───────────────────────────────────────────────────────────
+RESUMEN DE PAGO
+───────────────────────────────────────────────────────────
+Subtotal:          $${subtotal.toFixed(2)}
+Envío:             ${shipping === 0 ? 'GRATIS' : '$' + shipping.toFixed(2)}
+${discountAmount > 0 ? `Descuento:         -$${discountAmount.toFixed(2)}\n` : ''}Total:             $${order.total.toFixed(2)}
+
+───────────────────────────────────────────────────────────
+DIRECCIÓN DE ENVÍO
+───────────────────────────────────────────────────────────
+${shippingAddress.full_name}
+${shippingAddress.street}
+${shippingAddress.city}, ${shippingAddress.state} ${shippingAddress.zip_code}
+${shippingAddress.country}
+
+Teléfono: ${shippingAddress.phone}
+
+───────────────────────────────────────────────────────────
+MÉTODO DE PAGO
+───────────────────────────────────────────────────────────
+${paymentMethod === 'credit_card' ? 'Tarjeta de Crédito/Débito' : 'Pago contra entrega'}
+
+═══════════════════════════════════════════════════════════
+
+Pronto recibirás un email de confirmación cuando tu pedido sea procesado.
+
+¿Preguntas? Contáctanos en soporte@rami.com
+
+¡Gracias por comprar con RAmi!`;
+
         await base44.integrations.Core.SendEmail({
           to: user.email || order.customer_email,
-          subject: `Tu Factura - Orden ${order.order_number}`,
-          body: `Hola ${order.customer_name || 'Estimado Cliente'},\n\nGracias por tu compra.\nNúmero de orden: ${order.order_number}\nTotal: $${order.total.toFixed(2)}\n\nTu factura PDF se adjunta a este correo.\n\n¡Gracias por comprar con nosotros!`,
+          subject: `✓ Confirmación de Pedido - Orden ${order.order_number}`,
+          body: emailBody,
         });
       }
     } catch (pdfErr) {
