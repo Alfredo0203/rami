@@ -360,7 +360,7 @@ export default function ProductReviews({ productId, isGuest }) {
                       <button
                         key={idx}
                         onClick={() => setSelectedImages(review.images)}
-                        className="relative w-16 h-16 rounded-lg overflow-hidden border border-border hover:opacity-75 transition-opacity"
+                        className="relative w-16 h-16 rounded-lg overflow-hidden border border-border hover:opacity-75 hover:shadow-md transition-all cursor-pointer active:scale-95"
                       >
                         <img
                           src={url}
