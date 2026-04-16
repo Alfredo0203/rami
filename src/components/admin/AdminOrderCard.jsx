@@ -15,7 +15,7 @@ export default function AdminOrderCard({ order }) {
 
   const updateMutation = useMutation({
     mutationFn: ({ newStatus, extraFields }) =>
-      base44.entities.Order.update(order.id, { status: newStatus, ...extraFields }),
+      base44.functions.invoke('updateOrderStatus', { orderId: order.id, newStatus, extraFields }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
       toast.success('Pedido actualizado');
