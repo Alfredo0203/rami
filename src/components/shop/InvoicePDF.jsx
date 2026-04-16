@@ -58,25 +58,15 @@ export default function InvoicePDF({ orderId }) {
   }
 
   return (
-    <div className="space-y-3">
+    <div>
       {pdfData && (
-        <>
-          <div className="bg-card rounded-lg border border-border p-4">
-            <iframe
-              src={pdfData}
-              className="w-full h-96 rounded border border-border"
-              title="Invoice PDF"
-            />
-          </div>
-          
-          <Button
-            onClick={downloadPDF}
-            className="w-full bg-primary text-primary-foreground gap-2"
-          >
-            <Download className="w-4 h-4" />
-            Descargar Factura PDF
-          </Button>
-        </>
+        <Button
+          onClick={downloadPDF}
+          className="w-full bg-primary text-primary-foreground gap-2"
+        >
+          <Download className="w-4 h-4" />
+          Descargar Factura PDF
+        </Button>
       )}
     </div>
   );
