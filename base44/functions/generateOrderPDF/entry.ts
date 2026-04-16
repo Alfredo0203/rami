@@ -10,8 +10,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Order ID is required' }, { status: 400 });
     }
 
-    // Fetch order details
+    // Fetch order details and app settings
     const order = await base44.asServiceRole.entities.Order.get(orderId);
+    const settings = await base44.asServiceRole.entities.AppSettings.filter({ key: 'global' });
+    const appSettings = settings[0] || {};
     if (!order) {
       return Response.json({ error: 'Order not found' }, { status: 404 });
     }
@@ -29,13 +31,24 @@ Deno.serve(async (req) => {
     let yPosition = margin;
 
     // ─── Header with Logo & Company Info ───
+    let logoWidth = 25;
+    let logoHeight = 15;
+    
+    if (appSettings.logo_url) {
+      try {
+        doc.addImage(appSettings.logo_url, 'PNG', margin, yPosition, logoWidth, logoHeight);
+      } catch (e) {
+        // Logo URL invalid, skip
+      }
+    }
+    
     doc.setFontSize(22);
-    doc.setTextColor(14, 133, 140); // Primary color
-    doc.text('FACTURA', margin, yPosition);
+    doc.setTextColor(14, 133, 140);
+    doc.text('FACTURA', margin + logoWidth + 5, yPosition + 5);
 
     doc.setFontSize(11);
     doc.setTextColor(0, 0, 0);
-    yPosition += 10;
+    yPosition += logoHeight + 3;
     doc.setFont(undefined, 'bold');
     doc.text('RAmi', margin, yPosition);
     yPosition += 5;
