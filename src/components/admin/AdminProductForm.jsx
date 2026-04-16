@@ -35,6 +35,7 @@ export default function AdminProductForm({ product, categories, onClose }) {
   });
 
   const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
   const saveMutation = useMutation({
     mutationFn: (data) => {
@@ -74,6 +75,23 @@ export default function AdminProductForm({ product, categories, onClose }) {
   };
 
   return (
+    <>
+    {previewUrl && (
+      <div
+        className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
+        onClick={() => setPreviewUrl(null)}
+      >
+        <div className="relative max-w-lg w-full" onClick={e => e.stopPropagation()}>
+          <img src={previewUrl} alt="Vista previa" className="w-full max-h-[80vh] object-contain rounded-2xl" />
+          <button
+            onClick={() => setPreviewUrl(null)}
+            className="absolute top-2 right-2 w-8 h-8 bg-black/60 rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
+          >
+            <X className="w-4 h-4 text-white" />
+          </button>
+        </div>
+      </div>
+    )}
     <div className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm flex items-end sm:items-center justify-center">
       <div className="bg-card w-full max-w-md max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-5 space-y-4">
         <div className="flex items-center justify-between">
@@ -115,7 +133,12 @@ export default function AdminProductForm({ product, categories, onClose }) {
           <div className="flex gap-2 mt-1 flex-wrap">
             {form.images.map((url, i) => (
               <div key={i} className="relative w-16 h-16 rounded-lg overflow-hidden">
-                <img src={url} alt="" className="w-full h-full object-cover" />
+                <img
+                  src={url}
+                  alt=""
+                  className="w-full h-full object-cover cursor-zoom-in"
+                  onClick={() => setPreviewUrl(url)}
+                />
                 <button onClick={() => removeImage(i)} className="absolute top-0.5 right-0.5 w-5 h-5 bg-foreground/60 rounded-full flex items-center justify-center">
                   <X className="w-3 h-3 text-primary-foreground" />
                 </button>
@@ -153,5 +176,6 @@ export default function AdminProductForm({ product, categories, onClose }) {
         </Button>
       </div>
     </div>
+    </>
   );
 }
