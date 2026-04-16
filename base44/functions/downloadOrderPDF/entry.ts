@@ -3,12 +3,14 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const body = await req.json();
-    const { orderId } = body;
+    
+    // Get orderId from URL query params (GET request)
+    const url = new URL(req.url);
+    const orderId = url.searchParams.get('orderId');
 
     if (!orderId) return Response.json({ error: 'Order ID required' }, { status: 400 });
 
-    // Generate PDF
+    // Generate PDF using service role (public endpoint)
     const pdfRes = await base44.asServiceRole.functions.invoke('generateOrderPDF', {
       orderId,
     });
