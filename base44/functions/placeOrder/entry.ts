@@ -88,17 +88,22 @@ Deno.serve(async (req) => {
     // tracking_number se genera automáticamente cuando el admin cambia estado a "shipped"
 
     // ── 3. Crear la orden ─────────────────────────────────────────────
-    const order = await base44.asServiceRole.entities.Order.create({
-      order_number: orderNumber,
-      items: cartItems.map(item => ({
-        product_id: item.product_id,
-        variant_id: item.variant_id || undefined,
-        product_name: item.product_name,
-        variant_name: item.variant_name || undefined,
-        product_image: item.product_image,
-        price: item.product_price,
-        quantity: item.quantity,
-      })),
+     const order = await base44.asServiceRole.entities.Order.create({
+       order_number: orderNumber,
+       items: cartItems.map(item => {
+         const orderItem = {
+           product_id: item.product_id,
+           product_name: item.product_name,
+           product_image: item.product_image,
+           price: item.product_price,
+           quantity: item.quantity,
+         };
+         if (item.variant_id) {
+           orderItem.variant_id = item.variant_id;
+           orderItem.variant_name = item.variant_name;
+         }
+         return orderItem;
+       }),
       subtotal,
       discount_amount: discountAmount,
       coupon_code: appliedCoupon?.code || undefined,
