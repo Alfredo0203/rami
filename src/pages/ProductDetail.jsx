@@ -50,7 +50,14 @@ export default function ProductDetail() {
 
   const { data: wishlistItems = [] } = useQuery({
     queryKey: ['wishlist'],
-    queryFn: () => base44.entities.Wishlist.list().catch(() => []),
+    queryFn: async () => {
+      if (isGuest) return [];
+      try {
+        return await base44.entities.Wishlist.filter({ user_email: user.email });
+      } catch {
+        return [];
+      }
+    },
     enabled: !isGuest,
   });
 
