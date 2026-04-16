@@ -201,7 +201,7 @@ export default function ProductDetail() {
 
   // All attribute keys that exist across variants
   const allAttrKeys = hasVariants
-    ? [...new Set(variants.flatMap(v => (v.attributes || []).map(a => a.key)))]
+    ? [...new Set(variants.flatMap(v => Array.isArray(v.attributes) ? v.attributes.map(a => a.key) : []))]
     : [];
   // User must select a value for every attribute key before adding to cart
   const needsVariantSelection = hasVariants && (
