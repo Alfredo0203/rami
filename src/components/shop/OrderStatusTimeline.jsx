@@ -19,9 +19,11 @@ export default function OrderStatusTimeline({ orderId }) {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const records = await base44.asServiceRole.entities.OrderStatusHistory.filter({
+        console.log('Fetching history for orderId:', orderId);
+        const records = await base44.entities.OrderStatusHistory.filter({
           order_id: orderId,
         });
+        console.log('Records fetched:', records);
         const sorted = records.sort((a, b) => 
           new Date(a.timestamp || a.created_date) - new Date(b.timestamp || b.created_date)
         );
@@ -36,6 +38,8 @@ export default function OrderStatusTimeline({ orderId }) {
 
     if (orderId) {
       fetchHistory();
+    } else {
+      setLoading(false);
     }
 
     // Suscribirse a cambios en tiempo real
@@ -51,7 +55,16 @@ export default function OrderStatusTimeline({ orderId }) {
   }, [orderId]);
 
   if (loading) {
-    return <div className="animate-pulse h-32 bg-gray-200 rounded"></div>;
+    return <div className="animate-pulse h-20 bg-secondary rounded"></div>;
+  }
+
+  if (!history || history.length === 0) {
+    return (
+      <div className="space-y-2">
+        <h3 className="font-semibold text-xs text-muted-foreground">Historial De Estado</h3>
+        <p className="text-xs text-muted-foreground">Sin historial disponible</p>
+      </div>
+    );
   }
 
   return (
