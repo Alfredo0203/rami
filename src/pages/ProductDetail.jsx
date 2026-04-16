@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { ArrowLeft, Star, ShoppingCart, Heart, Minus, Plus, Check, Truck, Shield, RotateCcw, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Star, ShoppingCart, Heart, Minus, Plus, Check, Truck, Shield, RotateCcw, Loader2, AlertCircle, X, ZoomIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,6 +19,7 @@ export default function ProductDetail() {
   const queryClient = useQueryClient();
   const { user, isGuest } = useCurrentUser();
   const [currentImage, setCurrentImage] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [quantity, setQuantity] = useState(preselectedQty);
   const [liked, setLiked] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState(null);
@@ -210,6 +211,24 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      {/* Lightbox */}
+      {lightboxOpen && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setLightboxOpen(false)}
+        >
+          <div className="relative max-w-lg w-full" onClick={e => e.stopPropagation()}>
+            <img src={images[safeImageIndex]} alt={product.name} className="w-full max-h-[85vh] object-contain rounded-2xl" />
+            <button
+              onClick={() => setLightboxOpen(false)}
+              className="absolute top-2 right-2 w-9 h-9 bg-black/60 rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Top bar */}
       <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg flex items-center justify-between px-4 safe-area-top">
         <button onClick={() => navigate(-1)} className="p-2 bg-secondary rounded-full">
@@ -241,13 +260,20 @@ export default function ProductDetail() {
             key={safeImageIndex}
             src={images[safeImageIndex]}
             alt={product.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover cursor-zoom-in"
+            onClick={() => setLightboxOpen(true)}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           />
         </AnimatePresence>
+        <button
+          onClick={() => setLightboxOpen(true)}
+          className="absolute top-3 right-3 w-8 h-8 bg-black/40 rounded-full flex items-center justify-center"
+        >
+          <ZoomIn className="w-4 h-4 text-white" />
+        </button>
         {images.length > 1 && (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
             {images.map((_, i) => (
