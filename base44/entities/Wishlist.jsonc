@@ -6,6 +6,10 @@
       "type": "string",
       "description": "ID del producto guardado en favoritos"
     },
+    "user_email": {
+      "type": "string",
+      "description": "Email del usuario propietario del wishlist"
+    },
     "product_name": {
       "type": "string",
       "description": "Nombre del producto (snapshot)"

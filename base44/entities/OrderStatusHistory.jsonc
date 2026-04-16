@@ -6,6 +6,10 @@
       "type": "string",
       "description": "ID de la orden"
     },
+    "user_email": {
+      "type": "string",
+      "description": "Email del usuario propietario de la orden"
+    },
     "status": {
       "type": "string",
       "enum": [

@@ -64,6 +64,7 @@ export default function ProductDetail() {
       }
       return base44.entities.Wishlist.create({
         product_id: productId,
+        user_email: user.email,
         product_name: product?.name,
         product_image: product?.images?.[0] || '',
         product_price: product?.price,
