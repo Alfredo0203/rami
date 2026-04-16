@@ -6,6 +6,7 @@ import { createPageUrl } from '@/utils';
 import { CheckCircle2, Package, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import InvoicePDF from '@/components/shop/InvoicePDF';
 
 export default function OrderConfirmation() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -58,21 +59,27 @@ export default function OrderConfirmation() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-card rounded-xl p-4 mt-6 w-full max-w-sm shadow-sm"
+          className="w-full max-w-sm space-y-4 mt-6"
         >
-          <div className="flex items-center gap-2 mb-3">
-            <Package className="w-4 h-4 text-primary" />
-            <span className="text-sm font-bold text-foreground">Detalle del Pedido</span>
-          </div>
-          {order.items?.map((item, i) => (
-            <div key={i} className="flex justify-between text-sm py-1">
-              <span className="text-muted-foreground">{item.product_name} × {item.quantity}</span>
-              <span className="text-foreground font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+          {/* Invoice PDF */}
+          <InvoicePDF orderId={orderId} />
+
+          {/* Order Details */}
+          <div className="bg-card rounded-xl p-4 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <Package className="w-4 h-4 text-primary" />
+              <span className="text-sm font-bold text-foreground">Detalle del Pedido</span>
             </div>
-          ))}
-          <div className="border-t border-border mt-2 pt-2 flex justify-between text-base font-bold">
-            <span className="text-foreground">Total</span>
-            <span className="text-primary">${order.total?.toFixed(2)}</span>
+            {order.items?.map((item, i) => (
+              <div key={i} className="flex justify-between text-sm py-1">
+                <span className="text-muted-foreground">{item.product_name} × {item.quantity}</span>
+                <span className="text-foreground font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+              </div>
+            ))}
+            <div className="border-t border-border mt-2 pt-2 flex justify-between text-base font-bold">
+              <span className="text-foreground">Total</span>
+              <span className="text-primary">${order.total?.toFixed(2)}</span>
+            </div>
           </div>
         </motion.div>
       )}

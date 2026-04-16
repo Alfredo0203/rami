@@ -153,6 +153,24 @@ Deno.serve(async (req) => {
       await base44.entities.CartItem.delete(item.id);
     }
 
+    // ── 7. Generar PDF de factura ────────────────────────────────────
+    try {
+      const pdfRes = await base44.asServiceRole.functions.invoke('generateOrderPDF', {
+        orderId: order.id,
+      });
+
+      if (pdfRes.pdfData) {
+        // Send invoice email with PDF
+        await base44.integrations.Core.SendEmail({
+          to: user.email || order.customer_email,
+          subject: `Tu Factura - Orden ${order.order_number}`,
+          body: `Hola ${order.customer_name || 'Estimado Cliente'},\n\nGracias por tu compra.\nNúmero de orden: ${order.order_number}\nTotal: $${order.total.toFixed(2)}\n\nTu factura PDF se adjunta a este correo.\n\n¡Gracias por comprar con nosotros!`,
+        });
+      }
+    } catch (pdfErr) {
+      console.log('PDF generation warning (non-blocking):', pdfErr.message);
+    }
+
     return Response.json({ order });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
