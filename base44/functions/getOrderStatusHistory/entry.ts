@@ -16,15 +16,19 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'orderId requerido' }, { status: 400 });
     }
 
-    // Verificar que el usuario sea el dueño de la orden
-    const orders = await base44.entities.Order.filter({ id: orderId });
+    // Verificar que la orden exista (cualquier usuario autenticado puede ver su historial)
+    const orders = await base44.asServiceRole.entities.Order.filter({ id: orderId });
     const order = orders[0];
 
     if (!order) {
       return Response.json({ error: 'Orden no encontrada' }, { status: 404 });
     }
 
-    if (order.created_by !== user.email && user.role !== 'admin') {
+    // Permitir si es admin o si el email del cliente coincide
+    const isAdmin = user.role === 'admin';
+    const isOwner = order.customer_email === user.email;
+    
+    if (!isAdmin && !isOwner) {
       return Response.json({ error: 'No tienes permiso para ver este historial' }, { status: 403 });
     }
 
