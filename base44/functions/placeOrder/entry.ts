@@ -88,39 +88,38 @@ Deno.serve(async (req) => {
     // tracking_number se genera automáticamente cuando el admin cambia estado a "shipped"
 
     // ── 3. Crear la orden ─────────────────────────────────────────────
+     // Validate each item before creating order
      const cleanedItems = cartItems.map(item => {
-       const cleanItem = {
-         product_id: item.product_id,
-         product_name: item.product_name,
-         product_image: item.product_image,
-         price: item.product_price,
-         quantity: item.quantity,
+       // Only include the exact fields Order schema expects
+       return {
+         product_id: item.product_id || '',
+         product_name: item.product_name || '',
+         product_image: item.product_image || '',
+         price: Number(item.product_price) || 0,
+         quantity: Number(item.quantity) || 1,
+         ...(item.variant_id && { variant_id: item.variant_id }),
+         ...(item.variant_name && { variant_name: item.variant_name }),
        };
-       // Only include variant fields if they have values
-       if (item.variant_id) {
-         cleanItem.variant_id = item.variant_id;
-       }
-       if (item.variant_name) {
-         cleanItem.variant_name = item.variant_name;
-       }
-       return cleanItem;
      });
 
+     // Validate items structure before sending
+     console.log('Cleaned items:', JSON.stringify(cleanedItems));
+
      const order = await base44.asServiceRole.entities.Order.create({
-       order_number: orderNumber,
-       items: cleanedItems,
-      subtotal,
-      discount_amount: discountAmount,
-      coupon_code: appliedCoupon?.code || undefined,
-      shipping_cost: shipping,
-      total,
-      status: 'pending',
-      payment_status: 'pending_payment',
-      payment_method: paymentMethod,
-      shipping_address: shippingAddress,
-      customer_email: user.email || '',
-      customer_name: user.full_name || shippingAddress.full_name || '',
-    });
+        order_number: orderNumber,
+        items: cleanedItems,
+       subtotal: Number(subtotal) || 0,
+       discount_amount: Number(discountAmount) || 0,
+       coupon_code: appliedCoupon?.code || undefined,
+       shipping_cost: Number(shipping) || 0,
+       total: Number(total) || 0,
+       status: 'pending',
+       payment_status: 'pending_payment',
+       payment_method: paymentMethod,
+       shipping_address: shippingAddress,
+       customer_email: user.email || '',
+       customer_name: user.full_name || shippingAddress.full_name || '',
+     });
 
     // ── 4. Descontar stock ────────────────────────────────────────────
     for (const item of cartItems) {
