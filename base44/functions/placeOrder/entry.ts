@@ -122,12 +122,16 @@ Deno.serve(async (req) => {
      });
 
      // Registrar estado inicial en historial
-     await base44.asServiceRole.entities.OrderStatusHistory.create({
-       order_id: order.id,
-       status: 'pending',
-       timestamp: order.created_date,
-       notes: 'Pedido creado'
-     });
+     try {
+       await base44.asServiceRole.entities.OrderStatusHistory.create({
+         order_id: order.id,
+         status: 'pending',
+         timestamp: new Date().toISOString(),
+         notes: 'Pedido creado'
+       });
+     } catch (historyErr) {
+       console.error('Error creating history record:', historyErr);
+     }
 
      // ── 4. Descontar stock ────────────────────────────────────────────
      // Skip stock decrement to avoid validation issues - focus on order creation first
