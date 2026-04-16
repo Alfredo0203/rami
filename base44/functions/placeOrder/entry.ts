@@ -155,14 +155,13 @@ Deno.serve(async (req) => {
 
     // ── 7. Generar PDF de factura y enviar email ─────────────────
     try {
-      const appBaseUrl = Deno.env.get('APP_BASE_URL') || 'https://app.example.com';
-      const downloadLink = `${appBaseUrl}/api/downloadOrderPDF?orderId=${order.id}`;
+      const orderConfirmationLink = `https://rami.base44.app/OrderConfirmation?orderId=${order.id}`;
       
       const emailBody = `Hola, ${order.customer_name || 'Estimado Cliente'}.
 
 Gracias por tu compra. Tu pedido fue recibido correctamente.
 
-📄 Descargar Factura: ${downloadLink}
+Ver orden y descargar factura: ${orderConfirmationLink}
 
 Estamos preparando tu pedido y te notificaremos cualquier actualización.
 
