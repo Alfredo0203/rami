@@ -18,17 +18,28 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
   // Fetch search history
   const { data: history = [] } = useQuery({
     queryKey: ['search-history'],
-    queryFn: () =>
-      user?.email
-        ? base44.entities.SearchHistory.filter({ user_email: user.email }, '-updated_date', 10)
-        : [],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      try {
+        return await base44.entities.SearchHistory.filter({ user_email: user.email }, '-updated_date', 10);
+      } catch {
+        return [];
+      }
+    },
     enabled: !!user?.email,
   });
 
   // Fetch products for suggestions
   const { data: products = [] } = useQuery({
     queryKey: ['products-for-search'],
-    queryFn: () => base44.functions.invoke('getPublicCatalog', {}),
+    queryFn: async () => {
+      try {
+        const res = await base44.functions.invoke('getPublicCatalog', {});
+        return res.data?.products || [];
+      } catch {
+        return [];
+      }
+    },
   });
 
   // Save search mutation
@@ -110,6 +121,8 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
   const handleDeleteHistory = (id) => {
     base44.entities.SearchHistory.delete(id).then(() => {
       queryClient.invalidateQueries({ queryKey: ['search-history'] });
+    }).catch(() => {
+      // silently fail
     });
   };
 
