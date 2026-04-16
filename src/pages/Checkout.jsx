@@ -285,7 +285,7 @@ export default function Checkout() {
            {placeOrderMutation.isPending ? (
              <Loader2 className="w-5 h-5 animate-spin" />
            ) : (
-             'Confirmar Pedido'
+             'Finalizar Compra'
            )}
          </Button>
       </div>
