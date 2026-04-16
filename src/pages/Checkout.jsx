@@ -80,8 +80,20 @@ export default function Checkout() {
         country: address.country || 'El Salvador',
       };
 
+      // Clean cart items - only send required fields to avoid validation errors
+      const cleanedCartItems = cartItems.map(item => ({
+        id: item.id,
+        product_id: item.product_id,
+        variant_id: item.variant_id || undefined,
+        quantity: item.quantity,
+        product_name: item.product_name,
+        variant_name: item.variant_name || undefined,
+        product_image: item.product_image,
+        product_price: item.product_price,
+      }));
+
       const res = await base44.functions.invoke('placeOrder', {
-        cartItems,
+        cartItems: cleanedCartItems,
         shippingAddress,
         paymentMethod,
       });
