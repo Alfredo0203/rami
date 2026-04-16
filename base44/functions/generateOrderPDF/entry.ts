@@ -10,15 +10,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Order ID is required' }, { status: 400 });
     }
 
-    // Fetch order details and app settings
     const order = await base44.asServiceRole.entities.Order.get(orderId);
     const settings = await base44.asServiceRole.entities.AppSettings.filter({ key: 'global' });
     const appSettings = settings[0] || {};
+    
     if (!order) {
       return Response.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    // Create PDF document
     const doc = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -27,236 +26,197 @@ Deno.serve(async (req) => {
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 12;
+    const margin = 15;
     let yPosition = margin;
 
-    // ─── Header with Logo & Company Info ───
-    let logoWidth = 25;
-    let logoHeight = 15;
-    
+    // ─── Logo ───
     if (appSettings.logo_url) {
       try {
-        doc.addImage(appSettings.logo_url, 'PNG', margin, yPosition, logoWidth, logoHeight);
+        doc.addImage(appSettings.logo_url, 'PNG', margin, yPosition, 35, 20);
+        yPosition += 22;
       } catch (e) {
-        // Logo URL invalid, skip
+        yPosition += 8;
       }
     }
-    
-    doc.setFontSize(22);
-    doc.setTextColor(14, 133, 140);
-    doc.text('FACTURA', margin + logoWidth + 5, yPosition + 5);
-
-    doc.setFontSize(11);
-    doc.setTextColor(0, 0, 0);
-    yPosition += logoHeight + 3;
-    doc.setFont(undefined, 'bold');
-    doc.text('RAmi', margin, yPosition);
-    yPosition += 5;
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(100, 100, 100);
-    doc.text('Tu tienda de confianza', margin, yPosition);
-
-    // ─── Order Number & Date ───
-    yPosition += 8;
-    doc.setFontSize(10);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont(undefined, 'bold');
-    doc.text(`Orden #${order.order_number}`, margin, yPosition);
-    yPosition += 5;
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`${new Date(order.created_date).toLocaleDateString('es-SV')}`, margin, yPosition);
 
     // ─── Divider ───
-    yPosition += 10;
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, yPosition, pageWidth - margin, yPosition);
-
-    // ─── Customer Info ───
-    yPosition += 6;
-    doc.setFontSize(9);
-    doc.setFont(undefined, 'bold');
-    doc.setTextColor(0, 0, 0);
-    doc.text('Cliente', margin, yPosition);
-    yPosition += 4;
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(8.5);
-    doc.text(`${order.customer_name || 'N/A'}`, margin, yPosition);
-    yPosition += 3.5;
-    doc.text(`${order.customer_email || 'N/A'}`, margin, yPosition);
-    yPosition += 3.5;
-    const phoneDisplay = order.shipping_address?.phone || 'N/A';
-    doc.text(`Tel: ${phoneDisplay}`, margin, yPosition);
-
-    // ─── Shipping Address ───
-    yPosition += 5;
-    doc.setFont(undefined, 'bold');
-    doc.setFontSize(9);
-    doc.text('Dirección de Envío', margin, yPosition);
-    yPosition += 4;
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(8.5);
-    if (order.shipping_address) {
-      const addr = order.shipping_address;
-      doc.text(`${addr.street || ''}`, margin, yPosition);
-      yPosition += 3.5;
-      doc.text(`${addr.city || ''}, ${addr.state || ''} ${addr.zip_code || ''}`, margin, yPosition);
-      yPosition += 3.5;
-      doc.text(`${addr.country || 'El Salvador'}`, margin, yPosition);
-    }
-
-    // ─── Products Section ───
     yPosition += 8;
+
+    // ─── Productos Header ───
     doc.setFont(undefined, 'bold');
-    doc.setFontSize(11);
+    doc.setFontSize(12);
     doc.setTextColor(0, 0, 0);
     doc.text('Productos', margin, yPosition);
-    yPosition += 6;
-    
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(8.5);
-    
+    yPosition += 8;
+
+    // ─── Products Items ───
     let totalItems = 0;
-    const itemHeight = 22;
-    
     for (const item of order.items || []) {
       const productName = `${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''}`;
       const itemTotal = (item.price || 0) * (item.quantity || 1);
       const qty = item.quantity || 1;
       totalItems += qty;
-      
+
       // Check if need new page
-      if (yPosition + itemHeight > pageHeight - 40) {
+      if (yPosition + 20 > pageHeight - 60) {
         doc.addPage();
         yPosition = margin;
       }
+
+      // Product image
+      const imgX = margin;
+      const imgY = yPosition;
+      const imgSize = 16;
       
-      // Product image placeholder (light gray box)
       if (item.product_image) {
         try {
-          doc.addImage(item.product_image, 'JPEG', margin, yPosition, 18, 18);
+          doc.addImage(item.product_image, 'JPEG', imgX, imgY, imgSize, imgSize);
         } catch (e) {
           doc.setDrawColor(220, 220, 220);
-          doc.rect(margin, yPosition, 18, 18);
+          doc.rect(imgX, imgY, imgSize, imgSize);
         }
       } else {
         doc.setDrawColor(220, 220, 220);
-        doc.rect(margin, yPosition, 18, 18);
+        doc.rect(imgX, imgY, imgSize, imgSize);
       }
-      
-      // Product info
-      const infoX = margin + 20;
+
+      // Product name and quantity
+      const infoX = imgX + imgSize + 5;
       doc.setFont(undefined, 'bold');
-      doc.setFontSize(9);
+      doc.setFontSize(9.5);
       doc.setTextColor(0, 0, 0);
-      doc.text(productName.substring(0, 35), infoX, yPosition + 2);
-      
+      const lines = doc.splitTextToSize(productName, 70);
+      doc.text(lines[0], infoX, imgY + 4);
+
       doc.setFont(undefined, 'normal');
       doc.setFontSize(8);
       doc.setTextColor(100, 100, 100);
-      doc.text(`Cant: ${qty}`, infoX, yPosition + 7);
-      
+      doc.text(`Cant: ${qty}`, infoX, imgY + 10);
+
       // Price on the right
+      const priceX = pageWidth - margin - 12;
       doc.setFont(undefined, 'bold');
-      doc.setFontSize(9);
+      doc.setFontSize(10);
       doc.setTextColor(14, 133, 140);
-      doc.text(`$${itemTotal.toFixed(2)}`, pageWidth - margin - 15, yPosition + 2, { align: 'right' });
-      
-      doc.setFont(undefined, 'normal');
-      doc.setFontSize(7.5);
-      doc.setTextColor(150, 150, 150);
-      doc.text(`$${(item.price || 0).toFixed(2)} c/u`, pageWidth - margin - 15, yPosition + 7, { align: 'right' });
-      
-      yPosition += itemHeight;
+      doc.text(`$${itemTotal.toFixed(2)}`, priceX, imgY + 5, { align: 'right' });
+
+      yPosition += 20;
     }
 
-    // ─── Totals Section ───
+    // ─── Subtotal / Envío / Total Section ───
     yPosition += 3;
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, yPosition, pageWidth - margin, yPosition);
     yPosition += 6;
 
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(8.5);
-    doc.setTextColor(0, 0, 0);
-    
-    const rightCol = pageWidth - margin - 12;
-    const labelCol = pageWidth - margin - 35;
-    
-    // Items count
-    doc.text(`Total de artículos: ${totalItems}`, margin, yPosition);
-    yPosition += 4.5;
-    
+    const labelX = margin;
+    const priceX = pageWidth - margin - 12;
+
     // Subtotal
-    doc.text('Subtotal:', labelCol, yPosition);
-    doc.text(`$${(order.subtotal || 0).toFixed(2)}`, rightCol, yPosition, { align: 'right' });
-    yPosition += 4.5;
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Subtotal', labelX, yPosition);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`$${(order.subtotal || 0).toFixed(2)}`, priceX, yPosition, { align: 'right' });
+    yPosition += 5;
 
     // Shipping
+    doc.setTextColor(100, 100, 100);
+    doc.text('Envío', labelX, yPosition);
     if (order.shipping_cost > 0) {
-      doc.text('Envío:', labelCol, yPosition);
-      doc.text(`$${(order.shipping_cost || 0).toFixed(2)}`, rightCol, yPosition, { align: 'right' });
-      yPosition += 4.5;
-    } else {
-      doc.setTextColor(76, 175, 80); // Green
-      doc.text('Envío:', labelCol, yPosition);
-      doc.text('GRATIS', rightCol, yPosition, { align: 'right' });
-      yPosition += 4.5;
       doc.setTextColor(0, 0, 0);
+      doc.text(`$${(order.shipping_cost || 0).toFixed(2)}`, priceX, yPosition, { align: 'right' });
+    } else {
+      doc.setTextColor(76, 175, 80);
+      doc.setFont(undefined, 'bold');
+      doc.text('GRATIS', priceX, yPosition, { align: 'right' });
+      doc.setFont(undefined, 'normal');
     }
+    yPosition += 5;
 
     // Discount
     if (order.discount_amount > 0) {
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Desc. ${order.coupon_code || ''}`, labelX, yPosition);
       doc.setTextColor(76, 175, 80);
-      doc.text(`Desc. ${order.coupon_code || ''}:`, labelCol, yPosition);
-      doc.text(`-$${(order.discount_amount || 0).toFixed(2)}`, rightCol, yPosition, { align: 'right' });
-      yPosition += 4.5;
-      doc.setTextColor(0, 0, 0);
+      doc.text(`-$${(order.discount_amount || 0).toFixed(2)}`, priceX, yPosition, { align: 'right' });
+      yPosition += 5;
     }
 
     // Total
-    yPosition += 1;
+    yPosition += 2;
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, yPosition, pageWidth - margin, yPosition);
-    yPosition += 5;
-    
-    doc.setFont(undefined, 'bold');
-    doc.setFontSize(11);
-    doc.setTextColor(14, 133, 140);
-    doc.text('TOTAL:', labelCol, yPosition);
-    doc.text(`$${(order.total || 0).toFixed(2)}`, rightCol, yPosition, { align: 'right' });
+    yPosition += 6;
 
-    // ─── Payment & Status Info ───
-    yPosition += 8;
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Total', labelX, yPosition);
+    doc.setTextColor(14, 133, 140);
+    doc.setFontSize(14);
+    doc.text(`$${(order.total || 0).toFixed(2)}`, priceX, yPosition, { align: 'right' });
+
+    // ─── Dirección de Envío ───
+    yPosition += 12;
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Dirección de Envío', margin, yPosition);
+    yPosition += 5;
+
     doc.setFont(undefined, 'normal');
-    doc.setFontSize(8);
+    doc.setFontSize(8.5);
+    doc.setTextColor(0, 0, 0);
+    if (order.shipping_address) {
+      const addr = order.shipping_address;
+      doc.text(`${addr.street || ''}`, margin, yPosition);
+      yPosition += 4;
+      doc.text(`${addr.city || ''}, ${addr.state || ''} ${addr.zip_code || ''}`, margin, yPosition);
+      yPosition += 4;
+      doc.text(`${addr.country || 'El Salvador'}`, margin, yPosition);
+    }
+
+    // ─── Pago ───
+    yPosition += 10;
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Pago', margin, yPosition);
+    yPosition += 5;
+
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(8.5);
     doc.setTextColor(100, 100, 100);
-    
     const paymentLabel = 
       order.payment_method === 'credit_card' ? 'Tarjeta de Crédito' :
       order.payment_method === 'cash_on_delivery' ? 'Pago contra entrega' :
       order.payment_method === 'paypal' ? 'PayPal' :
       order.payment_method === 'apple_pay' ? 'Apple Pay' : 'N/A';
-    
-    doc.text(`Método de Pago: ${paymentLabel}`, margin, yPosition);
-    yPosition += 4;
-    doc.text(`Estado: ${(order.status || 'N/A').charAt(0).toUpperCase() + (order.status || 'N/A').slice(1)}`, margin, yPosition);
+    doc.text(paymentLabel, margin, yPosition);
 
     // ─── Footer ───
-    yPosition = pageHeight - 12;
+    yPosition = pageHeight - 10;
     doc.setFontSize(7);
     doc.setTextColor(150, 150, 150);
-    doc.text('Gracias por comprar en RAmi. Visita www.rami.com', pageWidth / 2, yPosition, { align: 'center' });
+    doc.text('Gracias por tu compra', pageWidth / 2, yPosition, { align: 'center' });
 
     // Generate PDF as Data URL
     const pdfData = doc.output('dataurlstring');
+    
+    // Format date for filename
+    const orderDate = new Date(order.created_date);
+    const dateStr = orderDate.toLocaleDateString('es-SV').replace(/\//g, '-');
+    const fileName = `Orden_${order.order_number}_${dateStr}`;
     
     return Response.json({ 
       success: true,
       pdfData,
       orderId: order.id,
+      fileName,
     });
 
   } catch (error) {

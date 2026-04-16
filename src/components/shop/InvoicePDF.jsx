@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 
 export default function InvoicePDF({ orderId }) {
   const [pdfData, setPdfData] = useState(null);
+  const [fileName, setFileName] = useState('factura.pdf');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -18,6 +19,9 @@ export default function InvoicePDF({ orderId }) {
         
         if (res.data?.success && res.data?.pdfData) {
           setPdfData(res.data.pdfData);
+          if (res.data?.fileName) {
+            setFileName(`${res.data.fileName}.pdf`);
+          }
         } else if (res.data?.error) {
           setError(res.data.error);
         }
@@ -36,7 +40,7 @@ export default function InvoicePDF({ orderId }) {
     
     const link = document.createElement('a');
     link.href = pdfData;
-    link.download = `factura-${orderId}.pdf`;
+    link.download = fileName;
     link.click();
   };
 
