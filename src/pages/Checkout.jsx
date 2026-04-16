@@ -278,18 +278,16 @@ export default function Checkout() {
           </p>
         )}
         <Button
-          onClick={() => placeOrderMutation.mutate()}
-          disabled={placeOrderMutation.isPending || !selectedAddressId || !paymentMethod}
-          className="w-full bg-primary text-primary-foreground font-bold h-12 rounded-full text-base max-w-lg mx-auto block"
-        >
-          {placeOrderMutation.isPending ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : paymentMethod === 'cash_on_delivery' ? (
-            `Confirmar Pedido · Pago contra entrega`
-          ) : (
-            `Confirmar Pedido · $${total.toFixed(2)}`
-          )}
-        </Button>
+           onClick={() => placeOrderMutation.mutate()}
+           disabled={placeOrderMutation.isPending || !selectedAddressId || !paymentMethod}
+           className="w-full bg-primary text-primary-foreground font-bold h-12 rounded-full text-base max-w-lg mx-auto block"
+         >
+           {placeOrderMutation.isPending ? (
+             <Loader2 className="w-5 h-5 animate-spin" />
+           ) : (
+             'Confirmar Pedido'
+           )}
+         </Button>
       </div>
     </div>
   );
