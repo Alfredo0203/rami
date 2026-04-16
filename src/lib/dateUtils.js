@@ -1,21 +1,14 @@
-const EL_SALVADOR_TZ = 'America/El_Salvador';
-
-export const formatDateSV = (date) => {
-  if (!date) return '';
-  const dateObj = new Date(date);
-  return dateObj.toLocaleString('es-SV', {
-    timeZone: EL_SALVADOR_TZ,
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-};
-
 export const formatDateTimeSV = (date) => {
   if (!date) return '';
-  const dateObj = new Date(date);
+
+  const normalized = String(date).replace('T', ' ').replace('Z', '');
+  const [datePart, timePart = '00:00:00'] = normalized.split(' ');
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hour, minute] = timePart.split(':').map(Number);
+
+  const dateObj = new Date(year, month - 1, day, hour, minute);
+
   return dateObj.toLocaleString('es-SV', {
-    timeZone: EL_SALVADOR_TZ,
     year: 'numeric',
     month: 'short',
     day: 'numeric',
