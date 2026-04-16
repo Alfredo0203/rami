@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
          user_email: user.email,
          status: 'pending',
          timestamp: new Date().toISOString(),
-         notes: 'Pedido creado'
+         notes: 'Pedido creado automáticamente'
        });
      } catch (historyErr) {
        console.error('Error creating history record:', historyErr);

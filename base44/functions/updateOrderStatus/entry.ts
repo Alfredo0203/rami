@@ -57,12 +57,20 @@ Deno.serve(async (req) => {
     });
 
     // Registrar en historial de estados
+    const statusLabels = {
+      pending: 'Pendiente',
+      processing: 'Procesando',
+      shipped: 'Enviado',
+      delivered: 'Entregado',
+      cancelled: 'Cancelado'
+    };
+    
     await base44.asServiceRole.entities.OrderStatusHistory.create({
       order_id: orderId,
       user_email: order.customer_email,
       status: newStatus,
       timestamp: new Date().toISOString(),
-      notes: `Estado actualizado a ${newStatus}`
+      notes: `Estado actualizado a ${statusLabels[newStatus] || newStatus}`
     });
 
     return Response.json({ order: updated });
