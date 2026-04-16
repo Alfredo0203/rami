@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Minus, Plus, Trash2, AlertTriangle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -8,6 +8,16 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 export default function CartItemCard({ item, onUpdateQty, onRemove, stockInfo }) {
   const navigate = useNavigate();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [showStockMsg, setShowStockMsg] = useState(false);
+
+  const handlePlusClick = () => {
+    if (item.quantity >= available) {
+      setShowStockMsg(true);
+      setTimeout(() => setShowStockMsg(false), 2500);
+    } else {
+      onUpdateQty(item, item.quantity + 1);
+    }
+  };
 
   // stockInfo: { available: number } — si no se pasa, no mostramos alerta
   const available = stockInfo?.available ?? Infinity;
@@ -47,7 +57,7 @@ export default function CartItemCard({ item, onUpdateQty, onRemove, stockInfo })
             Solo {available} disponible{available !== 1 ? 's' : ''}
           </p>
         )}
-        <div className="flex items-center justify-between mt-2">
+        <div className="flex items-center justify-between mt-2 relative">
           <div className="flex items-center gap-0 bg-secondary rounded-full">
             <button
               onClick={() => onUpdateQty(item, item.quantity - 1)}
@@ -57,13 +67,24 @@ export default function CartItemCard({ item, onUpdateQty, onRemove, stockInfo })
             </button>
             <span className="text-sm font-semibold w-7 text-center text-foreground">{item.quantity}</span>
             <button
-              onClick={() => onUpdateQty(item, item.quantity + 1)}
-              disabled={item.quantity >= available}
-              className="p-1.5 rounded-full hover:bg-muted transition-colors disabled:opacity-30"
+              onClick={handlePlusClick}
+              className="p-1.5 rounded-full hover:bg-muted transition-colors"
             >
               <Plus className="w-3.5 h-3.5 text-foreground" />
             </button>
           </div>
+          <AnimatePresence>
+            {showStockMsg && (
+              <motion.span
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 4 }}
+                className="absolute text-[10px] font-medium text-destructive bg-destructive/10 px-2 py-0.5 rounded-full pointer-events-none"
+              >
+                {available === 0 ? 'Sin stock disponible' : `Máx. ${available} disponible${available !== 1 ? 's' : ''}`}
+              </motion.span>
+            )}
+          </AnimatePresence>
           <button
             onClick={() => setConfirmOpen(true)}
             className="p-2 text-muted-foreground hover:text-destructive transition-colors"
