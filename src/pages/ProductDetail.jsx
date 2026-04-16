@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { ArrowLeft, Star, ShoppingCart, Heart, Minus, Plus, Check, Truck, Shield, RotateCcw, Loader2, AlertCircle, X, ZoomIn } from 'lucide-react';
+import ProductReviews from '@/components/shop/ProductReviews';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -447,6 +448,11 @@ export default function ProductDetail() {
             <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
           </div>
         )}
+      </div>
+
+      {/* Reviews */}
+      <div className="mt-4 border-t border-border">
+        <ProductReviews productId={productId} isGuest={isGuest} />
       </div>
 
       {/* Bottom action bar */}
