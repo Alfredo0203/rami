@@ -29,29 +29,85 @@ Deno.serve(async (req) => {
     const margin = 15;
     let yPosition = margin;
 
-    // ─── Logo ───
+    // ─── Logo y Encabezado ───
     if (appSettings.logo_url) {
       try {
         doc.addImage(appSettings.logo_url, 'PNG', margin, yPosition, 35, 20);
-        yPosition += 22;
       } catch (e) {
-        yPosition += 8;
+        // Logo URL invalid, skip
       }
     }
 
-    // ─── Divider ───
+    // Nombre de la tienda
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(20);
+    doc.setTextColor(14, 133, 140);
+    doc.text('RAmi', pageWidth - margin - 40, yPosition + 3);
+
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Tu tienda de confianza', pageWidth - margin - 40, yPosition + 10);
+
+    yPosition += 25;
+
+    // Divider
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += 6;
+
+    // ─── Información de la Orden ───
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`FACTURA #${order.order_number}`, margin, yPosition);
+    
+    yPosition += 5;
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Fecha: ${new Date(order.created_date).toLocaleDateString('es-SV')}`, margin, yPosition);
+    
+    yPosition += 4;
+    doc.text(`Estado: ${(order.status || 'N/A').charAt(0).toUpperCase() + (order.status || 'N/A').slice(1)}`, margin, yPosition);
+
     yPosition += 8;
 
-    // ─── Productos Header ───
+    // ─── Información del Cliente ───
     doc.setFont(undefined, 'bold');
-    doc.setFontSize(12);
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Cliente', margin, yPosition);
+    
+    yPosition += 4;
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(0, 0, 0);
+    doc.text(order.customer_name || 'N/A', margin, yPosition);
+    
+    yPosition += 3.5;
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Email: ${order.customer_email || 'N/A'}`, margin, yPosition);
+    
+    yPosition += 3.5;
+    const phoneDisplay = order.shipping_address?.phone || 'N/A';
+    doc.text(`Tel: ${phoneDisplay}`, margin, yPosition);
+
+    yPosition += 8;
+
+    // Divider
+    doc.setDrawColor(200, 200, 200);
+    doc.line(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += 6;
+
+    // ─── Productos ───
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(11);
     doc.setTextColor(0, 0, 0);
     doc.text('Productos', margin, yPosition);
-    yPosition += 8;
+    yPosition += 7;
 
-    // ─── Products Items ───
     let totalItems = 0;
     for (const item of order.items || []) {
       const productName = `${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''}`;
@@ -60,7 +116,7 @@ Deno.serve(async (req) => {
       totalItems += qty;
 
       // Check if need new page
-      if (yPosition + 20 > pageHeight - 60) {
+      if (yPosition + 20 > pageHeight - 80) {
         doc.addPage();
         yPosition = margin;
       }
@@ -85,7 +141,7 @@ Deno.serve(async (req) => {
       // Product name and quantity
       const infoX = imgX + imgSize + 5;
       doc.setFont(undefined, 'bold');
-      doc.setFontSize(9.5);
+      doc.setFontSize(9);
       doc.setTextColor(0, 0, 0);
       const lines = doc.splitTextToSize(productName, 70);
       doc.text(lines[0], infoX, imgY + 4);
@@ -98,21 +154,28 @@ Deno.serve(async (req) => {
       // Price on the right
       const priceX = pageWidth - margin - 12;
       doc.setFont(undefined, 'bold');
-      doc.setFontSize(10);
+      doc.setFontSize(9.5);
       doc.setTextColor(14, 133, 140);
       doc.text(`$${itemTotal.toFixed(2)}`, priceX, imgY + 5, { align: 'right' });
 
       yPosition += 20;
     }
 
-    // ─── Subtotal / Envío / Total Section ───
-    yPosition += 3;
+    // ─── Totales ───
+    yPosition += 2;
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, yPosition, pageWidth - margin, yPosition);
     yPosition += 6;
 
     const labelX = margin;
     const priceX = pageWidth - margin - 12;
+
+    // Total de artículos
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Total de artículos: ${totalItems}`, labelX, yPosition);
+    yPosition += 5;
 
     // Subtotal
     doc.setFont(undefined, 'normal');
@@ -140,53 +203,61 @@ Deno.serve(async (req) => {
     // Discount
     if (order.discount_amount > 0) {
       doc.setTextColor(100, 100, 100);
-      doc.text(`Desc. ${order.coupon_code || ''}`, labelX, yPosition);
+      doc.text(`Descuento${order.coupon_code ? ` (${order.coupon_code})` : ''}`, labelX, yPosition);
       doc.setTextColor(76, 175, 80);
       doc.text(`-$${(order.discount_amount || 0).toFixed(2)}`, priceX, yPosition, { align: 'right' });
       yPosition += 5;
     }
 
-    // Total
+    // Total (grand total)
     yPosition += 2;
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, yPosition, pageWidth - margin, yPosition);
-    yPosition += 6;
+    yPosition += 5;
 
     doc.setFont(undefined, 'bold');
     doc.setFontSize(12);
     doc.setTextColor(0, 0, 0);
     doc.text('Total', labelX, yPosition);
     doc.setTextColor(14, 133, 140);
-    doc.setFontSize(14);
+    doc.setFontSize(13);
     doc.text(`$${(order.total || 0).toFixed(2)}`, priceX, yPosition, { align: 'right' });
 
+    yPosition += 10;
+
     // ─── Dirección de Envío ───
-    yPosition += 12;
     doc.setFont(undefined, 'bold');
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setTextColor(0, 0, 0);
     doc.text('Dirección de Envío', margin, yPosition);
-    yPosition += 5;
+    yPosition += 4;
 
     doc.setFont(undefined, 'normal');
     doc.setFontSize(8.5);
     doc.setTextColor(0, 0, 0);
     if (order.shipping_address) {
       const addr = order.shipping_address;
-      doc.text(`${addr.street || ''}`, margin, yPosition);
-      yPosition += 4;
-      doc.text(`${addr.city || ''}, ${addr.state || ''} ${addr.zip_code || ''}`, margin, yPosition);
-      yPosition += 4;
-      doc.text(`${addr.country || 'El Salvador'}`, margin, yPosition);
+      const addressLines = [];
+      if (addr.street) addressLines.push(addr.street);
+      if (addr.city) addressLines.push(addr.city);
+      if (addr.state) addressLines.push(addr.state);
+      if (addr.zip_code) addressLines.push(addr.zip_code);
+      if (addr.country) addressLines.push(addr.country);
+      
+      const fullAddress = addressLines.join(', ');
+      const addrLines = doc.splitTextToSize(fullAddress, pageWidth - (margin * 2));
+      doc.text(addrLines, margin, yPosition);
+      yPosition += addrLines.length * 4;
     }
 
-    // ─── Pago ───
-    yPosition += 10;
+    yPosition += 4;
+
+    // ─── Método de Pago ───
     doc.setFont(undefined, 'bold');
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setTextColor(0, 0, 0);
     doc.text('Pago', margin, yPosition);
-    yPosition += 5;
+    yPosition += 4;
 
     doc.setFont(undefined, 'normal');
     doc.setFontSize(8.5);
@@ -196,13 +267,39 @@ Deno.serve(async (req) => {
       order.payment_method === 'cash_on_delivery' ? 'Pago contra entrega' :
       order.payment_method === 'paypal' ? 'PayPal' :
       order.payment_method === 'apple_pay' ? 'Apple Pay' : 'N/A';
-    doc.text(paymentLabel, margin, yPosition);
+    
+    doc.text(`Método: ${paymentLabel}`, margin, yPosition);
+    yPosition += 3.5;
+    
+    const statusLabel = 
+      order.payment_status === 'paid' ? 'Pagado' :
+      order.payment_status === 'pending_payment' ? 'Pendiente de pago' :
+      order.payment_status === 'failed' ? 'Falló' : 'N/A';
+    doc.text(`Estado: ${statusLabel}`, margin, yPosition);
+
+    if (order.tracking_number) {
+      yPosition += 4;
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(0, 0, 0);
+      doc.text('Seguimiento', margin, yPosition);
+      yPosition += 4;
+      
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Número: ${order.tracking_number}`, margin, yPosition);
+      yPosition += 3.5;
+      if (order.carrier) {
+        doc.text(`Transportista: ${order.carrier}`, margin, yPosition);
+      }
+    }
 
     // ─── Footer ───
-    yPosition = pageHeight - 10;
+    yPosition = pageHeight - 12;
     doc.setFontSize(7);
     doc.setTextColor(150, 150, 150);
-    doc.text('Gracias por tu compra', pageWidth / 2, yPosition, { align: 'center' });
+    doc.text('Gracias por tu compra en RAmi', pageWidth / 2, yPosition, { align: 'center' });
 
     // Generate PDF as Data URL
     const pdfData = doc.output('dataurlstring');
