@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Star, ThumbsUp, Camera, Loader2, X } from 'lucide-react';
+import { Star, ThumbsUp, Camera, Loader2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -30,6 +30,28 @@ function StarRating({ value, onChange, readonly = false }) {
           />
         </button>
       ))}
+    </div>
+  );
+}
+
+function ImageGallery({ images }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  if (!images?.length) return null;
+
+  const next = () => setCurrentIndex((i) => (i + 1) % images.length);
+  const prev = () => setCurrentIndex((i) => (i - 1 + images.length) % images.length);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setCurrentIndex(0)}>
+      <button onClick={(e) => { e.stopPropagation(); prev(); }} className="absolute left-4 text-white hover:bg-white/20 p-2 rounded-full">
+        <ChevronLeft className="w-6 h-6" />
+      </button>
+      <img src={images[currentIndex]} alt="" className="max-h-[80vh] max-w-[80vw] object-contain rounded-lg" />
+      <button onClick={(e) => { e.stopPropagation(); next(); }} className="absolute right-4 text-white hover:bg-white/20 p-2 rounded-full">
+        <ChevronRight className="w-6 h-6" />
+      </button>
+      <span className="absolute bottom-4 text-white text-sm">{currentIndex + 1} / {images.length}</span>
     </div>
   );
 }
@@ -167,6 +189,7 @@ function ReviewForm({ productId, onClose, hasPurchased }) {
 
 export default function ProductReviews({ productId, isGuest }) {
   const [showForm, setShowForm] = useState(false);
+  const [selectedImages, setSelectedImages] = useState(null);
 
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ['reviews', productId],
@@ -297,7 +320,7 @@ export default function ProductReviews({ productId, isGuest }) {
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] text-muted-foreground">
-                      {review.created_date ? format(new Date(review.created_date), 'dd MMM yyyy') : ''}
+                      {review.created_date ? format(new Date(review.created_date), 'dd MMM yyyy HH:mm') : ''}
                     </p>
                     {review.is_verified_purchase && (
                       <span className="text-[10px] text-success font-medium">✓ Verificada</span>
@@ -315,12 +338,17 @@ export default function ProductReviews({ productId, isGuest }) {
                 {review.images?.length > 0 && (
                   <div className="flex gap-2 mt-2 flex-wrap">
                     {review.images.map((url, idx) => (
-                      <img
+                      <button
                         key={idx}
-                        src={url}
-                        alt=""
-                        className="w-16 h-16 rounded-lg object-cover border border-border"
-                      />
+                        onClick={() => setSelectedImages(review.images)}
+                        className="relative w-16 h-16 rounded-lg overflow-hidden border border-border hover:opacity-75 transition-opacity"
+                      >
+                        <img
+                          src={url}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
                     ))}
                   </div>
                 )}
@@ -329,6 +357,8 @@ export default function ProductReviews({ productId, isGuest }) {
           </div>
         </>
       )}
+
+      {selectedImages && <ImageGallery images={selectedImages} />}
     </div>
   );
 }
