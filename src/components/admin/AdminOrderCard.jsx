@@ -15,19 +15,25 @@ export default function AdminOrderCard({ order }) {
 
   const updateMutation = useMutation({
     mutationFn: async ({ newStatus, extraFields }) => {
-      const res = await base44.functions.invoke('updateOrderStatus', {
-        orderId: order.id,
-        newStatus,
-        extraFields,
-      });
-      return res.data;
+      // Si se cancela, usar la función backend para restaurar stock
+      if (newStatus === 'cancelled') {
+        const res = await base44.functions.invoke('updateOrderStatus', {
+          orderId: order.id,
+          newStatus,
+          extraFields,
+        });
+        if (res.data?.error) throw new Error(res.data.error);
+        return res.data;
+      }
+      // Para otros cambios de estado, actualizar directamente
+      return base44.entities.Order.update(order.id, { status: newStatus, ...extraFields });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
       toast.success('Pedido actualizado');
     },
     onError: (err) => {
-      toast.error(err?.response?.data?.error || 'Error al actualizar el pedido');
+      toast.error(err?.message || 'Error al actualizar el pedido');
     },
   });
 
@@ -99,7 +105,8 @@ export default function AdminOrderCard({ order }) {
           defaultValue={order.tracking_number || ''}
           onBlur={(e) => {
             if (e.target.value !== (order.tracking_number || '')) {
-              updateMutation.mutate({ newStatus: order.status, extraFields: { tracking_number: e.target.value } });
+              base44.entities.Order.update(order.id, { tracking_number: e.target.value })
+                .then(() => queryClient.invalidateQueries({ queryKey: ['admin-orders'] }));
             }
           }}
           className="h-8 text-xs flex-1"
