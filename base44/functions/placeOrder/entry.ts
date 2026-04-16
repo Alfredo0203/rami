@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
      await base44.asServiceRole.entities.OrderStatusHistory.create({
        order_id: order.id,
        status: 'pending',
-       timestamp: new Date().toISOString(),
+       timestamp: order.created_date,
        notes: 'Pedido creado'
      });
 

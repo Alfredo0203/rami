@@ -52,8 +52,8 @@ export default function OrderStatusTimeline({ orderId }) {
   }
 
   return (
-    <div className="space-y-4">
-      <h3 className="font-semibold text-lg">Historial de Estado</h3>
+    <div className="space-y-2">
+      <h3 className="font-semibold text-xs uppercase text-muted-foreground">Historial de Estado</h3>
       <div className="relative">
         {history.map((record, idx) => {
           const config = statusConfig[record.status] || statusConfig.pending;
@@ -61,27 +61,27 @@ export default function OrderStatusTimeline({ orderId }) {
           const isLast = idx === history.length - 1;
 
           return (
-            <div key={record.id} className="flex gap-4 pb-8 relative">
+            <div key={record.id} className="flex gap-3 pb-4 relative">
               {/* Línea conectora */}
               {!isLast && (
-                <div className="absolute left-6 top-12 w-1 h-12 bg-gray-200" />
+                <div className="absolute left-4 top-8 w-0.5 h-8 bg-border" />
               )}
 
               {/* Icono de estado */}
-              <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${config.color}`}>
-                <Icon className="w-6 h-6" />
+              <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${config.color} mt-0.5`}>
+                <Icon className="w-4 h-4" />
               </div>
 
               {/* Contenido */}
-              <div className="flex-1 pt-2">
+              <div className="flex-1 pt-0.5">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">{config.label}</span>
-                  <span className="text-xs text-gray-500">
-                    {format(new Date(record.timestamp || record.created_date), 'dd MMM yyyy HH:mm', { locale: es })}
+                  <span className="text-xs font-medium text-foreground">{config.label}</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {format(new Date(record.timestamp || record.created_date), 'dd MMM HH:mm', { locale: es })}
                   </span>
                 </div>
                 {record.notes && (
-                  <p className="text-sm text-gray-600 mt-1">{record.notes}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{record.notes}</p>
                 )}
               </div>
             </div>
