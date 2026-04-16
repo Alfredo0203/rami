@@ -19,15 +19,10 @@ export default function OrderStatusTimeline({ orderId }) {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        console.log('Fetching history for orderId:', orderId);
-        const records = await base44.entities.OrderStatusHistory.filter({
-          order_id: orderId,
+        const response = await base44.functions.invoke('getOrderStatusHistory', {
+          orderId,
         });
-        console.log('Records fetched:', records);
-        const sorted = records.sort((a, b) => 
-          new Date(a.timestamp || a.created_date) - new Date(b.timestamp || b.created_date)
-        );
-        setHistory(sorted);
+        setHistory(response.data.history || []);
       } catch (error) {
         console.error('Error fetching status history:', error);
         setHistory([]);
