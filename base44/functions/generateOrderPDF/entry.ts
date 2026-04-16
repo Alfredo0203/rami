@@ -107,45 +107,69 @@ Deno.serve(async (req) => {
       doc.text(`${addr.country || 'El Salvador'}`, margin, yPosition);
     }
 
-    // ─── Items Table ───
+    // ─── Products Section ───
     yPosition += 8;
     doc.setFont(undefined, 'bold');
-    doc.setFontSize(9);
+    doc.setFontSize(11);
     doc.setTextColor(0, 0, 0);
+    doc.text('Productos', margin, yPosition);
+    yPosition += 6;
     
-    // Table header
-    const col1 = margin;
-    const col2 = pageWidth - margin - 50;
-    const col3 = pageWidth - margin - 30;
-    const col4 = pageWidth - margin - 12;
-    
-    doc.text('Producto', col1, yPosition);
-    doc.text('Cant', col2, yPosition);
-    doc.text('Precio', col3, yPosition);
-    doc.text('Total', col4, yPosition);
-    
-    yPosition += 5;
-    doc.setDrawColor(200, 200, 200);
-    doc.line(margin, yPosition - 0.5, pageWidth - margin, yPosition - 0.5);
-    
-    // Table rows
     doc.setFont(undefined, 'normal');
     doc.setFontSize(8.5);
-    doc.setTextColor(0, 0, 0);
     
     let totalItems = 0;
+    const itemHeight = 22;
+    
     for (const item of order.items || []) {
       const productName = `${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''}`;
       const itemTotal = (item.price || 0) * (item.quantity || 1);
       const qty = item.quantity || 1;
       totalItems += qty;
       
-      doc.text(productName.substring(0, 28), col1, yPosition);
-      doc.text(String(qty), col2, yPosition);
-      doc.text(`$${(item.price || 0).toFixed(2)}`, col3, yPosition, { align: 'right' });
-      doc.text(`$${itemTotal.toFixed(2)}`, col4, yPosition, { align: 'right' });
+      // Check if need new page
+      if (yPosition + itemHeight > pageHeight - 40) {
+        doc.addPage();
+        yPosition = margin;
+      }
       
-      yPosition += 5.5;
+      // Product image placeholder (light gray box)
+      if (item.product_image) {
+        try {
+          doc.addImage(item.product_image, 'JPEG', margin, yPosition, 18, 18);
+        } catch (e) {
+          doc.setDrawColor(220, 220, 220);
+          doc.rect(margin, yPosition, 18, 18);
+        }
+      } else {
+        doc.setDrawColor(220, 220, 220);
+        doc.rect(margin, yPosition, 18, 18);
+      }
+      
+      // Product info
+      const infoX = margin + 20;
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(0, 0, 0);
+      doc.text(productName.substring(0, 35), infoX, yPosition + 2);
+      
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Cant: ${qty}`, infoX, yPosition + 7);
+      
+      // Price on the right
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(14, 133, 140);
+      doc.text(`$${itemTotal.toFixed(2)}`, pageWidth - margin - 15, yPosition + 2, { align: 'right' });
+      
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(150, 150, 150);
+      doc.text(`$${(item.price || 0).toFixed(2)} c/u`, pageWidth - margin - 15, yPosition + 7, { align: 'right' });
+      
+      yPosition += itemHeight;
     }
 
     // ─── Totals Section ───
