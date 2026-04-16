@@ -25,28 +25,36 @@ Deno.serve(async (req) => {
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 15;
+    const margin = 12;
     let yPosition = margin;
 
     // ─── Header with Logo & Company Info ───
-    doc.setFontSize(24);
+    doc.setFontSize(22);
     doc.setTextColor(14, 133, 140); // Primary color
     doc.text('FACTURA', margin, yPosition);
 
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    yPosition += 12;
-    doc.text('TuTienda Online', margin, yPosition);
-    yPosition += 5;
-    doc.text('www.tutienda.com', margin, yPosition);
-
-    // ─── Order Number & Date ───
-    yPosition += 10;
     doc.setFontSize(11);
     doc.setTextColor(0, 0, 0);
-    doc.text(`Número de Orden: ${order.order_number}`, margin, yPosition);
-    yPosition += 6;
-    doc.text(`Fecha: ${new Date(order.created_date).toLocaleDateString('es-SV')}`, margin, yPosition);
+    yPosition += 10;
+    doc.setFont(undefined, 'bold');
+    doc.text('RAmi', margin, yPosition);
+    yPosition += 5;
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Tu tienda de confianza', margin, yPosition);
+
+    // ─── Order Number & Date ───
+    yPosition += 8;
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont(undefined, 'bold');
+    doc.text(`Orden #${order.order_number}`, margin, yPosition);
+    yPosition += 5;
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`${new Date(order.created_date).toLocaleDateString('es-SV')}`, margin, yPosition);
 
     // ─── Divider ───
     yPosition += 10;
@@ -54,135 +62,146 @@ Deno.serve(async (req) => {
     doc.line(margin, yPosition, pageWidth - margin, yPosition);
 
     // ─── Customer Info ───
-    yPosition += 8;
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
-    doc.text('Información del Cliente', margin, yPosition);
     yPosition += 6;
-    doc.setFont(undefined, 'normal');
     doc.setFontSize(9);
-    doc.text(`Nombre: ${order.customer_name || 'N/A'}`, margin, yPosition);
-    yPosition += 5;
-    doc.text(`Email: ${order.customer_email || 'N/A'}`, margin, yPosition);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text('Cliente', margin, yPosition);
+    yPosition += 4;
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(8.5);
+    doc.text(`${order.customer_name || 'N/A'}`, margin, yPosition);
+    yPosition += 3.5;
+    doc.text(`${order.customer_email || 'N/A'}`, margin, yPosition);
 
     // ─── Shipping Address ───
-    yPosition += 8;
+    yPosition += 5;
     doc.setFont(undefined, 'bold');
-    doc.setFontSize(10);
-    doc.text('Dirección de Envío', margin, yPosition);
-    yPosition += 6;
-    doc.setFont(undefined, 'normal');
     doc.setFontSize(9);
+    doc.text('Dirección de Envío', margin, yPosition);
+    yPosition += 4;
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(8.5);
     if (order.shipping_address) {
       const addr = order.shipping_address;
       doc.text(`${addr.street || ''}`, margin, yPosition);
-      yPosition += 4;
+      yPosition += 3.5;
       doc.text(`${addr.city || ''}, ${addr.state || ''} ${addr.zip_code || ''}`, margin, yPosition);
-      yPosition += 4;
+      yPosition += 3.5;
       doc.text(`${addr.country || 'El Salvador'}`, margin, yPosition);
     }
 
     // ─── Items Table ───
-    yPosition += 10;
+    yPosition += 8;
     doc.setFont(undefined, 'bold');
-    doc.setFontSize(10);
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
     
     // Table header
     const col1 = margin;
-    const col2 = pageWidth - margin - 60;
-    const col3 = pageWidth - margin - 40;
-    const col4 = pageWidth - margin - 15;
+    const col2 = pageWidth - margin - 50;
+    const col3 = pageWidth - margin - 30;
+    const col4 = pageWidth - margin - 12;
     
     doc.text('Producto', col1, yPosition);
-    doc.text('Cantidad', col2, yPosition);
+    doc.text('Cant', col2, yPosition);
     doc.text('Precio', col3, yPosition);
     doc.text('Total', col4, yPosition);
     
-    yPosition += 7;
+    yPosition += 5;
     doc.setDrawColor(200, 200, 200);
-    doc.line(margin, yPosition - 1, pageWidth - margin, yPosition - 1);
+    doc.line(margin, yPosition - 0.5, pageWidth - margin, yPosition - 0.5);
     
     // Table rows
     doc.setFont(undefined, 'normal');
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
+    doc.setTextColor(0, 0, 0);
     
     for (const item of order.items || []) {
       const productName = `${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''}`;
       const itemTotal = (item.price || 0) * (item.quantity || 1);
       
-      doc.text(productName.substring(0, 30), col1, yPosition);
-      doc.text(String(item.quantity || 1), col2, yPosition, { align: 'center' });
+      doc.text(productName.substring(0, 28), col1, yPosition);
+      doc.text(String(item.quantity || 1), col2, yPosition);
       doc.text(`$${(item.price || 0).toFixed(2)}`, col3, yPosition, { align: 'right' });
       doc.text(`$${itemTotal.toFixed(2)}`, col4, yPosition, { align: 'right' });
       
-      yPosition += 6;
+      yPosition += 5.5;
     }
 
     // ─── Totals Section ───
-    yPosition += 5;
+    yPosition += 3;
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, yPosition, pageWidth - margin, yPosition);
-    yPosition += 8;
+    yPosition += 6;
 
     doc.setFont(undefined, 'normal');
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
+    doc.setTextColor(0, 0, 0);
     
-    const rightCol = pageWidth - margin - 20;
+    const rightCol = pageWidth - margin - 12;
+    const labelCol = pageWidth - margin - 35;
     
     // Subtotal
-    doc.text('Subtotal:', col3, yPosition);
+    doc.text('Subtotal:', labelCol, yPosition);
     doc.text(`$${(order.subtotal || 0).toFixed(2)}`, rightCol, yPosition, { align: 'right' });
-    yPosition += 6;
+    yPosition += 4.5;
 
     // Shipping
     if (order.shipping_cost > 0) {
-      doc.text('Envío:', col3, yPosition);
+      doc.text('Envío:', labelCol, yPosition);
       doc.text(`$${(order.shipping_cost || 0).toFixed(2)}`, rightCol, yPosition, { align: 'right' });
-      yPosition += 6;
+      yPosition += 4.5;
     } else {
       doc.setTextColor(76, 175, 80); // Green
-      doc.text('Envío:', col3, yPosition);
+      doc.text('Envío:', labelCol, yPosition);
       doc.text('GRATIS', rightCol, yPosition, { align: 'right' });
-      yPosition += 6;
+      yPosition += 4.5;
       doc.setTextColor(0, 0, 0);
     }
 
     // Discount
     if (order.discount_amount > 0) {
       doc.setTextColor(76, 175, 80);
-      doc.text(`Descuento (${order.coupon_code || ''}):`, col3, yPosition);
+      doc.text(`Desc. ${order.coupon_code || ''}:`, labelCol, yPosition);
       doc.text(`-$${(order.discount_amount || 0).toFixed(2)}`, rightCol, yPosition, { align: 'right' });
-      yPosition += 6;
+      yPosition += 4.5;
       doc.setTextColor(0, 0, 0);
     }
 
     // Total
-    yPosition += 2;
+    yPosition += 1;
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, yPosition, pageWidth - margin, yPosition);
-    yPosition += 6;
+    yPosition += 5;
     
     doc.setFont(undefined, 'bold');
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setTextColor(14, 133, 140);
-    doc.text('TOTAL:', col3, yPosition);
+    doc.text('TOTAL:', labelCol, yPosition);
     doc.text(`$${(order.total || 0).toFixed(2)}`, rightCol, yPosition, { align: 'right' });
 
     // ─── Payment & Status Info ───
-    yPosition += 12;
+    yPosition += 8;
     doc.setFont(undefined, 'normal');
-    doc.setFontSize(9);
+    doc.setFontSize(8);
     doc.setTextColor(100, 100, 100);
     
-    doc.text(`Método de Pago: ${(order.payment_method || 'N/A').replace('_', ' ').toUpperCase()}`, margin, yPosition);
-    yPosition += 5;
-    doc.text(`Estado: ${(order.status || 'N/A').toUpperCase()}`, margin, yPosition);
+    const paymentLabel = 
+      order.payment_method === 'credit_card' ? 'Tarjeta de Crédito' :
+      order.payment_method === 'cash_on_delivery' ? 'Pago contra entrega' :
+      order.payment_method === 'paypal' ? 'PayPal' :
+      order.payment_method === 'apple_pay' ? 'Apple Pay' : 'N/A';
+    
+    doc.text(`Método de Pago: ${paymentLabel}`, margin, yPosition);
+    yPosition += 4;
+    doc.text(`Estado: ${(order.status || 'N/A').charAt(0).toUpperCase() + (order.status || 'N/A').slice(1)}`, margin, yPosition);
 
     // ─── Footer ───
-    yPosition = pageHeight - 15;
-    doc.setFontSize(8);
+    yPosition = pageHeight - 12;
+    doc.setFontSize(7);
     doc.setTextColor(150, 150, 150);
-    doc.text('Gracias por tu compra. Para más información, visita www.tutienda.com', pageWidth / 2, yPosition, { align: 'center' });
+    doc.text('Gracias por comprar en RAmi. Visita www.rami.com', pageWidth / 2, yPosition, { align: 'center' });
 
     // Generate PDF as Data URL
     const pdfData = doc.output('dataurlstring');
