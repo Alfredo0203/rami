@@ -14,20 +14,8 @@ export default function AdminOrderCard({ order }) {
   const queryClient = useQueryClient();
 
   const updateMutation = useMutation({
-    mutationFn: async ({ newStatus, extraFields }) => {
-      // Si se cancela, usar la función backend para restaurar stock
-      if (newStatus === 'cancelled') {
-        const res = await base44.functions.invoke('updateOrderStatus', {
-          orderId: order.id,
-          newStatus,
-          extraFields,
-        });
-        if (res.data?.error) throw new Error(res.data.error);
-        return res.data;
-      }
-      // Para otros cambios de estado, actualizar directamente
-      return base44.entities.Order.update(order.id, { status: newStatus, ...extraFields });
-    },
+    mutationFn: ({ newStatus, extraFields }) =>
+      base44.entities.Order.update(order.id, { status: newStatus, ...extraFields }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
       toast.success('Pedido actualizado');
