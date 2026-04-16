@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, ShoppingCart, X, Clock, TrendingUp } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Search, ShoppingCart, X, Clock, TrendingUp, Tag, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -29,18 +29,24 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
     enabled: !!user?.email,
   });
 
-  // Fetch products for suggestions
-  const { data: products = [] } = useQuery({
+  // Fetch products and categories for suggestions
+  const { data: catalogData = { products: [], categories: [] } } = useQuery({
     queryKey: ['products-for-search'],
     queryFn: async () => {
       try {
         const res = await base44.functions.invoke('getPublicCatalog', {});
-        return res.data?.products || [];
+        return {
+          products: res.data?.products || [],
+          categories: res.data?.categories || [],
+        };
       } catch {
-        return [];
+        return { products: [], categories: [] };
       }
     },
   });
+
+  const products = catalogData.products;
+  const categories = catalogData.categories;
 
   // Save search mutation
   const saveSearchMutation = useMutation({
@@ -70,29 +76,73 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
     },
   });
 
-  // Get suggestions based on input
-  const getSuggestions = () => {
-    if (!searchQuery.trim()) {
-      // Show recent searches when input is empty
-      return history.slice(0, 5).map(h => ({
+  // Get popular searches (most searched)
+  const popularSearches = useMemo(() => {
+    return history
+      .sort((a, b) => (b.search_count || 0) - (a.search_count || 0))
+      .slice(0, 3)
+      .map(h => ({
         id: h.id,
         text: h.query,
-        type: 'history',
-        icon: Clock,
+        type: 'popular',
+        icon: Zap,
+        count: h.search_count,
       }));
+  }, [history]);
+
+  // Get all tags from products
+  const allTags = useMemo(() => {
+    const tags = new Set();
+    products.forEach(p => {
+      if (Array.isArray(p.tags)) {
+        p.tags.forEach(tag => tags.add(tag));
+      }
+    });
+    return Array.from(tags).slice(0, 5);
+  }, [products]);
+
+  // Get suggestions based on input
+  const getSuggestions = () => {
+    const query = searchQuery.toLowerCase().trim();
+
+    if (!query) {
+      // Show recent searches + popular when input is empty
+      const recent = history
+        .slice(0, 3)
+        .map(h => ({
+          id: h.id,
+          text: h.query,
+          type: 'history',
+          icon: Clock,
+        }));
+
+      const popular = popularSearches.slice(0, 2);
+
+      return [...recent, ...popular];
     }
 
-    const query = searchQuery.toLowerCase();
-    
     // Get matching products
     const productSuggestions = products
-      .filter(p => p.name.toLowerCase().includes(query))
-      .slice(0, 3)
+      .filter(p => p.name.toLowerCase().includes(query) || 
+                    p.description?.toLowerCase().includes(query))
+      .slice(0, 4)
       .map(p => ({
         id: p.id,
         text: p.name,
         type: 'product',
         icon: TrendingUp,
+        subtitle: p.price ? `$${p.price}` : undefined,
+      }));
+
+    // Get matching categories
+    const categorySuggestions = categories
+      .filter(c => c.name.toLowerCase().includes(query))
+      .slice(0, 2)
+      .map(c => ({
+        id: c.id,
+        text: c.name,
+        type: 'category',
+        icon: Tag,
       }));
 
     // Get matching history
@@ -106,7 +156,18 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
         icon: Clock,
       }));
 
-    return [...productSuggestions, ...historySuggestions];
+    // Get matching tags
+    const tagSuggestions = allTags
+      .filter(tag => tag.toLowerCase().includes(query))
+      .slice(0, 2)
+      .map(tag => ({
+        id: tag,
+        text: tag,
+        type: 'tag',
+        icon: Tag,
+      }));
+
+    return [...productSuggestions, ...categorySuggestions, ...historySuggestions, ...tagSuggestions];
   };
 
   const suggestions = getSuggestions();
@@ -151,26 +212,41 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
 
           {/* Dropdown de sugerencias */}
           {isOpen && (suggestions.length > 0 || searchQuery.trim()) && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-2xl shadow-lg overflow-hidden">
+            <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-2xl shadow-xl overflow-hidden z-50">
               {suggestions.length > 0 ? (
-                <div className="max-h-80 overflow-y-auto">
+                <div className="max-h-96 overflow-y-auto">
                   {suggestions.map((suggestion, idx) => {
                     const Icon = suggestion.icon;
+                    const typeLabel = {
+                      history: 'Reciente',
+                      product: 'Producto',
+                      category: 'Categoría',
+                      tag: 'Etiqueta',
+                      popular: 'Popular',
+                    }[suggestion.type];
+
                     return (
                       <button
                         key={idx}
                         onClick={() => handleSearch(suggestion.text)}
-                        className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-secondary transition-colors text-left border-b border-border last:border-0"
+                        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-secondary transition-colors text-left border-b border-border/50 last:border-0 group"
                       >
-                        <Icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        <span className="text-sm text-foreground flex-1 truncate">{suggestion.text}</span>
+                        <Icon className="w-4 h-4 text-muted-foreground flex-shrink-0 group-hover:text-primary transition-colors" />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm text-foreground block truncate">{suggestion.text}</span>
+                          {suggestion.subtitle && (
+                            <span className="text-xs text-muted-foreground">{suggestion.subtitle}</span>
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">{typeLabel}</span>
                         {suggestion.type === 'history' && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDeleteHistory(suggestion.id);
                             }}
-                            className="p-1 hover:bg-destructive/10 rounded-full"
+                            className="p-1 hover:bg-destructive/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Eliminar"
                           >
                             <X className="w-3.5 h-3.5 text-muted-foreground" />
                           </button>
@@ -182,8 +258,8 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
               ) : null}
 
               {searchQuery.trim() && suggestions.length === 0 && (
-                <div className="px-4 py-6 text-center">
-                  <p className="text-sm text-muted-foreground">Sin resultados</p>
+                <div className="px-4 py-8 text-center">
+                  <p className="text-sm text-muted-foreground">No hay resultados para "{searchQuery}"</p>
                 </div>
               )}
             </div>
