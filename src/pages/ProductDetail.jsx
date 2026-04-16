@@ -370,8 +370,8 @@ export default function ProductDetail() {
               onClick={() => {
                 if (effectiveStock > 0 && quantity >= effectiveStock) {
                   toast.error('¡Alcanzaste el límite disponible!');
-                } else if (effectiveStock <= 0 || quantity < effectiveStock) {
-                  setQuantity(quantity + 1);
+                } else {
+                  setQuantity(q => q + 1);
                 }
               }}
               className="p-2.5 rounded-full"
