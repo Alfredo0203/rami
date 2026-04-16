@@ -17,7 +17,7 @@ export const formatDateSV = (date) => {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false
+    hour12: true
   });
 };
 
@@ -40,6 +40,6 @@ export const formatDateTimeSV = (date) => {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false
+    hour12: true
   });
 };
