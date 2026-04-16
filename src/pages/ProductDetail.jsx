@@ -49,7 +49,7 @@ export default function ProductDetail() {
   });
 
   const { data: wishlistItems = [] } = useQuery({
-    queryKey: ['wishlist'],
+    queryKey: ['wishlist', user?.email],
     queryFn: async () => {
       if (isGuest) return [];
       try {
