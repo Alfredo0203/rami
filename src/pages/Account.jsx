@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import BottomNav from '../components/shop/BottomNav';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { User, Package, MapPin, LogOut, ChevronRight, Shield, Loader2, Trash2, AlertTriangle, LogIn } from 'lucide-react';
+import { User, Package, MapPin, Heart, LogOut, ChevronRight, Shield, Loader2, Trash2, AlertTriangle, LogIn } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -60,6 +60,7 @@ export default function Account() {
   const menuItems = [
     { icon: Package, label: t('my_orders'), page: 'Orders' },
     { icon: MapPin, label: t('my_addresses'), page: 'Addresses' },
+    { icon: Heart, label: 'Lista de deseos', page: 'Wishlist' },
   ];
 
   if (user?.role === 'admin' || user?.role === 'super_admin') {
