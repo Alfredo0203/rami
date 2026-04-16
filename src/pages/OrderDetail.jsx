@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import OrderStatusBadge from '../components/shop/OrderStatusBadge';
+import OrderStatusTimeline from '../components/shop/OrderStatusTimeline';
 import { ArrowLeft, MapPin, CreditCard, Package, Truck, CheckCircle2, Clock, Loader2, RotateCcw, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import InvoicePDF from '../components/shop/InvoicePDF';
@@ -222,6 +223,11 @@ export default function OrderDetail() {
             {order.payment_method === 'paypal' && 'PayPal'}
             {order.payment_method === 'apple_pay' && 'Apple Pay'}
           </p>
+        </div>
+
+        {/* Status history */}
+        <div className="bg-card rounded-xl p-4 shadow-sm">
+          <OrderStatusTimeline orderId={orderId} />
         </div>
       </div>
     </div>

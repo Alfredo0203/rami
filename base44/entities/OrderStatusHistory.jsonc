@@ -1,0 +1,34 @@
+{
+  "name": "OrderStatusHistory",
+  "type": "object",
+  "properties": {
+    "order_id": {
+      "type": "string",
+      "description": "ID de la orden"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "processing",
+        "shipped",
+        "delivered",
+        "cancelled"
+      ],
+      "description": "Estado registrado"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Fecha y hora del cambio de estado"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notas opcionales sobre el cambio de estado"
+    }
+  },
+  "required": [
+    "order_id",
+    "status"
+  ]
+}

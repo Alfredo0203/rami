@@ -121,7 +121,15 @@ Deno.serve(async (req) => {
        customer_name: user.full_name || shippingAddress.full_name || '',
      });
 
-    // ── 4. Descontar stock ────────────────────────────────────────────
+     // Registrar estado inicial en historial
+     await base44.asServiceRole.entities.OrderStatusHistory.create({
+       order_id: order.id,
+       status: 'pending',
+       timestamp: new Date().toISOString(),
+       notes: 'Pedido creado'
+     });
+
+     // ── 4. Descontar stock ────────────────────────────────────────────
      // Skip stock decrement to avoid validation issues - focus on order creation first
      // TODO: Implement batch stock update after order is confirmed
      /*

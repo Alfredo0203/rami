@@ -56,6 +56,14 @@ Deno.serve(async (req) => {
       ...(extraFields || {}),
     });
 
+    // Registrar en historial de estados
+    await base44.asServiceRole.entities.OrderStatusHistory.create({
+      order_id: orderId,
+      status: newStatus,
+      timestamp: new Date().toISOString(),
+      notes: `Estado actualizado a ${newStatus}`
+    });
+
     return Response.json({ order: updated });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
