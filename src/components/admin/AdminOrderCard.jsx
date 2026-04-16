@@ -85,7 +85,13 @@ export default function AdminOrderCard({ order }) {
             <SelectItem value="processing">En proceso</SelectItem>
             <SelectItem value="shipped">Enviado</SelectItem>
             <SelectItem value="delivered">Entregado</SelectItem>
+            {/* Solo mostrar cancelado si aún se puede cancelar */}
+            {!NON_CANCELLABLE.includes(order.status) && (
               <SelectItem value="cancelled">Cancelado</SelectItem>
+            )}
+            {order.status === 'cancelled' && (
+              <SelectItem value="cancelled">Cancelado</SelectItem>
+            )}
           </SelectContent>
         </Select>
         <Input
