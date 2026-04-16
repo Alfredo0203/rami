@@ -1,16 +1,26 @@
-import { formatInTimeZone } from 'date-fns-tz';
-import { es } from 'date-fns/locale';
-
 const EL_SALVADOR_TZ = 'America/El_Salvador';
 
-export const formatDateSV = (date, format = 'd MMM yyyy') => {
+export const formatDateSV = (date) => {
   if (!date) return '';
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return formatInTimeZone(dateObj, EL_SALVADOR_TZ, format, { locale: es });
+  const dateObj = new Date(date);
+  return dateObj.toLocaleString('es-SV', {
+    timeZone: EL_SALVADOR_TZ,
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
 };
 
-export const formatDateTimeSV = (date, format = 'd MMM yyyy HH:mm') => {
+export const formatDateTimeSV = (date) => {
   if (!date) return '';
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return formatInTimeZone(dateObj, EL_SALVADOR_TZ, format, { locale: es });
+  const dateObj = new Date(date);
+  return dateObj.toLocaleString('es-SV', {
+    timeZone: EL_SALVADOR_TZ,
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
 };
