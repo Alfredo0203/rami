@@ -5,12 +5,10 @@ const EL_SALVADOR_TZ = 'America/El_Salvador';
 
 export const formatDateSV = (date, format = 'd MMM yyyy') => {
   if (!date) return '';
-  const dateObj = new Date(date);
-  return formatInTimeZone(dateObj, EL_SALVADOR_TZ, format, { locale: es });
+  return formatInTimeZone(new Date(date), EL_SALVADOR_TZ, format, { locale: es });
 };
 
 export const formatDateTimeSV = (date, format = 'd MMM yyyy HH:mm') => {
   if (!date) return '';
-  const dateObj = new Date(date);
-  return formatInTimeZone(dateObj, EL_SALVADOR_TZ, format, { locale: es });
+  return formatInTimeZone(new Date(date), EL_SALVADOR_TZ, format, { locale: es });
 };
