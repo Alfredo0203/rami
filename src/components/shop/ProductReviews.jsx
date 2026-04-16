@@ -339,7 +339,7 @@ export default function ProductReviews({ productId, isGuest }) {
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] text-muted-foreground">
-                      {review.created_date ? formatDateTimeSV(review.created_date) : ''}
+                      {review.created_date ? formatDateTimeSV(review.created_date, 'dd MMM yyyy HH:mm') : ''}
                     </p>
                     {review.is_verified_purchase && (
                       <span className="text-[10px] text-success font-medium">✓ Verificada</span>
