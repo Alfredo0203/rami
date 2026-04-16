@@ -1,0 +1,25 @@
+{
+  "name": "Wishlist",
+  "type": "object",
+  "properties": {
+    "product_id": {
+      "type": "string",
+      "description": "ID del producto guardado en favoritos"
+    },
+    "product_name": {
+      "type": "string",
+      "description": "Nombre del producto (snapshot)"
+    },
+    "product_image": {
+      "type": "string",
+      "description": "Imagen principal del producto (snapshot)"
+    },
+    "product_price": {
+      "type": "number",
+      "description": "Precio del producto al momento de guardar (snapshot)"
+    }
+  },
+  "required": [
+    "product_id"
+  ]
+}
