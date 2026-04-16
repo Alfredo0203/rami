@@ -87,7 +87,7 @@ export default function OrderStatusTimeline({ orderId }) {
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-medium text-foreground">{config.label}</span>
                   <span className="text-[10px] text-muted-foreground">
-                    {formatDateTimeSV(record.timestamp || record.created_date, 'dd MMM HH:mm')}
+                   {formatDateTimeSV(record.timestamp || record.created_date)}
                   </span>
                 </div>
                 {record.notes && (

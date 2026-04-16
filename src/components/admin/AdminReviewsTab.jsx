@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Star, Eye, EyeOff, Trash2, Loader2, MessageSquare } from 'lucide-react';
-import { format } from 'date-fns';
+import { formatDateTimeSV } from '@/lib/dateUtils';
 import { toast } from 'sonner';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -129,7 +129,7 @@ export default function AdminReviewsTab() {
                   </div>
                 )}
                 <p className="text-[10px] text-muted-foreground mt-1">
-                  {review.created_date ? format(new Date(review.created_date), 'dd MMM yyyy, HH:mm') : ''}
+                  {review.created_date ? formatDateTimeSV(review.created_date) : ''}
                 </p>
               </div>
 

@@ -6,7 +6,7 @@ import { createPageUrl } from '@/utils';
 import BottomNav from '../components/shop/BottomNav';
 import OrderStatusBadge from '../components/shop/OrderStatusBadge';
 import { Package, ChevronRight, Loader2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { formatDateSV } from '@/lib/dateUtils';
 import { motion } from 'framer-motion';
 import { useScrollRestoration } from '../components/useScrollRestoration';
 import { useTranslation } from '../components/i18n/useTranslation';
@@ -96,7 +96,7 @@ export default function Orders() {
                     {order.items?.map(item => item.product_name).join(', ')}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {order.created_date ? format(new Date(order.created_date), 'MMM d, yyyy') : ''}
+                    {order.created_date ? formatDateSV(order.created_date) : ''}
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
