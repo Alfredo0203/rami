@@ -23,7 +23,6 @@ export default function ProductDetail() {
   const [liked, setLiked] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedAttrMap, setSelectedAttrMap] = useState({});
-  const [showStockMsg, setShowStockMsg] = useState(false);
   const touchStartX = useRef(null);
 
   const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
@@ -370,8 +369,7 @@ export default function ProductDetail() {
             <button
               onClick={() => {
                 if (inStock && quantity >= effectiveStock) {
-                  setShowStockMsg(true);
-                  setTimeout(() => setShowStockMsg(false), 2500);
+                  toast.error('¡Alcanzaste el límite disponible!');
                 } else {
                   setQuantity(Math.min(effectiveStock || 1, quantity + 1));
                 }
@@ -381,18 +379,6 @@ export default function ProductDetail() {
               <Plus className="w-4 h-4 text-foreground" />
             </button>
           </div>
-          <AnimatePresence>
-            {showStockMsg && (
-              <motion.span
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="text-[11px] font-medium text-destructive"
-              >
-                ¡Alcanzaste el límite disponible!
-              </motion.span>
-            )}
-          </AnimatePresence>
           <Button
             onClick={() => isGuest ? base44.auth.redirectToLogin(window.location.href) : addToCartMutation.mutate()}
             disabled={addToCartMutation.isPending || (!isGuest && !inStock) || needsVariantSelection}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Minus, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -8,15 +9,13 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 export default function CartItemCard({ item, onUpdateQty, onRemove, stockInfo }) {
   const navigate = useNavigate();
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [showStockMsg, setShowStockMsg] = useState(false);
 
   const available = stockInfo?.available ?? Infinity;
   const isOverStock = item.quantity > available;
 
   const handlePlusClick = () => {
     if (item.quantity >= available) {
-      setShowStockMsg(true);
-      setTimeout(() => setShowStockMsg(false), 2500);
+      toast.error('¡Alcanzaste el límite disponible!');
     } else {
       onUpdateQty(item, item.quantity + 1);
     }
@@ -79,18 +78,7 @@ export default function CartItemCard({ item, onUpdateQty, onRemove, stockInfo })
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
-        <AnimatePresence>
-          {showStockMsg && (
-            <motion.p
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="text-[11px] font-medium text-destructive mt-1"
-            >
-              ¡Alcanzaste el límite disponible!
-            </motion.p>
-          )}
-        </AnimatePresence>
+
       </div>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
