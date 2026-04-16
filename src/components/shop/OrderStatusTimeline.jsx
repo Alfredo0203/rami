@@ -19,7 +19,7 @@ export default function OrderStatusTimeline({ orderId }) {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const records = await base44.entities.OrderStatusHistory.filter({
+        const records = await base44.asServiceRole.entities.OrderStatusHistory.filter({
           order_id: orderId,
         });
         const sorted = records.sort((a, b) => 
@@ -28,12 +28,15 @@ export default function OrderStatusTimeline({ orderId }) {
         setHistory(sorted);
       } catch (error) {
         console.error('Error fetching status history:', error);
+        setHistory([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchHistory();
+    if (orderId) {
+      fetchHistory();
+    }
 
     // Suscribirse a cambios en tiempo real
     const unsubscribe = base44.entities.OrderStatusHistory.subscribe((event) => {
@@ -53,7 +56,7 @@ export default function OrderStatusTimeline({ orderId }) {
 
   return (
     <div className="space-y-2">
-      <h3 className="font-semibold text-xs uppercase text-muted-foreground">Historial de Estado</h3>
+      <h3 className="font-semibold text-xs text-muted-foreground">Historial De Estado</h3>
       <div className="relative">
         {history.map((record, idx) => {
           const config = statusConfig[record.status] || statusConfig.pending;
