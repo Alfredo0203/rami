@@ -93,7 +93,7 @@ export default function Cart() {
   });
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.product_price || 0) * (item.quantity || 0), 0);
-  const shipping = subtotal > 50 ? 0 : 4.99;
+  const shipping = subtotal >= 15 ? 0 : 4.99;
   const total = subtotal + shipping;
 
   return (
@@ -160,7 +160,7 @@ export default function Cart() {
               </span>
             </div>
             {shipping > 0 && (
-              <p className="text-[10px] text-primary">¡Envío gratis en pedidos mayores a $50!</p>
+              <p className="text-[10px] text-primary">¡Envío gratis en pedidos mayores a $15!</p>
             )}
             <div className="border-t border-border pt-2.5 flex justify-between">
               <span className="text-foreground font-bold">Total</span>
