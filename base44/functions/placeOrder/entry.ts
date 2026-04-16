@@ -212,10 +212,14 @@ Pronto recibirás un email de confirmación cuando tu pedido sea procesado.
 
 ¡Gracias por comprar con RAmi!`;
 
+        // Include PDF link or data in email
+        const pdfLink = pdfRes.pdfUrl || pdfRes.pdfData;
+        const emailWithPDF = emailBody + `\n\n📄 Descargar Factura:\n${pdfLink}`;
+
         await base44.integrations.Core.SendEmail({
           to: user.email || order.customer_email,
           subject: `✓ Confirmación de Pedido - Orden ${order.order_number}`,
-          body: emailBody,
+          body: emailWithPDF,
         });
       }
     } catch (pdfErr) {
