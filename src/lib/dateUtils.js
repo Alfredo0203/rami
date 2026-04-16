@@ -23,6 +23,9 @@ export const formatDateTimeSV = (date) => {
   const [hour, minute] = timePart.split(':').map(Number);
 
   const dateObj = new Date(year, month - 1, day, hour, minute);
+  
+  // Restar 6 horas
+  dateObj.setHours(dateObj.getHours() - 6);
 
   return dateObj.toLocaleString('es-SV', {
     year: 'numeric',
