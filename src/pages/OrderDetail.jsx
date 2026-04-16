@@ -4,8 +4,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import OrderStatusBadge from '../components/shop/OrderStatusBadge';
-import { ArrowLeft, MapPin, CreditCard, Package, Truck, CheckCircle2, Clock, Loader2, RotateCcw } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Package, Truck, CheckCircle2, Clock, Loader2, RotateCcw, Download } from 'lucide-react';
 import { format } from 'date-fns';
+import InvoicePDF from '../components/shop/InvoicePDF';
+import { Button } from '@/components/ui/button';
 
 const steps = [
   { key: 'pending', icon: Clock, label: 'Pedido realizado' },
@@ -97,8 +99,8 @@ export default function OrderDetail() {
         <div className="ml-auto"><OrderStatusBadge status={order.status} /></div>
       </div>
 
-      {/* Reorder button */}
-      <div className="px-4 pt-4">
+      {/* Reorder & PDF buttons */}
+      <div className="px-4 pt-4 space-y-3">
         <button
           onClick={handleReorder}
           disabled={reordering}
@@ -107,6 +109,7 @@ export default function OrderDetail() {
           {reordering ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
           {reordering ? 'Agregando al carrito…' : 'Volver a pedir'}
         </button>
+        <InvoicePDF orderId={orderId} />
       </div>
 
       <div className="px-4 py-4 space-y-4">
@@ -213,7 +216,12 @@ export default function OrderDetail() {
             <CreditCard className="w-4 h-4 text-primary" />
             <h2 className="text-sm font-bold text-foreground">Pago</h2>
           </div>
-          <p className="text-sm text-foreground capitalize">{order.payment_method?.replace('_', ' ')}</p>
+          <p className="text-sm text-foreground">
+            {order.payment_method === 'credit_card' && 'Tarjeta de Crédito'}
+            {order.payment_method === 'cash_on_delivery' && 'Pago contra entrega'}
+            {order.payment_method === 'paypal' && 'PayPal'}
+            {order.payment_method === 'apple_pay' && 'Apple Pay'}
+          </p>
         </div>
       </div>
     </div>
