@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Star, ThumbsUp, Camera, Loader2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { formatDateTimeSV } from '@/lib/dateUtils';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function StarRating({ value, onChange, readonly = false }) {
@@ -339,7 +339,7 @@ export default function ProductReviews({ productId, isGuest }) {
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] text-muted-foreground">
-                      {review.created_date ? format(new Date(review.created_date), 'dd MMM yyyy HH:mm') : ''}
+                      {review.created_date ? formatDateTimeSV(review.created_date) : ''}
                     </p>
                     {review.is_verified_purchase && (
                       <span className="text-[10px] text-success font-medium">✓ Verificada</span>

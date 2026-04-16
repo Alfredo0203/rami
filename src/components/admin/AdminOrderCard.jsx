@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import OrderStatusBadge from '../shop/OrderStatusBadge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { format } from 'date-fns';
+import { formatDateSV } from '@/lib/dateUtils';
 import { toast } from 'sonner';
 
 // Estados desde los que NO se puede cancelar
@@ -47,7 +47,7 @@ export default function AdminOrderCard({ order }) {
         <div>
           <p className="text-sm font-bold text-foreground">{order.order_number}</p>
           <p className="text-xs text-muted-foreground">
-            {order.created_date ? format(new Date(order.created_date), 'MMM d, yyyy') : ''} · {order.customer_name || order.customer_email}
+            {order.created_date ? formatDateSV(order.created_date) : ''} · {order.customer_name || order.customer_email}
           </p>
         </div>
         <span className="text-sm font-extrabold text-primary">${order.total?.toFixed(2)}</span>

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { formatDateTimeSV } from '@/lib/dateUtils';
 import { Clock, CheckCircle2, Truck, Package } from 'lucide-react';
 
 const statusConfig = {
@@ -88,7 +87,7 @@ export default function OrderStatusTimeline({ orderId }) {
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-medium text-foreground">{config.label}</span>
                   <span className="text-[10px] text-muted-foreground">
-                    {format(new Date(record.timestamp || record.created_date), 'dd MMM HH:mm', { locale: es })}
+                    {formatDateTimeSV(record.timestamp || record.created_date, 'dd MMM HH:mm')}
                   </span>
                 </div>
                 {record.notes && (

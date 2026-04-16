@@ -6,7 +6,7 @@ import { createPageUrl } from '@/utils';
 import OrderStatusBadge from '../components/shop/OrderStatusBadge';
 import OrderStatusTimeline from '../components/shop/OrderStatusTimeline';
 import { ArrowLeft, MapPin, CreditCard, Package, Truck, CheckCircle2, Clock, Loader2, RotateCcw, Download } from 'lucide-react';
-import { format } from 'date-fns';
+import { formatDateTimeSV } from '@/lib/dateUtils';
 import InvoicePDF from '../components/shop/InvoicePDF';
 import { Button } from '@/components/ui/button';
 
@@ -94,7 +94,7 @@ export default function OrderDetail() {
         <div>
           <h1 className="text-base font-bold text-foreground">Pedido {order.order_number}</h1>
           <p className="text-xs text-muted-foreground">
-            {order.created_date ? format(new Date(order.created_date), 'MMM d, yyyy h:mm a') : ''}
+            {order.created_date ? formatDateTimeSV(order.created_date) : ''}
           </p>
         </div>
         <div className="ml-auto"><OrderStatusBadge status={order.status} /></div>
