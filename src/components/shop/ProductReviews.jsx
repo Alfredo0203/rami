@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Star, ThumbsUp, Camera, Loader2, X, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -34,24 +34,43 @@ function StarRating({ value, onChange, readonly = false }) {
   );
 }
 
-function ImageGallery({ images }) {
+function ImageGallery({ images, onClose }) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const touchStartX = useRef(null);
 
   if (!images?.length) return null;
 
-  const next = () => setCurrentIndex((i) => (i + 1) % images.length);
-  const prev = () => setCurrentIndex((i) => (i - 1 + images.length) % images.length);
+  const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const delta = touchStartX.current - e.changedTouches[0].clientX;
+    touchStartX.current = null;
+    if (Math.abs(delta) < 40) return;
+    if (delta > 0) setCurrentIndex(i => Math.min(i + 1, images.length - 1));
+    else setCurrentIndex(i => Math.max(i - 1, 0));
+  };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setCurrentIndex(0)}>
-      <button onClick={(e) => { e.stopPropagation(); prev(); }} className="absolute left-4 text-white hover:bg-white/20 p-2 rounded-full">
-        <ChevronLeft className="w-6 h-6" />
-      </button>
-      <img src={images[currentIndex]} alt="" className="max-h-[80vh] max-w-[80vw] object-contain rounded-lg" />
-      <button onClick={(e) => { e.stopPropagation(); next(); }} className="absolute right-4 text-white hover:bg-white/20 p-2 rounded-full">
-        <ChevronRight className="w-6 h-6" />
-      </button>
-      <span className="absolute bottom-4 text-white text-sm">{currentIndex + 1} / {images.length}</span>
+    <div
+      className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4"
+      onClick={onClose}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      <div className="relative max-w-lg w-full" onClick={e => e.stopPropagation()}>
+        <img src={images[currentIndex]} alt="" className="w-full max-h-[85vh] object-contain rounded-2xl" />
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 w-9 h-9 bg-black/60 rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
+        >
+          <X className="w-5 h-5 text-white" />
+        </button>
+        {images.length > 1 && (
+          <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/60 px-2 py-1 rounded">
+            {currentIndex + 1} / {images.length}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -358,7 +377,7 @@ export default function ProductReviews({ productId, isGuest }) {
         </>
       )}
 
-      {selectedImages && <ImageGallery images={selectedImages} />}
+      {selectedImages && <ImageGallery images={selectedImages} onClose={() => setSelectedImages(null)} />}
     </div>
   );
 }
