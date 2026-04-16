@@ -86,6 +86,9 @@ Deno.serve(async (req) => {
     doc.text(`${order.customer_name || 'N/A'}`, margin, yPosition);
     yPosition += 3.5;
     doc.text(`${order.customer_email || 'N/A'}`, margin, yPosition);
+    yPosition += 3.5;
+    const phoneDisplay = order.shipping_address?.phone || 'N/A';
+    doc.text(`Tel: ${phoneDisplay}`, margin, yPosition);
 
     // ─── Shipping Address ───
     yPosition += 5;
@@ -130,12 +133,15 @@ Deno.serve(async (req) => {
     doc.setFontSize(8.5);
     doc.setTextColor(0, 0, 0);
     
+    let totalItems = 0;
     for (const item of order.items || []) {
       const productName = `${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''}`;
       const itemTotal = (item.price || 0) * (item.quantity || 1);
+      const qty = item.quantity || 1;
+      totalItems += qty;
       
       doc.text(productName.substring(0, 28), col1, yPosition);
-      doc.text(String(item.quantity || 1), col2, yPosition);
+      doc.text(String(qty), col2, yPosition);
       doc.text(`$${(item.price || 0).toFixed(2)}`, col3, yPosition, { align: 'right' });
       doc.text(`$${itemTotal.toFixed(2)}`, col4, yPosition, { align: 'right' });
       
@@ -154,6 +160,10 @@ Deno.serve(async (req) => {
     
     const rightCol = pageWidth - margin - 12;
     const labelCol = pageWidth - margin - 35;
+    
+    // Items count
+    doc.text(`Total de artículos: ${totalItems}`, margin, yPosition);
+    yPosition += 4.5;
     
     // Subtotal
     doc.text('Subtotal:', labelCol, yPosition);
