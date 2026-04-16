@@ -309,7 +309,8 @@ export default function ProductDetail() {
         <div className="flex gap-2">
           <button
             onClick={() => isGuest ? base44.auth.redirectToLogin(window.location.href) : toggleWishlistMutation.mutate()}
-            className="p-2 bg-secondary rounded-full"
+            disabled={toggleWishlistMutation.isPending}
+            className="p-2 bg-secondary rounded-full disabled:opacity-50"
           >
             <Heart className={`w-5 h-5 transition-colors ${isWishlisted ? 'fill-sale text-sale' : 'text-foreground'}`} />
           </button>
