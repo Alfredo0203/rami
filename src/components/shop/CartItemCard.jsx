@@ -10,6 +10,9 @@ export default function CartItemCard({ item, onUpdateQty, onRemove, stockInfo })
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [showStockMsg, setShowStockMsg] = useState(false);
 
+  const available = stockInfo?.available ?? Infinity;
+  const isOverStock = item.quantity > available;
+
   const handlePlusClick = () => {
     if (item.quantity >= available) {
       setShowStockMsg(true);
@@ -18,10 +21,6 @@ export default function CartItemCard({ item, onUpdateQty, onRemove, stockInfo })
       onUpdateQty(item, item.quantity + 1);
     }
   };
-
-  // stockInfo: { available: number } — si no se pasa, no mostramos alerta
-  const available = stockInfo?.available ?? Infinity;
-  const isOverStock = item.quantity > available;
 
   const goToProduct = () => {
     const url = createPageUrl('ProductDetail') + `?id=${item.product_id}` + (item.variant_id ? `&variant_id=${item.variant_id}` : '') + `&qty=${item.quantity}`;
@@ -57,7 +56,7 @@ export default function CartItemCard({ item, onUpdateQty, onRemove, stockInfo })
             Solo {available} disponible{available !== 1 ? 's' : ''}
           </p>
         )}
-        <div className="flex items-center justify-between mt-2 relative">
+        <div className="flex items-center justify-between mt-2">
           <div className="flex items-center gap-0 bg-secondary rounded-full">
             <button
               onClick={() => onUpdateQty(item, item.quantity - 1)}
@@ -73,18 +72,6 @@ export default function CartItemCard({ item, onUpdateQty, onRemove, stockInfo })
               <Plus className="w-3.5 h-3.5 text-foreground" />
             </button>
           </div>
-          <AnimatePresence>
-            {showStockMsg && (
-              <motion.span
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 4 }}
-                className="absolute text-[10px] font-medium text-destructive bg-destructive/10 px-2 py-0.5 rounded-full pointer-events-none"
-              >
-                {available === 0 ? 'Sin stock disponible' : `Máx. ${available} disponible${available !== 1 ? 's' : ''}`}
-              </motion.span>
-            )}
-          </AnimatePresence>
           <button
             onClick={() => setConfirmOpen(true)}
             className="p-2 text-muted-foreground hover:text-destructive transition-colors"
@@ -92,6 +79,18 @@ export default function CartItemCard({ item, onUpdateQty, onRemove, stockInfo })
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
+        <AnimatePresence>
+          {showStockMsg && (
+            <motion.p
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="text-[11px] font-medium text-destructive mt-1"
+            >
+              ¡Alcanzaste el límite disponible!
+            </motion.p>
+          )}
+        </AnimatePresence>
       </div>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
