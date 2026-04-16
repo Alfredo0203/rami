@@ -307,13 +307,15 @@ export default function ProductDetail() {
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div className="flex gap-2">
-          <button
-            onClick={() => isGuest ? base44.auth.redirectToLogin(window.location.href) : toggleWishlistMutation.mutate()}
-            disabled={toggleWishlistMutation.isPending}
-            className="p-2 bg-secondary rounded-full disabled:opacity-50"
-          >
-            <Heart className={`w-5 h-5 transition-colors ${isWishlisted ? 'fill-sale text-sale' : 'text-foreground'}`} />
-          </button>
+          {!isGuest && (
+            <button
+              onClick={() => toggleWishlistMutation.mutate()}
+              disabled={toggleWishlistMutation.isPending}
+              className="p-2 bg-secondary rounded-full disabled:opacity-50"
+            >
+              <Heart className={`w-5 h-5 transition-colors ${isWishlisted ? 'fill-sale text-sale' : 'text-foreground'}`} />
+            </button>
+          )}
           <button onClick={() => navigate(createPageUrl('Cart'))} className="p-2 bg-secondary rounded-full relative">
             <ShoppingCart className="w-5 h-5 text-foreground" />
             {cartCount > 0 && (
