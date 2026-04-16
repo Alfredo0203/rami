@@ -153,20 +153,34 @@ Deno.serve(async (req) => {
       await base44.entities.CartItem.delete(item.id);
     }
 
-    // ── 7. Generar PDF de factura y enviar email ─────────────────
+    // ── 7. Enviar email de confirmación ─────────────────
     try {
-      const downloadLink = `https://rami.base44.app/api/downloadOrderPDF?orderId=${order.id}`;
-      
+      const itemsText = cartItems.map(item => 
+        `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} - ${item.quantity}x $${item.product_price.toFixed(2)}`
+      ).join('\n');
+
       const emailBody = `Hola, ${order.customer_name || 'Estimado Cliente'}.
 
 Gracias por tu compra. Tu pedido fue recibido correctamente.
 
-📄 Descargar Factura: ${downloadLink}
+═══════════════════════════════════
+Orden #${order.order_number}
+═══════════════════════════════════
+
+PRODUCTOS:
+${itemsText}
+
+Subtotal: $${subtotal.toFixed(2)}
+${discountAmount > 0 ? `Descuento: -$${discountAmount.toFixed(2)}\n` : ''}Envío: $${shipping.toFixed(2)}
+───────────────────────────────────
+TOTAL: $${total.toFixed(2)}
+═══════════════════════════════════
+
+Puedes ver tu orden y descargar la factura en tu cuenta en la app.
 
 Estamos preparando tu pedido y te notificaremos cualquier actualización.
 
 Saludos,
-
 RAmi.`;
 
       await base44.integrations.Core.SendEmail({
@@ -174,8 +188,8 @@ RAmi.`;
         subject: `Confirmación de Pedido - Orden ${order.order_number}`,
         body: emailBody,
       });
-    } catch (pdfErr) {
-      console.log('PDF generation warning (non-blocking):', pdfErr.message);
+    } catch (emailErr) {
+      console.log('Email warning (non-blocking):', emailErr.message);
     }
 
     return Response.json({ order });
