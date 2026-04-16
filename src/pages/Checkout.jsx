@@ -52,7 +52,7 @@ export default function Checkout() {
   }, [addresses, selectedAddressId]);
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.product_price || 0) * (item.quantity || 0), 0);
-  const shipping = subtotal > 50 ? 0 : 4.99;
+  const shipping = subtotal >= 15 ? 0 : 4.99;
   const total = subtotal + shipping;
 
   const saveAddressMutation = useMutation({

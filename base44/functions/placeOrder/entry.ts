@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
 
     // ── 2. Calcular totales ───────────────────────────────────────────
     const subtotal = cartItems.reduce((sum, item) => sum + (item.product_price || 0) * (item.quantity || 0), 0);
-    const shipping = subtotal > 50 ? 0 : 4.99;
+    const shipping = subtotal >= 15 ? 0 : 4.99;
 
     let discountAmount = 0;
     let appliedCoupon = null;
