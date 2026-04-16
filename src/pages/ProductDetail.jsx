@@ -53,12 +53,13 @@ export default function ProductDetail() {
     queryFn: async () => {
       if (isGuest) return [];
       try {
-        return await base44.entities.Wishlist.filter({ user_email: user.email });
+        const items = await base44.entities.Wishlist.filter({ user_email: user.email });
+        return Array.isArray(items) ? items : [];
       } catch {
         return [];
       }
     },
-    enabled: !isGuest,
+    enabled: !isGuest && !!user?.email,
   });
 
   const wishlistItem = wishlistItems.find(w => w.product_id === productId);
