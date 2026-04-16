@@ -7,16 +7,45 @@ import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
+// Estados desde los que NO se puede cancelar
+const NON_CANCELLABLE = ['delivered', 'cancelled'];
+
 export default function AdminOrderCard({ order }) {
   const queryClient = useQueryClient();
 
   const updateMutation = useMutation({
-    mutationFn: (data) => base44.entities.Order.update(order.id, data),
+    mutationFn: async ({ newStatus, extraFields }) => {
+      const res = await base44.functions.invoke('updateOrderStatus', {
+        orderId: order.id,
+        newStatus,
+        extraFields,
+      });
+      return res.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
       toast.success('Pedido actualizado');
     },
+    onError: (err) => {
+      toast.error(err?.response?.data?.error || 'Error al actualizar el pedido');
+    },
   });
+
+  const handleStatusChange = (newStatus) => {
+    if (newStatus === 'cancelled' && NON_CANCELLABLE.includes(order.status)) {
+      toast.error('No se puede cancelar un pedido ya entregado o cancelado');
+      return;
+    }
+
+    const extraFields = {};
+    if (newStatus === 'shipped' && !order.tracking_number) {
+      const ts = Date.now().toString(36).toUpperCase();
+      const rand = Math.random().toString(36).substring(2, 8).toUpperCase();
+      extraFields.tracking_number = 'RA-' + ts + rand;
+    }
+
+    updateMutation.mutate({ newStatus, extraFields });
+  };
 
   return (
     <div className="bg-card rounded-xl p-4 shadow-sm space-y-3">
@@ -45,16 +74,8 @@ export default function AdminOrderCard({ order }) {
       <div className="flex items-center gap-2">
         <Select
           value={order.status}
-          onValueChange={(status) => {
-            const update = { status };
-            // Generar rastreo automático al marcar como enviado (solo si no tiene uno ya)
-            if (status === 'shipped' && !order.tracking_number) {
-              const ts = Date.now().toString(36).toUpperCase();
-              const rand = Math.random().toString(36).substring(2, 8).toUpperCase();
-              update.tracking_number = 'RA-' + ts + rand;
-            }
-            updateMutation.mutate(update);
-          }}
+          onValueChange={handleStatusChange}
+          disabled={updateMutation.isPending}
         >
           <SelectTrigger className="h-8 text-xs flex-1">
             <SelectValue />
@@ -64,7 +85,13 @@ export default function AdminOrderCard({ order }) {
             <SelectItem value="processing">En proceso</SelectItem>
             <SelectItem value="shipped">Enviado</SelectItem>
             <SelectItem value="delivered">Entregado</SelectItem>
-            <SelectItem value="cancelled">Cancelado</SelectItem>
+            {/* Solo mostrar cancelado si aún se puede cancelar */}
+            {!NON_CANCELLABLE.includes(order.status) && (
+              <SelectItem value="cancelled">Cancelado</SelectItem>
+            )}
+            {order.status === 'cancelled' && (
+              <SelectItem value="cancelled">Cancelado</SelectItem>
+            )}
           </SelectContent>
         </Select>
         <Input
@@ -72,7 +99,7 @@ export default function AdminOrderCard({ order }) {
           defaultValue={order.tracking_number || ''}
           onBlur={(e) => {
             if (e.target.value !== (order.tracking_number || '')) {
-              updateMutation.mutate({ tracking_number: e.target.value });
+              updateMutation.mutate({ newStatus: order.status, extraFields: { tracking_number: e.target.value } });
             }
           }}
           className="h-8 text-xs flex-1"
