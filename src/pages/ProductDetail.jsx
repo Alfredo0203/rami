@@ -368,10 +368,10 @@ export default function ProductDetail() {
             <span className="text-sm font-bold w-8 text-center text-foreground">{quantity}</span>
             <button
               onClick={() => {
-                if (inStock && quantity >= effectiveStock) {
+                if (effectiveStock > 0 && quantity >= effectiveStock) {
                   toast.error('¡Alcanzaste el límite disponible!');
-                } else {
-                  setQuantity(Math.min(effectiveStock || 1, quantity + 1));
+                } else if (effectiveStock <= 0 || quantity < effectiveStock) {
+                  setQuantity(quantity + 1);
                 }
               }}
               className="p-2.5 rounded-full"
