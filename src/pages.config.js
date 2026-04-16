@@ -58,6 +58,7 @@ import OrderConfirmation from './pages/OrderConfirmation';
 import OrderDetail from './pages/OrderDetail';
 import Orders from './pages/Orders';
 import ProductDetail from './pages/ProductDetail';
+import Wishlist from './pages/Wishlist';
 import __Layout from './Layout.jsx';
 
 
@@ -73,6 +74,7 @@ export const PAGES = {
     "OrderDetail": OrderDetail,
     "Orders": Orders,
     "ProductDetail": ProductDetail,
+    "Wishlist": Wishlist,
 }
 
 export const pagesConfig = {

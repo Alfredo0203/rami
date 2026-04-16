@@ -21,7 +21,6 @@ export default function ProductDetail() {
   const [currentImage, setCurrentImage] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [quantity, setQuantity] = useState(preselectedQty);
-  const [liked, setLiked] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedAttrMap, setSelectedAttrMap] = useState({});
   const touchStartX = useRef(null);
@@ -46,6 +45,33 @@ export default function ProductDetail() {
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart'],
     queryFn: () => base44.entities.CartItem.list().catch(() => []),
+  });
+
+  const { data: wishlistItems = [] } = useQuery({
+    queryKey: ['wishlist'],
+    queryFn: () => base44.entities.Wishlist.list().catch(() => []),
+    enabled: !isGuest,
+  });
+
+  const wishlistItem = wishlistItems.find(w => w.product_id === productId);
+  const isWishlisted = !!wishlistItem;
+
+  const toggleWishlistMutation = useMutation({
+    mutationFn: async () => {
+      if (isWishlisted) {
+        return base44.entities.Wishlist.delete(wishlistItem.id);
+      }
+      return base44.entities.Wishlist.create({
+        product_id: productId,
+        product_name: product?.name,
+        product_image: product?.images?.[0] || '',
+        product_price: product?.price,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+      toast.success(isWishlisted ? 'Eliminado de favoritos' : 'Guardado en favoritos');
+    },
   });
 
   const product = data?.product;
@@ -271,8 +297,11 @@ export default function ProductDetail() {
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div className="flex gap-2">
-          <button onClick={() => setLiked(!liked)} className="p-2 bg-secondary rounded-full">
-            <Heart className={`w-5 h-5 ${liked ? 'fill-sale text-sale' : 'text-foreground'}`} />
+          <button
+            onClick={() => isGuest ? base44.auth.redirectToLogin(window.location.href) : toggleWishlistMutation.mutate()}
+            className="p-2 bg-secondary rounded-full"
+          >
+            <Heart className={`w-5 h-5 transition-colors ${isWishlisted ? 'fill-sale text-sale' : 'text-foreground'}`} />
           </button>
           <button onClick={() => navigate(createPageUrl('Cart'))} className="p-2 bg-secondary rounded-full relative">
             <ShoppingCart className="w-5 h-5 text-foreground" />
