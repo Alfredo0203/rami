@@ -53,59 +53,87 @@ export default function ProductDetail() {
   const hasVariants = variants.length > 0;
 
   // Al seleccionar una variante con imagen, cambiar la imagen principal
-  const handleVariantSelect = (variant, syncAttrMap = false) => {
-    setSelectedVariant(variant || null);
-    // Only sync attrMap when pre-selecting from URL/cart (not from user UI interaction)
-    if (syncAttrMap && variant?.attributes) {
-      const map = {};
-      variant.attributes.forEach(a => { if (a.key && a.values?.[0]) map[a.key] = a.values[0]; });
-      setSelectedAttrMap(map);
-    }
-    if (variant?.image_url && product?.images) {
-      const variantImgIndex = product.images.indexOf(variant.image_url);
-      if (variantImgIndex >= 0) {
-        setCurrentImage(variantImgIndex);
-      } else {
-        setCurrentImage(-1);
-      }
-    }
-    // If this variant is already in cart, sync quantity
-    const inCart = cartItems.find(item =>
-      item.product_id === productId && item.variant_id === variant?.id
-    );
-    if (inCart) {
-      setQuantity(inCart.quantity || 1);
-    } else {
-      setQuantity(1);
-    }
-  };
-
   // Auto-select variant: only if coming from cart (variant_id in URL) or product is already in cart
+  // Using refs to track if we've already done the initial selection
+  const initialSelectionDone = useRef(false);
+
   useEffect(() => {
-    if (variants.length === 0 || selectedVariant) return;
+    // Reset when product changes
+    if (productId) {
+      initialSelectionDone.current = false;
+    }
+  }, [productId]);
+
+  useEffect(() => {
+    // Skip if no variants, already selected, or initial selection already done
+    if (variants.length === 0 || initialSelectionDone.current) return;
+
+    let variantToSelect = null;
+    let shouldSyncQty = false;
 
     // 1. Preselected via URL param (coming from cart)
     if (preselectedVariantId) {
-      const preselected = variants.find(v => v.id === preselectedVariantId);
-      if (preselected) {
-        handleVariantSelect(preselected, true);
-        return;
-      }
+      variantToSelect = variants.find(v => v.id === preselectedVariantId);
     }
 
     // 2. Product already in cart — preselect the variant that's in cart
-    const cartVariant = cartItems.find(item => item.product_id === productId && item.variant_id);
-    if (cartVariant) {
-      const inCartVariant = variants.find(v => v.id === cartVariant.variant_id);
-      if (inCartVariant) {
-        handleVariantSelect(inCartVariant, true);
-        return;
+    if (!variantToSelect) {
+      const cartVariant = cartItems.find(item => item.product_id === productId && item.variant_id);
+      if (cartVariant) {
+        variantToSelect = variants.find(v => v.id === cartVariant.variant_id);
+        shouldSyncQty = true;
       }
     }
 
-    // 3. Otherwise: no preselection, user must choose
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, cartItems]);
+    // Apply selection if found
+    if (variantToSelect) {
+      initialSelectionDone.current = true;
+      setSelectedVariant(variantToSelect);
+      
+      // Sync attribute map
+      if (variantToSelect.attributes) {
+        const map = {};
+        variantToSelect.attributes.forEach(a => { 
+          if (a.key && a.values?.[0]) map[a.key] = a.values[0]; 
+        });
+        setSelectedAttrMap(map);
+      }
+      
+      // Sync image
+      if (variantToSelect.image_url && product?.images) {
+        const variantImgIndex = product.images.indexOf(variantToSelect.image_url);
+        setCurrentImage(variantImgIndex >= 0 ? variantImgIndex : -1);
+      }
+      
+      // Sync quantity from cart if applicable
+      if (shouldSyncQty) {
+        const inCart = cartItems.find(item =>
+          item.product_id === productId && item.variant_id === variantToSelect.id
+        );
+        if (inCart) {
+          setQuantity(inCart.quantity || 1);
+        }
+      }
+    }
+  }, [variants, cartItems, productId, preselectedVariantId, product?.images]);
+
+  // Handler for user-driven variant selection (from VariantSelector UI)
+  const handleVariantSelect = (variant) => {
+    setSelectedVariant(variant || null);
+    initialSelectionDone.current = true;
+    
+    // Update image based on variant
+    if (variant?.image_url && product?.images) {
+      const variantImgIndex = product.images.indexOf(variant.image_url);
+      setCurrentImage(variantImgIndex >= 0 ? variantImgIndex : -1);
+    }
+    
+    // Sync quantity if variant is in cart, otherwise reset to 1
+    const inCart = cartItems.find(item =>
+      item.product_id === productId && item.variant_id === variant?.id
+    );
+    setQuantity(inCart ? (inCart.quantity || 1) : 1);
+  };
 
   // Determine effective price and stock
   const effectivePrice = (hasVariants && selectedVariant)
@@ -123,6 +151,11 @@ export default function ProductDetail() {
 
   const addToCartMutation = useMutation({
     mutationFn: async () => {
+      // Final stock validation before committing
+      if (effectiveStock > 0 && quantity > effectiveStock) {
+        throw new Error(`Solo hay ${effectiveStock} unidades disponibles`);
+      }
+
       const variantId = hasVariants ? selectedVariant?.id : null;
       // Normalize: treat null, undefined, and empty string as "no variant"
       const normalizeVariantId = (v) => v || null;
@@ -152,6 +185,9 @@ export default function ProductDetail() {
     onSuccess: () => {
       toast.success(isAlreadyInCart ? 'Carrito actualizado' : 'Agregado al carrito');
       queryClient.invalidateQueries({ queryKey: ['cart'] });
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Error al agregar al carrito');
     },
   });
 
