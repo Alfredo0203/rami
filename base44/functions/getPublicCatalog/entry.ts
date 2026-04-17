@@ -24,10 +24,27 @@ Deno.serve(async (req) => {
       const effectiveStock = p.has_variants
         ? productVariants.reduce((sum, v) => sum + (v.stock || 0), 0)
         : (p.stock || 0);
-      return { ...p, effective_stock: effectiveStock };
+
+      // Collect unique variant attribute values (e.g. colors, sizes from variants)
+      const variantAttributes = {};
+      for (const v of productVariants) {
+        if (Array.isArray(v.attributes)) {
+          for (const attr of v.attributes) {
+            if (!variantAttributes[attr.key]) variantAttributes[attr.key] = new Set();
+            (attr.values || []).forEach(val => variantAttributes[attr.key].add(val));
+          }
+        }
+      }
+      // Convert sets to arrays
+      const variantAttributesFlat = {};
+      for (const [key, set] of Object.entries(variantAttributes)) {
+        variantAttributesFlat[key] = Array.from(set);
+      }
+
+      return { ...p, effective_stock: effectiveStock, variant_attributes: variantAttributesFlat };
     });
 
-    return Response.json({ products: enrichedProducts, categories });
+    return Response.json({ products: enrichedProducts, categories, variants });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

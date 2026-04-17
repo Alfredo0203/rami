@@ -19,7 +19,7 @@ export default function Browse() {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
-  const [priceRange, setPriceRange] = useState([0, 1000]);
+  const [priceRange, setPriceRange] = useState([0, 100]);
 
   // Read ?category= from URL on mount
   const urlParams = new URLSearchParams(window.location.search);
@@ -36,6 +36,7 @@ export default function Browse() {
   const [onlyInStock, setOnlyInStock] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState('all');
   const [selectedColor, setSelectedColor] = useState('all');
+  const [selectedVariantFilters, setSelectedVariantFilters] = useState({}); // { "Talla": "M", ... }
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const { data: catalogData, isLoading } = useQuery({
@@ -52,19 +53,63 @@ export default function Browse() {
   });
 
   const maxPrice = useMemo(() => {
-    const max = Math.max(...products.map(p => p.price || 0), 100);
+    if (products.length === 0) return 100;
+    const max = Math.max(...products.map(p => p.price || 0));
     return Math.ceil(max / 10) * 10;
   }, [products]);
 
+  // Reset price range upper bound when maxPrice is known
+  const [priceRangeInitialized, setPriceRangeInitialized] = useState(false);
+  useEffect(() => {
+    if (!priceRangeInitialized && products.length > 0) {
+      setPriceRange([0, maxPrice]);
+      setPriceRangeInitialized(true);
+    }
+  }, [maxPrice, products.length, priceRangeInitialized]);
+
   const availableBrands = useMemo(() => {
-    const brands = [...new Set(products.map(p => p.brand).filter(Boolean))].sort();
-    return brands;
+    return [...new Set(products.map(p => p.brand).filter(Boolean))].sort();
   }, [products]);
 
+  // Colors: merge product.color + variant_attributes["Color"] / "color"
   const availableColors = useMemo(() => {
-    const colors = [...new Set(products.map(p => p.color).filter(Boolean))].sort();
-    return colors;
+    const s = new Set();
+    products.forEach(p => {
+      if (p.color) s.add(p.color);
+      const varColors =
+        p.variant_attributes?.['Color'] ||
+        p.variant_attributes?.['color'] ||
+        p.variant_attributes?.['COLOR'] || [];
+      varColors.forEach(c => s.add(c));
+    });
+    return [...s].sort();
   }, [products]);
+
+  // Variant attribute keys other than color (e.g. Talla, Material)
+  const availableVariantKeys = useMemo(() => {
+    const keySet = new Set();
+    products.forEach(p => {
+      if (p.variant_attributes) {
+        Object.keys(p.variant_attributes).forEach(k => {
+          const lower = k.toLowerCase();
+          if (lower !== 'color') keySet.add(k);
+        });
+      }
+    });
+    return Array.from(keySet);
+  }, [products]);
+
+  const variantFilterOptions = useMemo(() => {
+    const result = {};
+    availableVariantKeys.forEach(key => {
+      const s = new Set();
+      products.forEach(p => {
+        (p.variant_attributes?.[key] || []).forEach(v => s.add(v));
+      });
+      result[key] = [...s].sort();
+    });
+    return result;
+  }, [products, availableVariantKeys]);
 
   const filteredProducts = useMemo(() => {
     let filtered = products;
@@ -98,8 +143,24 @@ export default function Browse() {
     }
 
     if (selectedColor !== 'all') {
-      filtered = filtered.filter(p => p.color === selectedColor);
+      filtered = filtered.filter(p => {
+        if (p.color === selectedColor) return true;
+        const varColors =
+          p.variant_attributes?.['Color'] ||
+          p.variant_attributes?.['color'] ||
+          p.variant_attributes?.['COLOR'] || [];
+        return varColors.includes(selectedColor);
+      });
     }
+
+    // Filter by variant attributes (e.g. Talla)
+    Object.entries(selectedVariantFilters).forEach(([key, value]) => {
+      if (value && value !== 'all') {
+        filtered = filtered.filter(p =>
+          (p.variant_attributes?.[key] || []).includes(value)
+        );
+      }
+    });
 
     if (minRating > 0) {
       filtered = filtered.filter(p => (p.rating || 0) >= minRating);
@@ -111,7 +172,7 @@ export default function Browse() {
     else if (sortBy === 'popular') filtered = [...filtered].sort((a, b) => (b.sold_count || 0) - (a.sold_count || 0));
 
     return filtered;
-  }, [products, searchQuery, selectedCategory, priceRange, sortBy, onlyOnSale, onlyInStock, minRating, selectedBrand, selectedColor]);
+  }, [products, searchQuery, selectedCategory, priceRange, sortBy, onlyOnSale, onlyInStock, minRating, selectedBrand, selectedColor, selectedVariantFilters]);
 
   const queryClient = useQueryClient();
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
@@ -124,12 +185,14 @@ export default function Browse() {
     onlyInStock,
     minRating > 0,
     priceRange[0] > 0 || priceRange[1] < maxPrice,
+    Object.values(selectedVariantFilters).some(v => v && v !== 'all'),
   ].filter(Boolean).length;
 
   const resetFilters = () => {
     setSelectedCategory('all');
     setSelectedBrand('all');
     setSelectedColor('all');
+    setSelectedVariantFilters({});
     setOnlyOnSale(false);
     setOnlyInStock(false);
     setMinRating(0);
@@ -271,6 +334,35 @@ export default function Browse() {
                     </div>
                   </div>
                 )}
+
+                {/* Otros atributos de variantes (Talla, Material, etc.) */}
+                {availableVariantKeys.map(key => {
+                  const options = variantFilterOptions[key] || [];
+                  if (options.length === 0) return null;
+                  const current = selectedVariantFilters[key] || 'all';
+                  return (
+                    <div key={key}>
+                      <label className="text-sm font-semibold text-foreground mb-2 block">{key}</label>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => setSelectedVariantFilters(prev => ({ ...prev, [key]: 'all' }))}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${current === 'all' ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}
+                        >
+                          Todos
+                        </button>
+                        {options.map(opt => (
+                          <button
+                            key={opt}
+                            onClick={() => setSelectedVariantFilters(prev => ({ ...prev, [key]: opt }))}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${current === opt ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
 
                 {/* Toggles */}
                 <div className="space-y-3">
