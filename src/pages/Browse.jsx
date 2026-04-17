@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import PullToRefresh from '../components/shop/PullToRefresh';
@@ -20,7 +20,17 @@ export default function Browse() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [priceRange, setPriceRange] = useState([0, 1000]);
-  const [selectedCategory, setSelectedCategory] = useState('all');
+
+  // Read ?category= from URL on mount
+  const urlParams = new URLSearchParams(window.location.search);
+  const [selectedCategory, setSelectedCategory] = useState(urlParams.get('category') || 'all');
+
+  // Re-sync if URL changes (e.g., after navigating from search)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const cat = params.get('category');
+    if (cat) setSelectedCategory(cat);
+  }, [window.location.search]);
   const [minRating, setMinRating] = useState(0);
   const [onlyOnSale, setOnlyOnSale] = useState(false);
   const [onlyInStock, setOnlyInStock] = useState(false);
