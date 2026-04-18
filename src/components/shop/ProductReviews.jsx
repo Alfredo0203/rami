@@ -234,13 +234,14 @@ export default function ProductReviews({ productId, isGuest }) {
 
 
   // Check if current user already left a review for this product
+  // Use `created_by` (built-in field set by the platform) for reliable ownership check
   const { data: userReview } = useQuery({
     queryKey: ['user-review', productId],
     queryFn: async () => {
       const user = await base44.auth.me();
       const existing = await base44.entities.Review.filter({
         product_id: productId,
-        reviewer_email: user.email,
+        created_by: user.email,
       });
       return existing[0] || null;
     },
