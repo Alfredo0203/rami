@@ -231,19 +231,7 @@ export default function ProductReviews({ productId, isGuest }) {
     enabled: !isGuest,
   });
 
-  // Check if user already left a review
-  const { data: userReview } = useQuery({
-    queryKey: ['user-review', productId],
-    queryFn: async () => {
-      const user = await base44.auth.me();
-      const existing = await base44.entities.Review.filter({
-        product_id: productId,
-        reviewer_email: user.email,
-      });
-      return existing[0] || null;
-    },
-    enabled: !isGuest,
-  });
+
 
   const avgRating = reviews.length > 0
     ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length
@@ -260,7 +248,7 @@ export default function ProductReviews({ productId, isGuest }) {
         <h2 className="text-sm font-bold text-foreground">
           Reseñas{reviews.length > 0 ? ` (${reviews.length})` : ''}
         </h2>
-        {!isGuest && !userReview && (
+        {!isGuest && (
           <button
             onClick={() => setShowForm(v => !v)}
             className="text-xs text-primary font-semibold"
@@ -288,7 +276,7 @@ export default function ProductReviews({ productId, isGuest }) {
         <div className="text-center py-8">
           <Star className="w-10 h-10 text-muted-foreground/20 mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">Aún no hay reseñas</p>
-          {!isGuest && !userReview && (
+          {!isGuest && (
             <button
               onClick={() => setShowForm(true)}
               className="mt-2 text-xs text-primary font-semibold"
