@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard, Megaphone } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -26,23 +28,23 @@ export default function AdminSettingsTab({ currentUser }) {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [bannerForm, setBannerForm] = useState({ enabled: true, badge_text: '', title: '', subtitle: '', link_url: '' });
+  const [savingBanner, setSavingBanner] = useState(false);
 
   useEffect(() => {
     base44.entities.AppSettings.filter({ key: 'global' })
-      .then(results => setSettings(results[0] || null))
+      .then(results => {
+        const s = results[0] || null;
+        setSettings(s);
+        if (s?.promo_banner) setBannerForm({ enabled: true, badge_text: '', title: '', subtitle: '', link_url: '', ...s.promo_banner });
+      })
       .finally(() => setLoading(false));
   }, []);
 
   const saveSettings = async (patch) => {
     setSaving(true);
     try {
-      const payload = {
-        key: 'global',
-        ...settings,
-        ...patch,
-        updated_by: currentUser?.email,
-        updated_at: new Date().toISOString(),
-      };
+      const payload = { key: 'global', ...settings, ...patch, updated_by: currentUser?.email, updated_at: new Date().toISOString() };
       if (settings?.id) {
         const updated = await base44.entities.AppSettings.update(settings.id, payload);
         setSettings(updated);
@@ -58,35 +60,42 @@ export default function AdminSettingsTab({ currentUser }) {
     }
   };
 
+  const saveBanner = async () => {
+    setSavingBanner(true);
+    try {
+      const payload = { key: 'global', ...settings, promo_banner: bannerForm, updated_by: currentUser?.email, updated_at: new Date().toISOString() };
+      if (settings?.id) {
+        const updated = await base44.entities.AppSettings.update(settings.id, payload);
+        setSettings(updated);
+      } else {
+        const created = await base44.entities.AppSettings.create(payload);
+        setSettings(created);
+      }
+      toast.success('Banner actualizado');
+    } catch {
+      toast.error('Error al guardar el banner');
+    } finally {
+      setSavingBanner(false);
+    }
+  };
+
   const toggleDevMode = (value) => saveSettings({ development_mode: value });
 
   const togglePage = (path, enabled) => {
     const current = settings?.disabled_pages || [];
-    const updated = enabled
-      ? current.filter(p => p !== path)
-      : [...new Set([...current, path])];
+    const updated = enabled ? current.filter(p => p !== path) : [...new Set([...current, path])];
     saveSettings({ disabled_pages: updated });
   };
 
   const togglePaymentMethod = (method, enabled) => {
     const current = settings?.allowed_payment_methods || ['credit_card'];
-    const updated = enabled
-      ? [...new Set([...current, method])]
-      : current.filter(m => m !== method);
-    // Must keep at least one
-    if (updated.length === 0) {
-      toast.error('Debe haber al menos un método de pago habilitado');
-      return;
-    }
+    const updated = enabled ? [...new Set([...current, method])] : current.filter(m => m !== method);
+    if (updated.length === 0) { toast.error('Debe haber al menos un método de pago habilitado'); return; }
     saveSettings({ allowed_payment_methods: updated });
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center py-10">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" />
-      </div>
-    );
+    return <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
   }
 
   const devMode = settings?.development_mode === true;
@@ -94,6 +103,63 @@ export default function AdminSettingsTab({ currentUser }) {
 
   return (
     <div className="space-y-4 mt-3 pb-6">
+
+      {/* Promo Banner */}
+      <div className="bg-card rounded-xl p-4 shadow-sm">
+        <div className="flex items-center gap-2 mb-3">
+          <Megaphone className="w-4 h-4 text-primary" />
+          <p className="text-sm font-semibold text-foreground">Banner Promocional</p>
+          <div className="ml-auto">
+            <Switch
+              checked={bannerForm.enabled}
+              onCheckedChange={(v) => setBannerForm(f => ({ ...f, enabled: v }))}
+            />
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground mb-3">Texto que aparece en el banner de la pantalla de inicio.</p>
+        <div className="space-y-2">
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Etiqueta (badge)</label>
+            <Input
+              placeholder="Flash Sale"
+              value={bannerForm.badge_text}
+              onChange={(e) => setBannerForm(f => ({ ...f, badge_text: e.target.value }))}
+              className="h-8 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Título principal</label>
+            <Input
+              placeholder="Up to 70% OFF"
+              value={bannerForm.title}
+              onChange={(e) => setBannerForm(f => ({ ...f, title: e.target.value }))}
+              className="h-8 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Subtítulo</label>
+            <Input
+              placeholder="Created by Alfred & Raquel"
+              value={bannerForm.subtitle}
+              onChange={(e) => setBannerForm(f => ({ ...f, subtitle: e.target.value }))}
+              className="h-8 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Enlace al tocar (opcional)</label>
+            <Input
+              placeholder="/Browse o https://..."
+              value={bannerForm.link_url}
+              onChange={(e) => setBannerForm(f => ({ ...f, link_url: e.target.value }))}
+              className="h-8 text-sm"
+            />
+          </div>
+          <Button size="sm" onClick={saveBanner} disabled={savingBanner} className="mt-1 w-full">
+            {savingBanner ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar banner'}
+          </Button>
+        </div>
+      </div>
+
       {/* Dev Mode */}
       <div className="bg-card rounded-xl p-4 shadow-sm flex items-start gap-3">
         <div className="w-9 h-9 bg-warning/10 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
@@ -102,53 +168,38 @@ export default function AdminSettingsTab({ currentUser }) {
         <div className="flex-1">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-foreground">{t('admin_dev_mode')}</p>
-            {saving ? (
-              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-            ) : (
-              <Switch checked={devMode} onCheckedChange={toggleDevMode} />
-            )}
+            {saving ? <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /> : <Switch checked={devMode} onCheckedChange={toggleDevMode} />}
           </div>
           <p className="text-xs text-muted-foreground mt-1">{t('admin_dev_mode_desc')}</p>
-          {devMode && (
-            <p className="text-xs text-warning font-medium mt-2">
-              ⚠️ El modo desarrollo está activo. Los usuarios regulares solo pueden acceder al Inicio.
-            </p>
-          )}
-          {settings?.updated_by && (
-            <p className="text-[10px] text-muted-foreground mt-1">
-              Última actualización por {settings.updated_by}
-            </p>
-          )}
+          {devMode && <p className="text-xs text-warning font-medium mt-2">⚠️ El modo desarrollo está activo. Los usuarios regulares solo pueden acceder al Inicio.</p>}
+          {settings?.updated_by && <p className="text-[10px] text-muted-foreground mt-1">Última actualización por {settings.updated_by}</p>}
         </div>
       </div>
 
-      {/* Page Visibility — only shown when dev mode is ON */}
-      {devMode && <div className="bg-card rounded-xl p-4 shadow-sm">
-        <div className="flex items-center gap-2 mb-3">
-          <LayoutDashboard className="w-4 h-4 text-primary" />
-          <p className="text-sm font-semibold text-foreground">Visibilidad de Pantallas</p>
-        </div>
-        <p className="text-xs text-muted-foreground mb-3">Habilita o deshabilita pantallas para usuarios regulares.</p>
-        <div className="space-y-3">
-          {PAGES_CONFIG.map(({ path, label, description }) => {
-            const disabledPages = settings?.disabled_pages || [];
-            const isEnabled = !disabledPages.includes(path);
-            return (
-              <div key={path} className="flex items-center gap-3">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">{label}</p>
-                  <p className="text-xs text-muted-foreground">{description}</p>
+      {/* Page Visibility */}
+      {devMode && (
+        <div className="bg-card rounded-xl p-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <LayoutDashboard className="w-4 h-4 text-primary" />
+            <p className="text-sm font-semibold text-foreground">Visibilidad de Pantallas</p>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">Habilita o deshabilita pantallas para usuarios regulares.</p>
+          <div className="space-y-3">
+            {PAGES_CONFIG.map(({ path, label, description }) => {
+              const isEnabled = !(settings?.disabled_pages || []).includes(path);
+              return (
+                <div key={path} className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground">{label}</p>
+                    <p className="text-xs text-muted-foreground">{description}</p>
+                  </div>
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /> : <Switch checked={isEnabled} onCheckedChange={(v) => togglePage(path, v)} />}
                 </div>
-                {saving ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                ) : (
-                  <Switch checked={isEnabled} onCheckedChange={(v) => togglePage(path, v)} />
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>}
+      )}
 
       {/* Payment Methods */}
       <div className="bg-card rounded-xl p-4 shadow-sm">
@@ -169,11 +220,7 @@ export default function AdminSettingsTab({ currentUser }) {
                   <p className="text-sm font-medium text-foreground">{label}</p>
                   <p className="text-xs text-muted-foreground">{description}</p>
                 </div>
-                {saving ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                ) : (
-                  <Switch checked={isEnabled} onCheckedChange={(v) => togglePaymentMethod(value, v)} />
-                )}
+                {saving ? <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /> : <Switch checked={isEnabled} onCheckedChange={(v) => togglePaymentMethod(value, v)} />}
               </div>
             );
           })}

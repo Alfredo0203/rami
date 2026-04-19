@@ -33,6 +33,32 @@
       "default": [],
       "description": "List of page paths disabled for regular users (e.g. ['Browse', 'Orders'])"
     },
+    "promo_banner": {
+      "type": "object",
+      "description": "Configurable promotional banner shown on the home screen",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "badge_text": {
+          "type": "string",
+          "description": "Small badge label (e.g. 'Flash Sale')"
+        },
+        "title": {
+          "type": "string",
+          "description": "Main headline (e.g. 'Up to 70% OFF')"
+        },
+        "subtitle": {
+          "type": "string",
+          "description": "Secondary text below the title"
+        },
+        "link_url": {
+          "type": "string",
+          "description": "Optional URL to navigate when tapped"
+        }
+      }
+    },
     "updated_by": {
       "type": "string",
       "description": "Email of admin who last updated"
