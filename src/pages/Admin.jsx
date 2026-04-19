@@ -94,6 +94,9 @@ export default function Admin() {
     queryFn: () => base44.entities.Store.list('-created_date'),
   });
 
+  // Filtrar para mostrar solo tiendas externas (no la tienda principal)
+  const externalStores = stores.filter(store => store.store_type !== 'owner');
+
   const deleteProductMutation = useMutation({
     mutationFn: (id) => base44.entities.Product.delete(id),
     onSuccess: () => {
@@ -322,7 +325,7 @@ export default function Admin() {
             >
               <option value="all">Todas las tiendas</option>
               <option value="main">Rami (Mi tienda)</option>
-              {stores.map(store => (
+              {externalStores.map(store => (
                 <option key={store.id} value={store.id}>{store.name}</option>
               ))}
             </select>
