@@ -9,16 +9,17 @@ function detectLanguage() {
   return 'es'; // Fixed to Spanish — app targets El Salvador
 }
 
-const LanguageContext = createContext({ lang: 'en', t: (k) => k });
+const LanguageContext = createContext({ lang: 'es', t: (k) => k, setLang: () => {} });
 
 export function LanguageProvider({ children }) {
-  const [lang, setLang] = useState(detectLanguage);
+  const [lang, setLang] = useState(() => {
+    const saved = localStorage.getItem('app_language');
+    return saved || detectLanguage();
+  });
 
   useEffect(() => {
-    const handler = () => setLang(detectLanguage());
-    window.addEventListener('languagechange', handler);
-    return () => window.removeEventListener('languagechange', handler);
-  }, []);
+    localStorage.setItem('app_language', lang);
+  }, [lang]);
 
   const t = useCallback((key, vars = {}) => {
     const dict = translations[lang] || en;
@@ -32,7 +33,7 @@ export function LanguageProvider({ children }) {
   }, [lang]);
 
   return (
-    <LanguageContext.Provider value={{ lang, t }}>
+    <LanguageContext.Provider value={{ lang, t, setLang }}>
       {children}
     </LanguageContext.Provider>
   );

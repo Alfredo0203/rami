@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import BottomNav from '../components/shop/BottomNav';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { User, Package, MapPin, Heart, LogOut, ChevronRight, Shield, Loader2, Trash2, AlertTriangle, LogIn } from 'lucide-react';
+import { User, Package, MapPin, Heart, LogOut, ChevronRight, Shield, Loader2, Trash2, AlertTriangle, LogIn, Globe } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -13,6 +13,7 @@ import { useScrollRestoration } from '../components/useScrollRestoration';
 import { useTranslation } from '../components/i18n/useTranslation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import LanguageSelector from '../components/i18n/LanguageSelector';
 
 const ROLE_LABELS = { user: 'Cliente', admin: 'Admin', super_admin: 'Propietario' };
 const STATUS_STYLES = {
@@ -168,6 +169,11 @@ export default function Account() {
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </button>
           ))}
+          <div className="flex items-center gap-3 p-4 border-t border-border">
+            <Globe className="w-5 h-5 text-primary" />
+            <span className="text-sm font-medium text-foreground flex-1">{t('language')}</span>
+            <LanguageSelector />
+          </div>
         </div>
 
         <button

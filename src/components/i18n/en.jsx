@@ -63,6 +63,7 @@ const en = {
   sort_price_high: "Price: High to Low",
   sort_rating: "Top Rated",
   sort_popular: "Best Selling",
-};
+  language: "Language",
+  };
 
-export default en;
+  export default en;
