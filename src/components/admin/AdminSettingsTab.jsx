@@ -239,7 +239,7 @@ export default function AdminSettingsTab({ currentUser }) {
                   {store.logo_url ? (
                     <img src={store.logo_url} alt={store.name} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-sm font-bold text-primary">{store.name.charAt(0).toUpperCase()}</span>
+                    <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=100&h=100&fit=crop" alt={store.name} className="w-full h-full object-cover" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">

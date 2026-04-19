@@ -129,7 +129,7 @@ export default function AdminStoresTab() {
                   {store.logo_url ? (
                     <img src={store.logo_url} alt={store.name} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-lg font-bold text-primary">{store.name.charAt(0).toUpperCase()}</span>
+                    <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=100&h=100&fit=crop" alt={store.name} className="w-full h-full object-cover" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -212,7 +212,7 @@ export default function AdminStoresTab() {
                         onClick={() => setPreviewUrl(form.logo_url)}
                       />
                     ) : (
-                      <span className="text-lg font-bold text-primary">{form.name ? form.name.charAt(0).toUpperCase() : '?'}</span>
+                      <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=100&h=100&fit=crop" alt="Logo" className="w-full h-full object-cover" />
                     )}
                   </div>
                   <label className="flex-1">

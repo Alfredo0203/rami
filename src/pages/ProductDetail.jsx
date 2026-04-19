@@ -417,11 +417,11 @@ export default function ProductDetail() {
                 {store?.logo_url ? (
                   <img src={store.logo_url} alt={store.name} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-[10px] font-bold text-primary">{(store?.name || 'Rami').charAt(0).toUpperCase()}</span>
+                  <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=100&h=100&fit=crop" alt="RAmi" className="w-full h-full object-cover" />
                 )}
               </div>
               <span className="text-xs text-muted-foreground">
-                Vendido por <span className="font-medium text-foreground">{store?.name || 'Rami'}</span>
+                Vendido por <span className="font-medium text-foreground">{store?.name || 'RAmi'}</span>
               </span>
             </div>
           )}
