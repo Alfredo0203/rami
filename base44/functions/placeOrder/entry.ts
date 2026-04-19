@@ -59,21 +59,64 @@ Deno.serve(async (req) => {
     let appliedCoupon = null;
 
     if (couponCode) {
-      const coupons = await base44.asServiceRole.entities.Coupon.filter({ code: couponCode.toUpperCase(), is_active: true });
+      const coupons = await base44.asServiceRole.entities.Coupon.filter({ 
+        code: couponCode.toUpperCase(), 
+        is_active: true 
+      });
+      
+      if (coupons.length === 0) {
+        return Response.json({ error: 'Cupón no válido' }, { status: 400 });
+      }
+      
       const coupon = coupons[0];
-      if (coupon) {
-        if (!coupon.expires_at || new Date(coupon.expires_at) > new Date()) {
-          if (subtotal >= (coupon.minimum_order_amount || 0)) {
-            if (coupon.discount_type === 'percentage') {
-              discountAmount = subtotal * (coupon.discount_value / 100);
-              if (coupon.maximum_discount_amount) discountAmount = Math.min(discountAmount, coupon.maximum_discount_amount);
-            } else {
-              discountAmount = coupon.discount_value;
-            }
-            appliedCoupon = coupon;
-          }
+      const now = new Date();
+      
+      // Validar fechas
+      if (coupon.starts_at && new Date(coupon.starts_at) > now) {
+        return Response.json({ error: 'Este cupón aún no está disponible' }, { status: 400 });
+      }
+      
+      if (coupon.expires_at && new Date(coupon.expires_at) < now) {
+        return Response.json({ error: 'Este cupón ha expirado' }, { status: 400 });
+      }
+      
+      // Validar monto mínimo
+      if (coupon.minimum_order_amount && subtotal < coupon.minimum_order_amount) {
+        return Response.json({ 
+          error: `Compra mínima requerida: $${coupon.minimum_order_amount.toFixed(2)}` 
+        }, { status: 400 });
+      }
+      
+      // Validar límite total de usos
+      if (coupon.usage_limit && coupon.used_count >= coupon.usage_limit) {
+        return Response.json({ error: 'Este cupón ya no está disponible' }, { status: 400 });
+      }
+      
+      // Validar límite por usuario
+      if (coupon.usage_limit_per_user && coupon.usage_limit_per_user > 0) {
+        const userCouponUses = await base44.asServiceRole.entities.Order.filter({
+          customer_email: user.email,
+          coupon_code: coupon.code
+        });
+        
+        if (userCouponUses.length >= coupon.usage_limit_per_user) {
+          return Response.json({ 
+            error: 'Ya has usado este cupón el máximo de veces permitidas' 
+          }, { status: 400 });
         }
       }
+      
+      // Calcular descuento
+      if (coupon.discount_type === 'percentage') {
+        discountAmount = subtotal * (coupon.discount_value / 100);
+        if (coupon.maximum_discount_amount) {
+          discountAmount = Math.min(discountAmount, coupon.maximum_discount_amount);
+        }
+      } else {
+        discountAmount = coupon.discount_value;
+      }
+      
+      appliedCoupon = coupon;
     }
 
     const total = Math.max(0, subtotal - discountAmount + shipping);

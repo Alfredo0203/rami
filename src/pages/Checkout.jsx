@@ -21,6 +21,7 @@ export default function Checkout() {
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState('');
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -78,10 +79,11 @@ export default function Checkout() {
   const validateCouponMutation = useMutation({
     mutationFn: async (code) => {
       const coupons = await base44.entities.Coupon.filter({ code: code.toUpperCase(), is_active: true });
-      if (coupons.length === 0) throw new Error('Cupón no válido o expirado');
+      if (coupons.length === 0) throw new Error('Cupón no válido');
       
       const coupon = coupons[0];
       const now = new Date();
+      
       if (coupon.starts_at && new Date(coupon.starts_at) > now) {
         throw new Error('Este cupón aún no está disponible');
       }
@@ -92,7 +94,16 @@ export default function Checkout() {
         throw new Error(`Compra mínima requerida: $${coupon.minimum_order_amount.toFixed(2)}`);
       }
       if (coupon.usage_limit && coupon.used_count >= coupon.usage_limit) {
-        throw new Error('Este cupón ha alcanzado su límite de uso');
+        throw new Error('Este cupón ya no está disponible');
+      }
+      if (coupon.usage_limit_per_user && coupon.usage_limit_per_user > 0) {
+        const userOrders = await base44.entities.Order.filter({ 
+          customer_email: user?.email, 
+          coupon_code: coupon.code 
+        });
+        if (userOrders.length >= coupon.usage_limit_per_user) {
+          throw new Error(`Ya has usado este cupón el máximo de veces permitidas`);
+        }
       }
       
       return coupon;
@@ -101,10 +112,11 @@ export default function Checkout() {
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
-      toast.error('Ingresa un código de cupón');
+      setCouponError('Ingresa un código de cupón');
       return;
     }
     
+    setCouponError('');
     setValidatingCoupon(true);
     try {
       const coupon = await validateCouponMutation.mutateAsync(couponCode);
@@ -112,7 +124,9 @@ export default function Checkout() {
       setCouponCode('');
       toast.success('¡Cupón aplicado correctamente!');
     } catch (err) {
-      toast.error(err.message || 'Error al validar cupón');
+      const errorMsg = err.message || 'Error al validar cupón';
+      setCouponError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setValidatingCoupon(false);
     }
@@ -121,6 +135,7 @@ export default function Checkout() {
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null);
     setCouponCode('');
+    setCouponError('');
   };
 
   const placeOrderMutation = useMutation({
@@ -309,24 +324,29 @@ export default function Checkout() {
               </Button>
             </div>
           ) : (
-            <div className="flex gap-2">
-              <Input
-                placeholder="Ingresa tu código"
-                value={couponCode}
-                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
-                disabled={validatingCoupon}
-                className="text-sm"
-              />
-              <Button
-                onClick={handleApplyCoupon}
-                disabled={validatingCoupon || !couponCode.trim()}
-                variant="outline"
-                className="px-3"
-              >
-                {validatingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Aplicar'}
-              </Button>
-            </div>
+            <>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Ingresa tu código"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                  disabled={validatingCoupon}
+                  className="text-sm"
+                />
+                <Button
+                  onClick={handleApplyCoupon}
+                  disabled={validatingCoupon || !couponCode.trim()}
+                  variant="outline"
+                  className="px-3"
+                >
+                  {validatingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Aplicar'}
+                </Button>
+              </div>
+              {couponError && (
+                <p className="text-xs text-destructive mt-2">{couponError}</p>
+              )}
+            </>
           )}
         </div>
 
