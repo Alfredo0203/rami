@@ -32,6 +32,7 @@ export default function AdminSalesCharts() {
 
     const now = new Date();
     const filtered = orders.filter(o => {
+      if (o.status !== 'delivered') return false;
       const orderDate = new Date(o.created_date);
       if (timeframe === '7days') return (now - orderDate) <= 7 * 24 * 60 * 60 * 1000;
       if (timeframe === '30days') return (now - orderDate) <= 30 * 24 * 60 * 60 * 1000;
@@ -77,8 +78,9 @@ export default function AdminSalesCharts() {
     return { daily, weekly };
   }, [orders, timeframe]);
 
-  const totalRevenue = orders.filter(o => o.status !== 'cancelled').reduce((sum, o) => sum + (o.total || 0), 0);
-  const totalOrders = orders.length;
+  const deliveredOrders = orders.filter(o => o.status === 'delivered');
+  const totalRevenue = deliveredOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+  const totalOrders = deliveredOrders.length;
   const avgOrderValue = totalOrders ? (totalRevenue / totalOrders).toFixed(2) : 0;
 
   return (
