@@ -26,10 +26,10 @@ export default function RelatedProducts({ categoryId, currentProductId, currentT
     ? sameCategory.filter(p => (p.tags || []).some(t => currentTags.includes(t)))
     : [];
 
-  // Mostrar primero los de tag compartido, luego el resto, máximo 10
+  // Mostrar primero los de tag compartido, luego el resto, máximo 5
   const related = withSharedTags.length >= 2
-    ? [...withSharedTags, ...sameCategory.filter(p => !withSharedTags.includes(p))].slice(0, 10)
-    : sameCategory.slice(0, 10);
+    ? [...withSharedTags, ...sameCategory.filter(p => !withSharedTags.includes(p))].slice(0, 5)
+    : sameCategory.slice(0, 5);
 
   if (!related.length) return null;
 
