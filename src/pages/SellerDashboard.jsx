@@ -19,7 +19,7 @@ export default function SellerDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [deletingProductId, setDeleteingProductId] = useState(null);
+  const [deletingProductId, setDeletingProductId] = useState(null);
   const [showStoreForm, setShowStoreForm] = useState(false);
 
   useEffect(() => {
@@ -237,7 +237,7 @@ export default function SellerDashboard() {
                                 <Edit2 className="w-3.5 h-3.5 text-foreground" />
                               </button>
                               <button
-                                onClick={() => setDeleteingProductId(product.id)}
+                                onClick={() => setDeletingProductId(product.id)}
                                 className="p-1.5 bg-secondary rounded hover:bg-destructive/10"
                                 title="Eliminar"
                               >
@@ -355,7 +355,7 @@ export default function SellerDashboard() {
         />
       )}
 
-      <AlertDialog open={!!deletingProductId} onOpenChange={(open) => { if (!open) setDeleteingProductId(null); }}>
+      <AlertDialog open={!!deletingProductId} onOpenChange={(open) => { if (!open) setDeletingProductId(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar producto?</AlertDialogTitle>
@@ -367,7 +367,7 @@ export default function SellerDashboard() {
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => { deleteProductMutation.mutate(deletingProductId); setDeleteingProductId(null); }}
+              onClick={() => { deleteProductMutation.mutate(deletingProductId); setDeletingProductId(null); }}
             >
               Eliminar
             </AlertDialogAction>
