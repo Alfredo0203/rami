@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard, Megaphone } from 'lucide-react';
+import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard, Megaphone, MessageCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -33,6 +33,7 @@ export default function AdminSettingsTab({ currentUser }) {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [whatsappPhone, setWhatsappPhone] = useState('');
   
 
 
@@ -83,6 +84,9 @@ export default function AdminSettingsTab({ currentUser }) {
         promo_banner_link:     settings.promo_banner_link     ?? '',
         promo_banner_enabled:  settings.promo_banner_enabled  ?? true,
       });
+    }
+    if (settings && whatsappPhone === '') {
+      setWhatsappPhone(settings.whatsapp_phone ?? '+50370000000');
     }
   }, [settings]);
 
@@ -246,34 +250,61 @@ export default function AdminSettingsTab({ currentUser }) {
       </div>
 
       {/* Payment Methods */}
-      <div className="bg-card rounded-xl p-4 shadow-sm">
-        <div className="flex items-center gap-2 mb-3">
-          <CreditCard className="w-4 h-4 text-primary" />
-          <p className="text-sm font-semibold text-foreground">Métodos de Pago Habilitados</p>
-        </div>
-        <p className="text-xs text-muted-foreground mb-3">Habilita o deshabilita los métodos de pago disponibles en el checkout.</p>
-        <div className="space-y-3">
-          {PAYMENT_METHODS.map(({ value, label, description, icon: Icon }) => {
-            const isEnabled = allowedMethods.includes(value);
-            return (
-              <div key={value} className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center shrink-0">
-                  <Icon className="w-4 h-4 text-muted-foreground" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">{label}</p>
-                  <p className="text-xs text-muted-foreground">{description}</p>
-                </div>
-                {saving ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                ) : (
-                  <Switch checked={isEnabled} onCheckedChange={(v) => togglePaymentMethod(value, v)} />
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+       <div className="bg-card rounded-xl p-4 shadow-sm">
+         <div className="flex items-center gap-2 mb-3">
+           <CreditCard className="w-4 h-4 text-primary" />
+           <p className="text-sm font-semibold text-foreground">Métodos de Pago Habilitados</p>
+         </div>
+         <p className="text-xs text-muted-foreground mb-3">Habilita o deshabilita los métodos de pago disponibles en el checkout.</p>
+         <div className="space-y-3">
+           {PAYMENT_METHODS.map(({ value, label, description, icon: Icon }) => {
+             const isEnabled = allowedMethods.includes(value);
+             return (
+               <div key={value} className="flex items-center gap-3">
+                 <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center shrink-0">
+                   <Icon className="w-4 h-4 text-muted-foreground" />
+                 </div>
+                 <div className="flex-1">
+                   <p className="text-sm font-medium text-foreground">{label}</p>
+                   <p className="text-xs text-muted-foreground">{description}</p>
+                 </div>
+                 {saving ? (
+                   <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                 ) : (
+                   <Switch checked={isEnabled} onCheckedChange={(v) => togglePaymentMethod(value, v)} />
+                 )}
+               </div>
+             );
+           })}
+         </div>
+       </div>
+
+       {/* WhatsApp Support */}
+       <div className="bg-card rounded-xl p-4 shadow-sm">
+         <div className="flex items-center gap-2 mb-3">
+           <MessageCircle className="w-4 h-4 text-primary" />
+           <p className="text-sm font-semibold text-foreground">WhatsApp de Soporte</p>
+         </div>
+         <p className="text-xs text-muted-foreground mb-3">Número de teléfono para el chat de soporte en WhatsApp.</p>
+         <div className="space-y-2">
+           <Label htmlFor="whatsapp" className="text-xs">Número de teléfono (formato: +503XXXXXXXX)</Label>
+           <Input
+             id="whatsapp"
+             value={whatsappPhone}
+             onChange={e => setWhatsappPhone(e.target.value)}
+             placeholder="+50370000000"
+             className="h-9 text-sm"
+           />
+           <Button
+             size="sm"
+             onClick={() => saveSettings({ whatsapp_phone: whatsappPhone })}
+             disabled={saving}
+             className="w-full mt-2"
+           >
+             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar número'}
+           </Button>
+         </div>
+       </div>
 
 
     </div>

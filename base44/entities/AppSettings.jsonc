@@ -57,6 +57,11 @@
       "default": true,
       "description": "Whether to show the promo banner on the home page"
     },
+    "whatsapp_phone": {
+      "type": "string",
+      "default": "+50370000000",
+      "description": "WhatsApp phone number for support (format: +503XXXXXXXX)"
+    },
     "updated_by": {
       "type": "string",
       "description": "Email of admin who last updated"

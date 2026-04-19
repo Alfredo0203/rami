@@ -8,14 +8,20 @@ export default function SupportChatModal({ isOpen, onClose }) {
   const [user, setUser] = useState(null);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [whatsappPhone, setWhatsappPhone] = useState('+50370000000');
 
   useEffect(() => {
     if (isOpen) {
       base44.auth.me().then(setUser);
+      // Fetch WhatsApp number from settings
+      base44.entities.AppSettings.filter({ key: 'global' })
+        .then(results => {
+          if (results[0]?.whatsapp_phone) {
+            setWhatsappPhone(results[0].whatsapp_phone);
+          }
+        });
     }
   }, [isOpen]);
-
-  const WHATSAPP_PHONE = '+50370000000'; // ← EDITA AQUÍ tu número (ej: +50370123456)
 
   const handleSendMessage = async () => {
     if (!message.trim()) return;
@@ -26,7 +32,7 @@ export default function SupportChatModal({ isOpen, onClose }) {
       const messageText = encodeURIComponent(
         `Hola, soy ${user?.full_name || 'Cliente'}. ${message}`
       );
-      const whatsappUrl = `https://wa.me/${WHATSAPP_PHONE.replace(/\D/g, '')}?text=${messageText}`;
+      const whatsappUrl = `https://wa.me/${whatsappPhone.replace(/\D/g, '')}?text=${messageText}`;
 
       // Abrir WhatsApp en nueva ventana
       window.open(whatsappUrl, '_blank', 'width=500,height=600');
@@ -40,7 +46,7 @@ export default function SupportChatModal({ isOpen, onClose }) {
   };
 
   const handleQuickMessage = (preset) => {
-    const whatsappUrl = `https://wa.me/${WHATSAPP_PHONE.replace(/\D/g, '')}?text=${encodeURIComponent(preset)}`;
+    const whatsappUrl = `https://wa.me/${whatsappPhone.replace(/\D/g, '')}?text=${encodeURIComponent(preset)}`;
     window.open(whatsappUrl, '_blank', 'width=500,height=600');
     onClose();
   };
@@ -129,12 +135,12 @@ export default function SupportChatModal({ isOpen, onClose }) {
           </div>
 
           {/* Direct call option */}
-          <a
-            href={`https://wa.me/${WHATSAPP_PHONE.replace(/\D/g, '')}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full p-2 bg-white border border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition text-sm font-medium"
-          >
+           <a
+             href={`https://wa.me/${whatsappPhone.replace(/\D/g, '')}`}
+             target="_blank"
+             rel="noopener noreferrer"
+             className="flex items-center justify-center gap-2 w-full p-2 bg-white border border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition text-sm font-medium"
+           >
             <Phone className="w-4 h-4" />
             Llamar directo a WhatsApp
           </a>
