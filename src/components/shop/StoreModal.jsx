@@ -5,7 +5,7 @@ import ProductCard from './ProductCard';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-export default function StoreModal({ store, products, categories, onClose }) {
+export default function StoreModal({ store, products, categories, orders = [], reviews = [], onClose }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   // Filtrar productos de esta tienda
@@ -30,10 +30,23 @@ export default function StoreModal({ store, products, categories, onClose }) {
   // Calcular estadísticas
   const stats = useMemo(() => {
     const totalProducts = storeProducts.length;
-    const totalSold = storeProducts.reduce((sum, p) => sum + (p.sold_count || 0), 0);
+    
+    // Contar solo productos de órdenes entregadas
+    let totalSold = 0;
+    const storeProductIds = new Set(storeProducts.map(p => p.id));
+    
+    orders.forEach(order => {
+      if (order.status === 'delivered') {
+        order.items?.forEach(item => {
+          if (storeProductIds.has(item.product_id)) {
+            totalSold += item.quantity || 0;
+          }
+        });
+      }
+    });
     
     return { totalProducts, totalSold };
-  }, [storeProducts]);
+  }, [storeProducts, orders]);
 
   // Obtener categorías con productos en esta tienda
   const storeCategories = useMemo(() => {
@@ -41,6 +54,15 @@ export default function StoreModal({ store, products, categories, onClose }) {
     const categoryIds = [...new Set(storeProducts.map(p => p.category_id))];
     return categories.filter(c => categoryIds.includes(c.id));
   }, [storeProducts, categories, store]);
+
+  // Obtener reseñas de los productos de esta tienda
+  const storeReviews = useMemo(() => {
+    const storeProductIds = new Set(storeProducts.map(p => p.id));
+    return (reviews || [])
+      .filter(r => storeProductIds.has(r.product_id) && r.is_approved)
+      .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
+      .slice(0, 5);
+  }, [storeProducts, reviews]);
 
   if (!store) return null;
 
@@ -52,7 +74,7 @@ export default function StoreModal({ store, products, categories, onClose }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] bg-background"
+        className="fixed inset-0 z-[100] bg-background flex flex-col"
       >
         {/* Header */}
         <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 py-3 flex items-center justify-between">
@@ -157,19 +179,46 @@ export default function StoreModal({ store, products, categories, onClose }) {
           </div>
         )}
 
-        {/* Products Grid */}
-        <div className="px-4 pb-20">
+        {/* Products Grid - Scrollable */}
+        <div className="flex-1 overflow-y-auto px-4 pb-24">
           {storeProducts.length === 0 ? (
             <div className="text-center py-20">
               <Package className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
               <p className="text-muted-foreground text-sm">No hay productos disponibles</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2.5">
-              {storeProducts.map((product, i) => (
-                <ProductCard key={product.id} product={product} index={i} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 gap-2.5 mb-8">
+                {storeProducts.map((product, i) => (
+                  <ProductCard key={product.id} product={product} index={i} />
+                ))}
+              </div>
+
+              {/* Reviews Section */}
+              {storeReviews.length > 0 && (
+                <div className="mt-6 pt-4 border-t border-border">
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Reseñas de clientes</h3>
+                  <div className="space-y-3">
+                    {storeReviews.map(review => (
+                      <div key={review.id} className="bg-card rounded-lg p-3 border border-border/50">
+                        <div className="flex items-start justify-between mb-1.5">
+                          <div className="flex items-center gap-1">
+                            {[...Array(5)].map((_, i) => (
+                              <div key={i} className={`w-3 h-3 rounded-full ${i < review.rating ? 'bg-warning' : 'bg-muted'}`} />
+                            ))}
+                          </div>
+                          <span className="text-[10px] text-muted-foreground">{review.reviewer_name}</span>
+                        </div>
+                        {review.title && (
+                          <p className="text-xs font-medium text-foreground mb-1">{review.title}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground line-clamp-2">{review.body}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </motion.div>

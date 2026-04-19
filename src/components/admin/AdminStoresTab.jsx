@@ -51,6 +51,16 @@ export default function AdminStoresTab() {
     queryFn: () => base44.entities.Category.list('sort_order'),
   });
 
+  const { data: orders = [] } = useQuery({
+    queryKey: ['admin-orders'],
+    queryFn: () => base44.entities.Order.list(),
+  });
+
+  const { data: reviews = [] } = useQuery({
+    queryKey: ['admin-reviews'],
+    queryFn: () => base44.entities.Review.list(),
+  });
+
   const saveMutation = useMutation({
     mutationFn: (data) => {
       if (editingStore) {
@@ -330,6 +340,8 @@ export default function AdminStoresTab() {
           store={viewingStore}
           products={products}
           categories={categories}
+          orders={orders}
+          reviews={reviews}
           onClose={() => setViewingStore(null)}
         />
       )}

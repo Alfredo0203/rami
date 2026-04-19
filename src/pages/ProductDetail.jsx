@@ -119,6 +119,16 @@ export default function ProductDetail() {
     queryFn: () => base44.entities.Category.list('sort_order'),
   });
 
+  const { data: orders = [] } = useQuery({
+    queryKey: ['all-orders'],
+    queryFn: () => base44.entities.Order.list(),
+  });
+
+  const { data: allReviews = [] } = useQuery({
+    queryKey: ['all-reviews'],
+    queryFn: () => base44.entities.Review.list(),
+  });
+
   const displayStore = store || defaultStore;
 
   // SEO: Update meta tags for social sharing (before early returns)
@@ -545,6 +555,8 @@ export default function ProductDetail() {
           store={viewingStore}
           products={products}
           categories={categories}
+          orders={orders}
+          reviews={allReviews}
           onClose={() => setViewingStore(null)}
         />
       )}
