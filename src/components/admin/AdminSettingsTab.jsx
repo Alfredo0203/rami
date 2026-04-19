@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Switch } from '@/components/ui/switch';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard, Megaphone, Save } from 'lucide-react';
+import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -28,32 +26,10 @@ export default function AdminSettingsTab({ currentUser }) {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [banner, setBanner] = useState({
-    promo_banner_enabled: true,
-    promo_banner_label: '',
-    promo_banner_title: '',
-    promo_banner_subtitle: '',
-    promo_banner_link: '',
-    promo_banner_image_url: '',
-  });
-  const [bannerSaving, setBannerSaving] = useState(false);
 
   useEffect(() => {
     base44.entities.AppSettings.filter({ key: 'global' })
-      .then(results => {
-        const s = results[0] || null;
-        setSettings(s);
-        if (s) {
-          setBanner({
-            promo_banner_enabled: s.promo_banner_enabled !== false,
-            promo_banner_label: s.promo_banner_label || '',
-            promo_banner_title: s.promo_banner_title || '',
-            promo_banner_subtitle: s.promo_banner_subtitle || '',
-            promo_banner_link: s.promo_banner_link || '',
-            promo_banner_image_url: s.promo_banner_image_url || '',
-          });
-        }
-      })
+      .then(results => setSettings(results[0] || null))
       .finally(() => setLoading(false));
   }, []);
 
@@ -90,31 +66,6 @@ export default function AdminSettingsTab({ currentUser }) {
       ? current.filter(p => p !== path)
       : [...new Set([...current, path])];
     saveSettings({ disabled_pages: updated });
-  };
-
-  const saveBanner = async () => {
-    setBannerSaving(true);
-    try {
-      const payload = {
-        key: 'global',
-        ...settings,
-        ...banner,
-        updated_by: currentUser?.email,
-        updated_at: new Date().toISOString(),
-      };
-      if (settings?.id) {
-        const updated = await base44.entities.AppSettings.update(settings.id, payload);
-        setSettings(updated);
-      } else {
-        const created = await base44.entities.AppSettings.create(payload);
-        setSettings(created);
-      }
-      toast.success('Banner actualizado');
-    } catch {
-      toast.error('Error al guardar el banner');
-    } finally {
-      setBannerSaving(false);
-    }
   };
 
   const togglePaymentMethod = (method, enabled) => {
@@ -198,67 +149,6 @@ export default function AdminSettingsTab({ currentUser }) {
           })}
         </div>
       </div>}
-
-      {/* Promo Banner */}
-      <div className="bg-card rounded-xl p-4 shadow-sm">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Megaphone className="w-4 h-4 text-primary" />
-            <p className="text-sm font-semibold text-foreground">Banner Promocional</p>
-          </div>
-          <Switch
-            checked={banner.promo_banner_enabled}
-            onCheckedChange={(v) => setBanner(b => ({ ...b, promo_banner_enabled: v }))}
-          />
-        </div>
-        <p className="text-xs text-muted-foreground mb-4">Configura el banner de promoción que aparece en el inicio.</p>
-        <div className="space-y-3">
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Etiqueta (ej: Flash Sale)</label>
-            <Input
-              value={banner.promo_banner_label}
-              onChange={e => setBanner(b => ({ ...b, promo_banner_label: e.target.value }))}
-              placeholder="Flash Sale"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Título principal</label>
-            <Input
-              value={banner.promo_banner_title}
-              onChange={e => setBanner(b => ({ ...b, promo_banner_title: e.target.value }))}
-              placeholder="Up to 70% OFF"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Subtítulo</label>
-            <Input
-              value={banner.promo_banner_subtitle}
-              onChange={e => setBanner(b => ({ ...b, promo_banner_subtitle: e.target.value }))}
-              placeholder="Ofertas por tiempo limitado"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Enlace (ruta o URL)</label>
-            <Input
-              value={banner.promo_banner_link}
-              onChange={e => setBanner(b => ({ ...b, promo_banner_link: e.target.value }))}
-              placeholder="/Browse"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">URL de imagen de fondo (opcional)</label>
-            <Input
-              value={banner.promo_banner_image_url}
-              onChange={e => setBanner(b => ({ ...b, promo_banner_image_url: e.target.value }))}
-              placeholder="https://..."
-            />
-          </div>
-          <Button onClick={saveBanner} disabled={bannerSaving} size="sm" className="w-full mt-1">
-            {bannerSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
-            Guardar banner
-          </Button>
-        </div>
-      </div>
 
       {/* Payment Methods */}
       <div className="bg-card rounded-xl p-4 shadow-sm">
