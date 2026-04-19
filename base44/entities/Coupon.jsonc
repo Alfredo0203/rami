@@ -74,6 +74,13 @@
         "type": "string"
       },
       "description": "Restrict coupon to specific product IDs (empty = all products)"
+    },
+    "assigned_user_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Email addresses of users this coupon is assigned to (empty = all users)"
     }
   },
   "required": [

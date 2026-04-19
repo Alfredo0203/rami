@@ -90,6 +90,9 @@ export default function Checkout() {
       if (coupon.expires_at && new Date(coupon.expires_at) < now) {
         throw new Error('Este cupón ha expirado');
       }
+      if (coupon.assigned_user_emails?.length > 0 && !coupon.assigned_user_emails.includes(user?.email)) {
+        throw new Error('Este cupón no está disponible para tu cuenta');
+      }
       if (coupon.minimum_order_amount && subtotal < coupon.minimum_order_amount) {
         throw new Error(`Compra mínima requerida: $${coupon.minimum_order_amount.toFixed(2)}`);
       }
