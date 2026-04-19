@@ -15,7 +15,7 @@ export default function SupportChatModal({ isOpen, onClose }) {
     }
   }, [isOpen]);
 
-  const WHATSAPP_PHONE = '+50370000000'; // Reemplazar con el número real
+  const WHATSAPP_PHONE = '+50370000000'; // ← EDITA AQUÍ tu número (ej: +50370123456)
 
   const handleSendMessage = async () => {
     if (!message.trim()) return;
