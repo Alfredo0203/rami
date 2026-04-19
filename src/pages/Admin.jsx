@@ -31,7 +31,7 @@ export default function Admin() {
   const [searchQuery, setSearchQuery] = useState('');
   const [stockFilter, setStockFilter] = useState('all'); // 'all', 'low', 'out', 'in_stock'
   const [sortBy, setSortBy] = useState('recent'); // 'recent', 'name', 'stock', 'sold'
-  const [selectedStoreFilter, setSelectedStoreFilter] = useState('main'); // Por defecto tienda principal
+  const [selectedStoreFilter, setSelectedStoreFilter] = useState('all'); // Por defecto todas las tiendas
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -320,7 +320,8 @@ export default function Admin() {
               onChange={(e) => setSelectedStoreFilter(e.target.value)}
               className="w-full px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              <option value="main">Rami</option>
+              <option value="all">Todas las tiendas</option>
+              <option value="main">Rami (Mi tienda)</option>
               {stores.map(store => (
                 <option key={store.id} value={store.id}>{store.name}</option>
               ))}
@@ -335,13 +336,15 @@ export default function Admin() {
             </div>
           ) : (
             (() => {
-              const filteredOrders = orders.filter(order => {
-                return order.items?.some(item => {
-                  const product = products.find(p => p.id === item.product_id);
-                  const storeId = product?.store_id || 'main';
-                  return storeId === selectedStoreFilter;
-                });
-              });
+              const filteredOrders = selectedStoreFilter === 'all' 
+                ? orders
+                : orders.filter(order => {
+                    return order.items?.some(item => {
+                      const product = products.find(p => p.id === item.product_id);
+                      const storeId = product?.store_id || 'main';
+                      return storeId === selectedStoreFilter;
+                    });
+                  });
 
               return filteredOrders.length === 0 ? (
                 <div className="text-center py-10">
