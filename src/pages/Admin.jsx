@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import AdminProductForm from '../components/admin/AdminProductForm';
 import AdminOrderCard from '../components/admin/AdminOrderCard';
 import AdminUserCard from '../components/admin/AdminUserCard';
-import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, Trash2, Loader2, Eye, EyeOff, Users, Settings, MessageSquare, LayoutGrid } from 'lucide-react';
+import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, Trash2, Loader2, Eye, EyeOff, Users, Settings, MessageSquare, LayoutGrid, BarChart3 } from 'lucide-react';
 import AdminSettingsTab from '../components/admin/AdminSettingsTab';
 import AdminReviewsTab from '../components/admin/AdminReviewsTab';
 import AdminCategoriesTab from '../components/admin/AdminCategoriesTab';
@@ -124,6 +124,15 @@ export default function Admin() {
             <p className="text-xs text-muted-foreground">{stat.label}</p>
           </motion.div>
         ))}
+      </div>
+
+      <div className="px-4 mb-3">
+        <Button
+          onClick={() => navigate('/AdminSalesCharts')}
+          className="w-full bg-chart-1 text-primary-foreground rounded-full h-10 hover:bg-chart-1/90"
+        >
+          <BarChart3 className="w-4 h-4 mr-2" /> Ver Gráficas
+        </Button>
       </div>
 
       <Tabs defaultValue="products" className="px-4">
