@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Switch } from '@/components/ui/switch';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard, Megaphone } from 'lucide-react';
+import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -28,21 +26,10 @@ export default function AdminSettingsTab({ currentUser }) {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [bannerDraft, setBannerDraft] = useState(null);
 
   useEffect(() => {
     base44.entities.AppSettings.filter({ key: 'global' })
-      .then(results => {
-        const s = results[0] || null;
-        setSettings(s);
-        setBannerDraft({
-          banner_enabled: s?.banner_enabled !== false,
-          banner_title: s?.banner_title || '',
-          banner_subtitle: s?.banner_subtitle || '',
-          banner_image_url: s?.banner_image_url || '',
-          banner_link: s?.banner_link || '',
-        });
-      })
+      .then(results => setSettings(results[0] || null))
       .finally(() => setLoading(false));
   }, []);
 
@@ -80,8 +67,6 @@ export default function AdminSettingsTab({ currentUser }) {
       : [...new Set([...current, path])];
     saveSettings({ disabled_pages: updated });
   };
-
-  const saveBanner = () => saveSettings(bannerDraft);
 
   const togglePaymentMethod = (method, enabled) => {
     const current = settings?.allowed_payment_methods || ['credit_card'];
@@ -164,59 +149,6 @@ export default function AdminSettingsTab({ currentUser }) {
           })}
         </div>
       </div>}
-
-      {/* Promo Banner */}
-      {bannerDraft && (
-        <div className="bg-card rounded-xl p-4 shadow-sm space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Megaphone className="w-4 h-4 text-primary" />
-              <p className="text-sm font-semibold text-foreground">Banner Promocional</p>
-            </div>
-            <Switch
-              checked={bannerDraft.banner_enabled}
-              onCheckedChange={(v) => setBannerDraft(d => ({ ...d, banner_enabled: v }))}
-            />
-          </div>
-          <p className="text-xs text-muted-foreground">Configura el banner que aparece en la pantalla principal.</p>
-
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-foreground">Título principal</label>
-            <Input
-              placeholder="Ej: Up to 70% OFF"
-              value={bannerDraft.banner_title}
-              onChange={(e) => setBannerDraft(d => ({ ...d, banner_title: e.target.value }))}
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-foreground">Subtítulo</label>
-            <Input
-              placeholder="Ej: Solo por tiempo limitado"
-              value={bannerDraft.banner_subtitle}
-              onChange={(e) => setBannerDraft(d => ({ ...d, banner_subtitle: e.target.value }))}
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-foreground">URL de imagen de fondo (opcional)</label>
-            <Input
-              placeholder="https://..."
-              value={bannerDraft.banner_image_url}
-              onChange={(e) => setBannerDraft(d => ({ ...d, banner_image_url: e.target.value }))}
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-foreground">Enlace al tocar (opcional)</label>
-            <Input
-              placeholder="Ej: Browse o https://..."
-              value={bannerDraft.banner_link}
-              onChange={(e) => setBannerDraft(d => ({ ...d, banner_link: e.target.value }))}
-            />
-          </div>
-          <Button size="sm" onClick={saveBanner} disabled={saving} className="w-full">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar banner'}
-          </Button>
-        </div>
-      )}
 
       {/* Payment Methods */}
       <div className="bg-card rounded-xl p-4 shadow-sm">

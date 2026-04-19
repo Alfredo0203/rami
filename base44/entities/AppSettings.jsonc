@@ -33,27 +33,6 @@
       "default": [],
       "description": "List of page paths disabled for regular users (e.g. ['Browse', 'Orders'])"
     },
-    "banner_enabled": {
-      "type": "boolean",
-      "default": true,
-      "description": "Whether the promo banner is shown on Home"
-    },
-    "banner_title": {
-      "type": "string",
-      "description": "Main headline of the promo banner (e.g. 'Up to 70% OFF')"
-    },
-    "banner_subtitle": {
-      "type": "string",
-      "description": "Subtitle text under the banner headline"
-    },
-    "banner_image_url": {
-      "type": "string",
-      "description": "Optional background image URL for the banner"
-    },
-    "banner_link": {
-      "type": "string",
-      "description": "Optional URL or page path to navigate when tapping the banner"
-    },
     "updated_by": {
       "type": "string",
       "description": "Email of admin who last updated"
