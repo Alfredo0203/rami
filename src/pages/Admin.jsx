@@ -5,9 +5,10 @@ import { useNavigate } from 'react-router-dom';
 import AdminProductForm from '../components/admin/AdminProductForm';
 import AdminOrderCard from '../components/admin/AdminOrderCard';
 import AdminUserCard from '../components/admin/AdminUserCard';
-import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, Trash2, Loader2, Eye, EyeOff, Users, Settings, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, Trash2, Loader2, Eye, EyeOff, Users, Settings, MessageSquare, LayoutGrid } from 'lucide-react';
 import AdminSettingsTab from '../components/admin/AdminSettingsTab';
 import AdminReviewsTab from '../components/admin/AdminReviewsTab';
+import AdminCategoriesTab from '../components/admin/AdminCategoriesTab';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -130,6 +131,7 @@ export default function Admin() {
           <TabsTrigger value="products" className="flex-1">Productos</TabsTrigger>
           <TabsTrigger value="orders" className="flex-1">Pedidos</TabsTrigger>
           <TabsTrigger value="users" className="flex-1">Usuarios</TabsTrigger>
+          <TabsTrigger value="categories" className="flex-1"><LayoutGrid className="w-3.5 h-3.5" /></TabsTrigger>
           <TabsTrigger value="reviews" className="flex-1"><MessageSquare className="w-3.5 h-3.5" /></TabsTrigger>
           {user?.role === 'super_admin' && (
             <TabsTrigger value="settings" className="flex-1"><Settings className="w-3.5 h-3.5" /></TabsTrigger>
@@ -217,6 +219,10 @@ export default function Admin() {
               <AdminUserCard key={u.id} targetUser={u} currentUser={user} orders={orders} />
             ))
           )}
+        </TabsContent>
+
+        <TabsContent value="categories">
+          <AdminCategoriesTab />
         </TabsContent>
 
         <TabsContent value="reviews">
