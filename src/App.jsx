@@ -12,6 +12,7 @@ import { LanguageProvider } from '@/components/i18n/LanguageProvider';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import AdminSalesCharts from './pages/AdminSalesCharts';
 import InventoryDashboard from './pages/InventoryDashboard';
+import SellerDashboard from './pages/SellerDashboard';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -70,6 +71,7 @@ const AuthenticatedApp = () => {
       ))}
       <Route path="/AdminSalesCharts" element={<AdminSalesCharts />} />
       <Route path="/InventoryDashboard" element={<InventoryDashboard />} />
+      <Route path="/SellerDashboard" element={<SellerDashboard />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

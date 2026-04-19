@@ -7,9 +7,11 @@ import { Wrench } from 'lucide-react';
 
 const SUPER_ADMIN_ROLES = ['super_admin', 'owner'];
 const ADMIN_ROLES = ['admin', 'super_admin', 'owner'];
+const SELLER_ROLES = ['seller'];
 const HOME_PATH = createPageUrl('Home');
 // Pages accessible without authentication (guest mode)
 const GUEST_ALLOWED_PATHS = ['/Home', '/Browse', '/ProductDetail', '/Account', '/'];
+const SELLER_ALLOWED_PATHS = ['/SellerDashboard', '/Home', '/Browse', '/Account', '/'];
 
 export default function DevModeGuard({ children }) {
   const { t } = useTranslation();
@@ -34,6 +36,7 @@ export default function DevModeGuard({ children }) {
         const userRole = user?.role;
         const isSuperAdmin = userRole === 'super_admin' || userRole === 'owner';
         const isAnyAdmin = userRole === 'admin' || isSuperAdmin;
+        const isSeller = userRole === 'seller';
         const isGuest = !user;
         const currentPage = location.pathname.replace('/', '');
         const isHome = location.pathname === '/' || currentPage === 'Home';
@@ -49,6 +52,13 @@ export default function DevModeGuard({ children }) {
         // Super admins bypass all other restrictions
         if (isSuperAdmin) {
           setBlocked(false);
+          return;
+        }
+
+        // Sellers have limited access
+        if (isSeller) {
+          const isSellerAllowed = SELLER_ALLOWED_PATHS.some(p => location.pathname.startsWith(p));
+          setBlocked(!isSellerAllowed);
           return;
         }
 

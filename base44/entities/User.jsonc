@@ -1,0 +1,37 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "user",
+        "admin",
+        "seller",
+        "super_admin"
+      ],
+      "default": "user",
+      "description": "User role"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "suspended",
+        "deactivated"
+      ],
+      "default": "active",
+      "description": "Account status"
+    },
+    "status_reason": {
+      "type": "string",
+      "description": "Reason for suspension or deactivation (required when status is suspended or deactivated)"
+    },
+    "status_changed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when account status last changed"
+    }
+  },
+  "required": []
+}
