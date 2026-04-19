@@ -31,7 +31,7 @@ export default function Admin() {
   const [searchQuery, setSearchQuery] = useState('');
   const [stockFilter, setStockFilter] = useState('all'); // 'all', 'low', 'out', 'in_stock'
   const [sortBy, setSortBy] = useState('recent'); // 'recent', 'name', 'stock', 'sold'
-  const [selectedStoreFilters, setSelectedStoreFilters] = useState(['main']); // Por defecto tienda principal
+  const [selectedStoreFilter, setSelectedStoreFilter] = useState('main'); // Por defecto tienda principal
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -312,16 +312,12 @@ export default function Admin() {
         </TabsContent>
 
         <TabsContent value="orders" className="space-y-3 mt-3">
-          {/* Filtro multi-selección de tiendas */}
+          {/* Filtro de tienda */}
           <div className="space-y-2">
             <label className="text-xs font-medium text-foreground block">Filtrar por tienda:</label>
             <select
-              multiple
-              value={selectedStoreFilters}
-              onChange={(e) => {
-                const values = Array.from(e.target.selectedOptions, option => option.value);
-                setSelectedStoreFilters(values);
-              }}
+              value={selectedStoreFilter}
+              onChange={(e) => setSelectedStoreFilter(e.target.value)}
               className="w-full px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="main">Rami</option>
@@ -340,17 +336,16 @@ export default function Admin() {
           ) : (
             (() => {
               const filteredOrders = orders.filter(order => {
-                const hasMatchingItem = order.items?.some(item => {
+                return order.items?.some(item => {
                   const product = products.find(p => p.id === item.product_id);
                   const storeId = product?.store_id || 'main';
-                  return selectedStoreFilters.includes(storeId);
+                  return storeId === selectedStoreFilter;
                 });
-                return hasMatchingItem;
               });
 
               return filteredOrders.length === 0 ? (
                 <div className="text-center py-10">
-                  <p className="text-muted-foreground text-sm">No hay pedidos en las tiendas seleccionadas</p>
+                  <p className="text-muted-foreground text-sm">No hay pedidos para esta tienda</p>
                 </div>
               ) : (
                 filteredOrders.map(order => <AdminOrderCard key={order.id} order={order} />)
