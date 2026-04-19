@@ -11,7 +11,6 @@ import {
 const LANGUAGES = [
   { code: 'es', name: 'Español' },
   { code: 'en', name: 'English' },
-  { code: 'pt', name: 'Português' },
 ];
 
 export default function LanguageSelector() {

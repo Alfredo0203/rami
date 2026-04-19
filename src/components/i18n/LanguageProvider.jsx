@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import en from './en';
 import es from './es';
-import pt from './pt';
 
-const translations = { en, es, pt };
+const translations = { en, es };
 
 function detectLanguage() {
   return 'es'; // Fixed to Spanish — app targets El Salvador
