@@ -271,18 +271,6 @@ export default function ProductDetail() {
     ? Math.round((1 - effectivePrice / effectiveOriginalPrice) * 100)
     : 0;
 
-  const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
-
-  // SEO: Update meta tags for social sharing
-  const productUrl = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}?id=${productId}` : '';
-  useSEO({
-    title: `${product?.name} - Tienda`,
-    description: product?.description || `Compra ${product?.name} en nuestra tienda en línea`,
-    image: images?.[safeImageIndex] || product?.images?.[0],
-    url: productUrl,
-    type: 'product',
-  });
-
   // All attribute keys that exist across variants
   const allAttrKeys = hasVariants
     ? [...new Set(variants.flatMap(v => Array.isArray(v.attributes) ? v.attributes.map(a => a.key) : []))]
@@ -292,6 +280,16 @@ export default function ProductDetail() {
     !selectedVariant ||
     allAttrKeys.some(key => !selectedAttrMap[key])
   );
+
+  // SEO: Update meta tags for social sharing
+  const productUrl = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}?id=${productId}` : '';
+  useSEO({
+    title: `${product?.name} - Tienda`,
+    description: product?.description || `Compra ${product?.name} en nuestra tienda en línea`,
+    image: product?.images?.[0],
+    url: productUrl,
+    type: 'product',
+  });
 
   return (
     <div className="min-h-screen bg-background pb-24">
