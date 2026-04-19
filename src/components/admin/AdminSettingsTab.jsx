@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard, Megaphone, Save } from 'lucide-react';
+import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '../i18n/useTranslation';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 
 const PAGES_CONFIG = [
   { path: 'Browse', label: 'Browse / Catálogo', description: 'Explorar productos por categoría' },
@@ -59,45 +57,6 @@ export default function AdminSettingsTab({ currentUser }) {
       setSaving(false);
     }
   };
-
-  // Branding local state
-  const [brandingForm, setBrandingForm] = useState({ store_name: '', logo_url: '' });
-
-  useEffect(() => {
-    if (settings) {
-      setBrandingForm({
-        store_name: settings.store_name || '',
-        logo_url: settings.logo_url || '',
-      });
-    }
-  }, [settings]);
-
-  const saveBranding = () => saveSettings(brandingForm);
-
-  // Banner local state (saved on button click)
-  const [bannerForm, setBannerForm] = useState({
-    promo_banner_enabled: true,
-    promo_banner_label: 'Flash Sale',
-    promo_banner_title: 'Up to 70% OFF',
-    promo_banner_subtitle: '',
-    promo_banner_link: '',
-    promo_banner_image_url: '',
-  });
-
-  useEffect(() => {
-    if (settings) {
-      setBannerForm({
-        promo_banner_enabled: settings.promo_banner_enabled !== false,
-        promo_banner_label: settings.promo_banner_label || 'Flash Sale',
-        promo_banner_title: settings.promo_banner_title || 'Up to 70% OFF',
-        promo_banner_subtitle: settings.promo_banner_subtitle || '',
-        promo_banner_link: settings.promo_banner_link || '',
-        promo_banner_image_url: settings.promo_banner_image_url || '',
-      });
-    }
-  }, [settings]);
-
-  const saveBanner = () => saveSettings(bannerForm);
 
   const toggleDevMode = (value) => saveSettings({ development_mode: value });
 
@@ -190,103 +149,6 @@ export default function AdminSettingsTab({ currentUser }) {
           })}
         </div>
       </div>}
-
-      {/* Branding */}
-      <div className="bg-card rounded-xl p-4 shadow-sm">
-        <div className="flex items-center gap-2 mb-1">
-          <Megaphone className="w-4 h-4 text-primary" />
-          <p className="text-sm font-semibold text-foreground">Branding de la Tienda</p>
-        </div>
-        <p className="text-xs text-muted-foreground mb-3">Nombre y logo que aparecen en la tienda.</p>
-        <div className="space-y-3">
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Nombre de la tienda</label>
-            <Input
-              placeholder="Mi Tienda"
-              value={brandingForm.store_name}
-              onChange={e => setBrandingForm(f => ({ ...f, store_name: e.target.value }))}
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Logo URL</label>
-            <Input
-              placeholder="https://..."
-              value={brandingForm.logo_url}
-              onChange={e => setBrandingForm(f => ({ ...f, logo_url: e.target.value }))}
-            />
-          </div>
-          <Button size="sm" className="w-full mt-1" onClick={saveBranding} disabled={saving}>
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            Guardar branding
-          </Button>
-        </div>
-      </div>
-
-      {/* Promo Banner */}
-      <div className="bg-card rounded-xl p-4 shadow-sm">
-        <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center gap-2">
-            <Megaphone className="w-4 h-4 text-primary" />
-            <p className="text-sm font-semibold text-foreground">Banner Promocional</p>
-          </div>
-          {saving ? (
-            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-          ) : (
-            <Switch
-              checked={bannerForm.promo_banner_enabled}
-              onCheckedChange={(v) => setBannerForm(f => ({ ...f, promo_banner_enabled: v }))}
-            />
-          )}
-        </div>
-        <p className="text-xs text-muted-foreground mb-4">Configura el banner que aparece en la pantalla de Inicio.</p>
-
-        <div className="space-y-3">
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Etiqueta pequeña</label>
-            <Input
-              placeholder="Flash Sale"
-              value={bannerForm.promo_banner_label}
-              onChange={e => setBannerForm(f => ({ ...f, promo_banner_label: e.target.value }))}
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Título principal</label>
-            <Input
-              placeholder="Up to 70% OFF"
-              value={bannerForm.promo_banner_title}
-              onChange={e => setBannerForm(f => ({ ...f, promo_banner_title: e.target.value }))}
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Subtítulo / descripción</label>
-            <Input
-              placeholder="Ej: Solo por hoy"
-              value={bannerForm.promo_banner_subtitle}
-              onChange={e => setBannerForm(f => ({ ...f, promo_banner_subtitle: e.target.value }))}
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Enlace al tocar (URL)</label>
-            <Input
-              placeholder="/Browse"
-              value={bannerForm.promo_banner_link}
-              onChange={e => setBannerForm(f => ({ ...f, promo_banner_link: e.target.value }))}
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Imagen de fondo (URL)</label>
-            <Input
-              placeholder="https://..."
-              value={bannerForm.promo_banner_image_url}
-              onChange={e => setBannerForm(f => ({ ...f, promo_banner_image_url: e.target.value }))}
-            />
-          </div>
-          <Button size="sm" className="w-full mt-1" onClick={saveBanner} disabled={saving}>
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            Guardar banner
-          </Button>
-        </div>
-      </div>
 
       {/* Payment Methods */}
       <div className="bg-card rounded-xl p-4 shadow-sm">
