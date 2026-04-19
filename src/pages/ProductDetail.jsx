@@ -291,6 +291,8 @@ export default function ProductDetail() {
     allAttrKeys.some(key => !selectedAttrMap[key])
   );
 
+  const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Lightbox */}
