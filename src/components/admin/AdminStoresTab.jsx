@@ -139,7 +139,7 @@ export default function AdminStoresTab() {
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-semibold text-foreground">{store.name}</h3>
                     {store.store_type === 'owner' && (
-                      <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">Inversionista</span>
+                      <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">Propietario</span>
                     )}
                     {!store.is_active && (
                       <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full">Inactiva</span>
@@ -266,7 +266,7 @@ export default function AdminStoresTab() {
                     checked={form.store_type === 'owner'}
                     onCheckedChange={v => setForm({...form, store_type: v ? 'owner' : 'external'})}
                   />
-                  <Label className="text-xs">Tienda de inversionista (no eliminable)</Label>
+                  <Label className="text-xs">Tienda principal (no eliminable)</Label>
                 </div>
               )}
             </div>

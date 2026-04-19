@@ -249,7 +249,7 @@ export default function AdminSettingsTab({ currentUser }) {
                   <div className="flex items-center gap-2">
                     <h4 className="text-sm font-medium text-foreground truncate">{store.name}</h4>
                     {store.store_type === 'owner' && (
-                      <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">Inversionista</span>
+                      <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">Propietario</span>
                     )}
                     {!store.is_active && (
                       <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">Inactiva</span>
@@ -516,7 +516,7 @@ export default function AdminSettingsTab({ currentUser }) {
                     checked={storeForm.store_type === 'owner'}
                     onCheckedChange={v => setStoreForm({...storeForm, store_type: v ? 'owner' : 'external'})}
                   />
-                  <Label className="text-xs">Tienda de inversionista (no eliminable)</Label>
+                  <Label className="text-xs">Tienda principal (no eliminable)</Label>
                 </div>
               )}
             </div>
