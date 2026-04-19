@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send, MessageSquare, Phone } from 'lucide-react';
+import { X, Send, MessageSquare, Phone, ChevronLeft } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,9 @@ export default function SupportChatModal({ isOpen, onClose }) {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [whatsappPhone, setWhatsappPhone] = useState('+50370000000');
+  const [orders, setOrders] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showOrderSelection, setShowOrderSelection] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -23,15 +26,36 @@ export default function SupportChatModal({ isOpen, onClose }) {
     }
   }, [isOpen]);
 
+  const handleOrderQuestion = async () => {
+    // Fetch orders for the current user
+    const userOrders = await base44.entities.Order.filter({ customer_email: user?.email });
+    setOrders(userOrders || []);
+    setShowOrderSelection(true);
+  };
+
+  const handleSelectOrder = (order) => {
+    setSelectedOrder(order);
+  };
+
   const handleSendMessage = async () => {
     if (!message.trim()) return;
 
     setLoading(true);
     try {
-      // Generar URL de WhatsApp con el mensaje pre-llenado
-      const messageText = encodeURIComponent(
-        `Hola, soy ${user?.full_name || 'Cliente'}. ${message}`
-      );
+      // Construir mensaje con detalles del pedido si está seleccionado
+      let fullMessage = `Hola, soy ${user?.full_name || 'Cliente'}. ${message}`;
+      
+      if (selectedOrder) {
+        fullMessage += `\n\nPedido: ${selectedOrder.order_number}`;
+        if (selectedOrder.tracking_number) {
+          fullMessage += `\nRastreo: ${selectedOrder.tracking_number}`;
+        }
+        if (selectedOrder.status) {
+          fullMessage += `\nEstado: ${selectedOrder.status}`;
+        }
+      }
+
+      const messageText = encodeURIComponent(fullMessage);
       const whatsappUrl = `https://wa.me/${whatsappPhone.replace(/\D/g, '')}?text=${messageText}`;
 
       // Abrir WhatsApp en nueva ventana
@@ -39,6 +63,8 @@ export default function SupportChatModal({ isOpen, onClose }) {
 
       // Limpiar y cerrar modal
       setMessage('');
+      setSelectedOrder(null);
+      setShowOrderSelection(false);
       setTimeout(() => onClose(), 1000);
     } finally {
       setLoading(false);
@@ -52,6 +78,15 @@ export default function SupportChatModal({ isOpen, onClose }) {
   };
 
   if (!isOpen) return null;
+
+  // Status labels in Spanish
+  const statusLabels = {
+    pending: 'Pendiente',
+    processing: 'Procesando',
+    shipped: 'Enviado',
+    delivered: 'Entregado',
+    cancelled: 'Cancelado'
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-end md:justify-center p-0 md:p-4">
@@ -81,18 +116,54 @@ export default function SupportChatModal({ isOpen, onClose }) {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          <p className="text-sm text-gray-700 mb-4">
-            Selecciona un tema o escribe tu mensaje:
-          </p>
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {showOrderSelection ? (
+              <>
+                <div className="flex items-center gap-2 mb-3">
+                  <button onClick={() => setShowOrderSelection(false)} className="p-1 hover:bg-gray-100 rounded">
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <p className="text-sm font-semibold text-gray-700">Selecciona un pedido</p>
+                </div>
 
-          {/* Quick messages */}
-          <button
-            onClick={() => handleQuickMessage('Tengo una pregunta sobre mi pedido')}
-            className="w-full text-left p-3 rounded-lg hover:bg-green-50 border border-gray-200 transition text-sm text-gray-700"
-          >
-            📦 Pregunta sobre mi pedido
-          </button>
+                {orders.length === 0 ? (
+                  <p className="text-sm text-gray-600 text-center py-4">No tienes pedidos registrados</p>
+                ) : (
+                  <div className="space-y-2">
+                    {orders.map(order => (
+                      <button
+                        key={order.id}
+                        onClick={() => handleSelectOrder(order)}
+                        className={`w-full text-left p-3 rounded-lg border transition text-sm ${
+                          selectedOrder?.id === order.id
+                            ? 'border-green-600 bg-green-50'
+                            : 'border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="font-medium text-gray-900">Pedido #{order.order_number}</div>
+                        <div className="text-xs text-gray-600 mt-1">Total: ${order.total?.toFixed(2)}</div>
+                        <div className="text-xs text-gray-600">Estado: {statusLabels[order.status] || order.status}</div>
+                        {order.tracking_number && (
+                          <div className="text-xs text-gray-600">Rastreo: {order.tracking_number}</div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-gray-700 mb-4">
+                  Selecciona un tema o escribe tu mensaje:
+                </p>
+
+                {/* Quick messages */}
+                <button
+                  onClick={handleOrderQuestion}
+                  className="w-full text-left p-3 rounded-lg hover:bg-green-50 border border-gray-200 transition text-sm text-gray-700"
+                >
+                  📦 Pregunta sobre mi pedido
+                </button>
           <button
             onClick={() => handleQuickMessage('¿Cuál es el tiempo de entrega?')}
             className="w-full text-left p-3 rounded-lg hover:bg-green-50 border border-gray-200 transition text-sm text-gray-700"
@@ -111,10 +182,21 @@ export default function SupportChatModal({ isOpen, onClose }) {
           >
             💡 Sugerencia
           </button>
-        </div>
+          </>
+          )}
+          </div>
 
         {/* Input area */}
         <div className="border-t p-4 space-y-3 bg-gray-50">
+          {selectedOrder && (
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <p className="text-xs text-blue-600 font-medium">Pedido seleccionado:</p>
+              <p className="text-sm font-semibold text-blue-900">#{selectedOrder.order_number}</p>
+              {selectedOrder.tracking_number && (
+                <p className="text-xs text-blue-700">Rastreo: {selectedOrder.tracking_number}</p>
+              )}
+            </div>
+          )}
           <div className="flex gap-2">
             <Input
               value={message}
