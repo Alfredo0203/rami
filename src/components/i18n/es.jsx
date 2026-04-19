@@ -64,6 +64,7 @@ const es = {
   sort_rating: "Mejor Valorados",
   sort_popular: "Más Vendidos",
   language: "Idioma",
+  my_wishlist: "Mis Favoritos",
   };
 
   export default es;

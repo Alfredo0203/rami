@@ -61,7 +61,7 @@ export default function Account() {
   const menuItems = [
     { icon: Package, label: t('my_orders'), page: 'Orders' },
     { icon: MapPin, label: t('my_addresses'), page: 'Addresses' },
-    { icon: Heart, label: 'Mis favoritos', page: 'Wishlist' },
+    { icon: Heart, label: t('my_wishlist'), page: 'Wishlist' },
   ];
 
   if (user?.role === 'admin' || user?.role === 'super_admin') {

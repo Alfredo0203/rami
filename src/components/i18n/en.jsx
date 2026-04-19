@@ -64,6 +64,7 @@ const en = {
   sort_rating: "Top Rated",
   sort_popular: "Best Selling",
   language: "Language",
+  my_wishlist: "My Wishlist",
   };
 
   export default en;
