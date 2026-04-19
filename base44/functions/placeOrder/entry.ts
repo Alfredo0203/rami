@@ -92,14 +92,21 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Este cupón ya no está disponible' }, { status: 400 });
       }
       
-      // Validar límite por usuario
-      if (coupon.usage_limit_per_user && coupon.usage_limit_per_user > 0) {
-        const userCouponUses = await base44.asServiceRole.entities.Order.filter({
-          customer_email: user.email,
-          coupon_code: coupon.code
+      // Validar si es específico de usuarios
+      if (coupon.is_user_specific) {
+        const assignments = await base44.asServiceRole.entities.CouponAssignment.filter({
+          coupon_id: coupon.id,
+          user_email: user.email
         });
         
-        if (userCouponUses.length >= coupon.usage_limit_per_user) {
+        if (assignments.length === 0) {
+          return Response.json({ 
+            error: 'Este cupón no está disponible para tu cuenta' 
+          }, { status: 400 });
+        }
+        
+        const assignment = assignments[0];
+        if (coupon.usage_limit_per_user && assignment.usage_count >= coupon.usage_limit_per_user) {
           return Response.json({ 
             error: 'Ya has usado este cupón el máximo de veces permitidas' 
           }, { status: 400 });
@@ -199,9 +206,30 @@ Deno.serve(async (req) => {
 
     // ── 5. Actualizar contador del cupón ──────────────────────────────
     if (appliedCoupon) {
+      // Incrementar contador total del cupón
       await base44.asServiceRole.entities.Coupon.update(appliedCoupon.id, {
         used_count: (appliedCoupon.used_count || 0) + 1,
       });
+
+      // Si es específico de usuarios, actualizar el assignment
+      if (appliedCoupon.is_user_specific) {
+        const assignments = await base44.asServiceRole.entities.CouponAssignment.filter({
+          coupon_id: appliedCoupon.id,
+          user_email: user.email
+        });
+
+        if (assignments.length > 0) {
+          const assignment = assignments[0];
+          const newUsageCount = (assignment.usage_count || 0) + 1;
+          const newStatus = newUsageCount >= (appliedCoupon.usage_limit_per_user || 1) ? 'used' : 'available';
+
+          await base44.asServiceRole.entities.CouponAssignment.update(assignment.id, {
+            usage_count: newUsageCount,
+            status: newStatus,
+            used_date: newStatus === 'used' ? new Date().toISOString() : assignment.used_date
+          });
+        }
+      }
     }
 
     // ── 6. Limpiar carrito ────────────────────────────────────────────
