@@ -51,12 +51,19 @@ export default function StoreModal({ store, products, categories, orders = [], r
     return { totalProducts, totalSold };
   }, [storeProducts, orders]);
 
-  // Obtener categorías con productos en esta tienda
+  // Obtener categorías con productos en esta tienda (sin filtrar por selectedCategory)
   const storeCategories = useMemo(() => {
     if (!store || !categories) return [];
-    const categoryIds = [...new Set(storeProducts.map(p => p.category_id))];
+    let allStoreProducts = products.filter(p => {
+      if (!p.store_id) {
+        return store.store_type === 'owner';
+      }
+      return p.store_id === store.id;
+    }).filter(p => p.is_active !== false);
+    
+    const categoryIds = [...new Set(allStoreProducts.map(p => p.category_id))];
     return categories.filter(c => categoryIds.includes(c.id));
-  }, [storeProducts, categories, store]);
+  }, [products, categories, store]);
 
   // Obtener reseñas de los productos de esta tienda
   const storeReviews = useMemo(() => {
