@@ -5,10 +5,15 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import OrderStatusBadge from '../components/shop/OrderStatusBadge';
 import OrderStatusTimeline from '../components/shop/OrderStatusTimeline';
-import { ArrowLeft, MapPin, CreditCard, Package, Truck, CheckCircle2, Clock, Loader2, RotateCcw, Download } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Package, Truck, CheckCircle2, Clock, Loader2, RotateCcw, XCircle } from 'lucide-react';
 import { formatDateTimeSV } from '@/lib/dateUtils';
 import InvoicePDF from '../components/shop/InvoicePDF';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const steps = [
   { key: 'pending', icon: Clock, label: 'Pedido realizado' },
@@ -25,6 +30,7 @@ export default function OrderDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [reordering, setReordering] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', orderId],
@@ -62,6 +68,14 @@ export default function OrderDetail() {
 
   const currentStepIdx = stepOrder.indexOf(order.status);
   const isCancelled = order.status === 'cancelled';
+  const canCancel = ['pending', 'processing'].includes(order.status);
+
+  const handleCancel = async () => {
+    setCancelling(true);
+    await base44.entities.Order.update(orderId, { status: 'cancelled' });
+    queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+    setCancelling(false);
+  };
 
   const handleReorder = async () => {
     setReordering(true);
@@ -111,6 +125,36 @@ export default function OrderDetail() {
           {reordering ? 'Agregando al carrito…' : 'Volver a pedir'}
         </button>
         <InvoicePDF orderId={orderId} />
+        {canCancel && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button
+                disabled={cancelling}
+                className="w-full flex items-center justify-center gap-2 py-3 border border-destructive text-destructive rounded-xl font-semibold text-sm disabled:opacity-60 transition-opacity"
+              >
+                {cancelling ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                {cancelling ? 'Cancelando…' : 'Cancelar pedido'}
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>¿Cancelar este pedido?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta acción no se puede deshacer. El pedido será marcado como cancelado y el stock será restaurado.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Mantener pedido</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleCancel}
+                  className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                >
+                  Sí, cancelar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
 
       <div className="px-4 py-4 space-y-4">
