@@ -1,27 +1,24 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
+import { Store, Plus, Edit2, Trash2, Upload, X, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Plus, Edit2, Trash2, Loader2, Store, Upload, X, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import StoreModal from '../shop/StoreModal';
+import { Switch } from '@/components/ui/switch';
 
 export default function AdminStoresTab() {
   const queryClient = useQueryClient();
-  const [showForm, setShowForm] = useState(false);
+  const [showStoreForm, setShowStoreForm] = useState(false);
   const [editingStore, setEditingStore] = useState(null);
   const [deletingStoreId, setDeletingStoreId] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [viewingStore, setViewingStore] = useState(null);
-
-  const [form, setForm] = useState({
+  const [storePreviewUrl, setStorePreviewUrl] = useState(null);
+  const [storeForm, setStoreForm] = useState({
     name: '',
     owner_email: '',
     logo_url: '',
@@ -31,60 +28,31 @@ export default function AdminStoresTab() {
     store_type: 'external',
   });
 
-  const { data: stores = [], isLoading } = useQuery({
+  const { data: stores = [] } = useQuery({
     queryKey: ['admin-stores'],
     queryFn: () => base44.entities.Store.list(),
   });
 
   const { data: users = [] } = useQuery({
-    queryKey: ['admin-users'],
+    queryKey: ['admin-users-stores'],
     queryFn: () => base44.entities.User.list(),
   });
 
-  const { data: products = [] } = useQuery({
-    queryKey: ['admin-products'],
-    queryFn: () => base44.entities.Product.list(),
-  });
-
-  const { data: categories = [] } = useQuery({
-    queryKey: ['categories'],
-    queryFn: () => base44.entities.Category.list('sort_order'),
-  });
-
-  const { data: orders = [] } = useQuery({
-    queryKey: ['admin-orders'],
-    queryFn: () => base44.entities.Order.list(),
-  });
-
-  const { data: reviews = [] } = useQuery({
-    queryKey: ['admin-reviews'],
-    queryFn: () => base44.entities.Review.list(),
-  });
-
-  const saveMutation = useMutation({
-    mutationFn: async (data) => {
-      const storeData = data;
+  const saveStoreMutation = useMutation({
+    mutationFn: (data) => {
       if (editingStore) {
-        return base44.entities.Store.update(editingStore.id, storeData);
+        return base44.entities.Store.update(editingStore.id, data);
       }
-      // Si es nueva tienda, crear la tienda y luego cambiar el rol del usuario a seller
-      const newStore = await base44.entities.Store.create(storeData);
-      // Cambiar el rol del usuario asignado a seller
-      await base44.entities.User.update(
-        users.find(u => u.email === storeData.owner_email)?.id,
-        { role: 'seller' }
-      );
-      return newStore;
+      return base44.entities.Store.create(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-stores'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      toast.success(editingStore ? 'Tienda actualizada' : 'Tienda creada y usuario convertido a seller');
-      handleClose();
+      toast.success(editingStore ? 'Tienda actualizada' : 'Tienda creada');
+      handleStoreClose();
     },
   });
 
-  const deleteMutation = useMutation({
+  const deleteStoreMutation = useMutation({
     mutationFn: (id) => base44.entities.Store.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-stores'] });
@@ -93,10 +61,10 @@ export default function AdminStoresTab() {
     },
   });
 
-  const handleOpen = (store = null) => {
+  const handleStoreOpen = (store = null) => {
     if (store) {
       setEditingStore(store);
-      setForm({
+      setStoreForm({
         name: store.name || '',
         owner_email: store.owner_email || '',
         logo_url: store.logo_url || '',
@@ -107,7 +75,7 @@ export default function AdminStoresTab() {
       });
     } else {
       setEditingStore(null);
-      setForm({
+      setStoreForm({
         name: '',
         owner_email: '',
         logo_url: '',
@@ -117,104 +85,91 @@ export default function AdminStoresTab() {
         store_type: 'external',
       });
     }
-    setShowForm(true);
+    setShowStoreForm(true);
   };
 
-  const handleClose = () => {
-    setShowForm(false);
+  const handleStoreClose = () => {
+    setShowStoreForm(false);
     setEditingStore(null);
-    setPreviewUrl(null);
+    setStorePreviewUrl(null);
   };
 
-  const handleSubmit = () => {
-    if (!form.name || !form.owner_email) {
+  const handleStoreSubmit = () => {
+    if (!storeForm.name || !storeForm.owner_email) {
       toast.error('Nombre y email del dueño son requeridos');
       return;
     }
-    saveMutation.mutate(form);
+    saveStoreMutation.mutate(storeForm);
   };
 
   const handleLogoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    setForm(prev => ({ ...prev, logo_url: file_url }));
+    setStoreForm(prev => ({ ...prev, logo_url: file_url }));
   };
 
   return (
-    <div className="space-y-4">
-      <Button
-        onClick={() => handleOpen()}
-        className="w-full bg-primary text-primary-foreground rounded-full h-10"
-      >
-        <Plus className="w-4 h-4 mr-2" /> Agregar Tienda
-      </Button>
+    <div className="space-y-3 mt-3 pb-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Store className="w-4 h-4 text-primary" />
+          <p className="text-sm font-semibold text-foreground">Gestión de Tiendas</p>
+        </div>
+        <Button
+          onClick={() => handleStoreOpen()}
+          size="sm"
+          className="h-8 rounded-full"
+        >
+          <Plus className="w-3.5 h-3.5 mr-1" /> Agregar
+        </Button>
+      </div>
 
-      {isLoading ? (
-        <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-      ) : stores.length === 0 ? (
-        <div className="text-center py-10 text-muted-foreground text-sm">No hay tiendas registradas</div>
+      {/* Stores List */}
+      {stores.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No hay tiendas registradas</p>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {stores.map(store => (
-            <div key={store.id} className="bg-card rounded-xl p-4 shadow-sm">
-              <div className="flex gap-3">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {store.logo_url ? (
-                    <img src={store.logo_url} alt={store.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <img src="https://drive.google.com/thumbnail?id=1XvzxcscLVC00UVnvggpG1qTLTiyQ_6d0&sz=w100" alt={store.name} className="w-full h-full object-cover" />
+            <div key={store.id} className="flex items-center gap-3 p-2 bg-card rounded-lg border border-border">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                {store.logo_url ? (
+                  <img src={store.logo_url} alt={store.name} className="w-full h-full object-cover" />
+                ) : (
+                  <img src="https://drive.google.com/thumbnail?id=1XvzxcscLVC00UVnvggpG1qTLTiyQ_6d0&sz=w100" alt={store.name} className="w-full h-full object-cover" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-medium text-foreground truncate">{store.name}</h4>
+                  {store.store_type === 'owner' && (
+                    <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">Propietario</span>
+                  )}
+                  {!store.is_active && (
+                    <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">Inactiva</span>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold text-foreground">{store.name}</h3>
-                    {store.store_type === 'owner' && (
-                      <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">Propietario</span>
-                    )}
-                    {!store.is_active && (
-                      <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full">Inactiva</span>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">Dueño: {store.owner_email}</p>
-                  {store.description && (
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{store.description}</p>
-                  )}
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={() => setViewingStore(store)}
-                      className="p-1.5 bg-secondary rounded hover:bg-primary/10"
-                      title="Ver tienda"
-                    >
-                      <Eye className="w-3.5 h-3.5 text-primary" />
-                    </button>
-                    <button
-                      onClick={() => handleOpen(store)}
-                      className="p-1.5 bg-secondary rounded hover:bg-muted"
-                      title="Editar"
-                    >
-                      <Edit2 className="w-3.5 h-3.5 text-foreground" />
-                    </button>
-                    {store.store_type !== 'owner' && (
-                      <button
-                        onClick={() => setDeletingStoreId(store.id)}
-                        className="p-1.5 bg-secondary rounded hover:bg-destructive/10"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                      </button>
-                    )}
-                  </div>
-                </div>
+                <p className="text-xs text-muted-foreground truncate">{store.owner_email}</p>
+              </div>
+              <div className="flex gap-1">
+                <button onClick={() => handleStoreOpen(store)} className="p-1.5 bg-secondary rounded hover:bg-muted">
+                  <Edit2 className="w-3.5 h-3.5 text-foreground" />
+                </button>
+                {store.store_type !== 'owner' && (
+                  <button onClick={() => setDeletingStoreId(store.id)} className="p-1.5 bg-secondary rounded hover:bg-destructive/10">
+                    <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                  </button>
+                )}
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Form Modal */}
-      {showForm && (
-        <Dialog open={showForm} onOpenChange={handleClose}>
+      {/* Store Form Modal */}
+      {showStoreForm && (
+        <Dialog open={showStoreForm} onOpenChange={handleStoreClose}>
           <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingStore ? 'Editar Tienda' : 'Nueva Tienda'}</DialogTitle>
@@ -224,27 +179,25 @@ export default function AdminStoresTab() {
               <div>
                 <Label className="text-xs">Nombre de la tienda</Label>
                 <Input
-                  value={form.name}
-                  onChange={e => setForm({...form, name: e.target.value})}
+                  value={storeForm.name}
+                  onChange={e => setStoreForm({...storeForm, name: e.target.value})}
                   placeholder="Ej: Tienda Oficial"
                   className="h-9 text-sm"
                 />
               </div>
 
               <div>
-                <Label className="text-xs">Email del dueño (se convertirá a seller)</Label>
+                <Label className="text-xs">Email del dueño</Label>
                 <Select
-                  value={form.owner_email}
-                  onValueChange={v => setForm({...form, owner_email: v})}
+                  value={storeForm.owner_email}
+                  onValueChange={v => setStoreForm({...storeForm, owner_email: v})}
                 >
                   <SelectTrigger className="h-9 text-sm">
                     <SelectValue placeholder="Seleccionar usuario" />
                   </SelectTrigger>
                   <SelectContent>
-                    {users.filter(u => u.role !== 'super_admin').map(u => (
-                      <SelectItem key={u.id} value={u.email}>
-                        {u.email} - {u.full_name} {u.role === 'seller' ? '(ya es seller)' : ''}
-                      </SelectItem>
+                    {users.map(u => (
+                      <SelectItem key={u.id} value={u.email}>{u.email} - {u.full_name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -254,15 +207,15 @@ export default function AdminStoresTab() {
                 <Label className="text-xs">Logo</Label>
                 <div className="flex items-center gap-3 mt-1">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-                    {form.logo_url ? (
+                    {storeForm.logo_url ? (
                       <img
-                        src={form.logo_url}
+                        src={storeForm.logo_url}
                         alt="Logo"
                         className="w-full h-full object-cover cursor-pointer"
-                        onClick={() => setPreviewUrl(form.logo_url)}
+                        onClick={() => setStorePreviewUrl(storeForm.logo_url)}
                       />
                     ) : (
-                      <img src="https://drive.google.com/thumbnail?id=1XvzxcscLVC00UVnvggpG1qTLTiyQ_6d0&sz=w100" alt="Logo" className="w-full h-full object-cover" />
+                      <span className="text-lg font-bold text-primary">{storeForm.name ? storeForm.name.charAt(0).toUpperCase() : '?'}</span>
                     )}
                   </div>
                   <label className="flex-1">
@@ -277,8 +230,8 @@ export default function AdminStoresTab() {
               <div>
                 <Label className="text-xs">Descripción</Label>
                 <Textarea
-                  value={form.description}
-                  onChange={e => setForm({...form, description: e.target.value})}
+                  value={storeForm.description}
+                  onChange={e => setStoreForm({...storeForm, description: e.target.value})}
                   placeholder="Descripción de la tienda"
                   className="text-sm h-20"
                 />
@@ -287,8 +240,8 @@ export default function AdminStoresTab() {
               <div>
                 <Label className="text-xs">Teléfono</Label>
                 <Input
-                  value={form.phone}
-                  onChange={e => setForm({...form, phone: e.target.value})}
+                  value={storeForm.phone}
+                  onChange={e => setStoreForm({...storeForm, phone: e.target.value})}
                   placeholder="+503 1234 5678"
                   className="h-9 text-sm"
                 />
@@ -296,8 +249,8 @@ export default function AdminStoresTab() {
 
               <div className="flex items-center gap-2">
                 <Switch
-                  checked={form.is_active}
-                  onCheckedChange={v => setForm({...form, is_active: v})}
+                  checked={storeForm.is_active}
+                  onCheckedChange={v => setStoreForm({...storeForm, is_active: v})}
                 />
                 <Label className="text-xs">Tienda activa</Label>
               </div>
@@ -305,8 +258,8 @@ export default function AdminStoresTab() {
               {!editingStore && (
                 <div className="flex items-center gap-2">
                   <Switch
-                    checked={form.store_type === 'owner'}
-                    onCheckedChange={v => setForm({...form, store_type: v ? 'owner' : 'external'})}
+                    checked={storeForm.store_type === 'owner'}
+                    onCheckedChange={v => setStoreForm({...storeForm, store_type: v ? 'owner' : 'external'})}
                   />
                   <Label className="text-xs">Tienda principal (no eliminable)</Label>
                 </div>
@@ -314,29 +267,29 @@ export default function AdminStoresTab() {
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={handleClose}>Cancelar</Button>
+              <Button variant="outline" onClick={handleStoreClose}>Cancelar</Button>
               <Button
-                onClick={handleSubmit}
-                disabled={saveMutation.isPending}
+                onClick={handleStoreSubmit}
+                disabled={saveStoreMutation.isPending}
                 className="bg-primary text-primary-foreground"
               >
-                {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (editingStore ? 'Actualizar' : 'Crear')}
+                {saveStoreMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (editingStore ? 'Actualizar' : 'Crear')}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       )}
 
-      {/* Preview Modal */}
-      {previewUrl && (
+      {/* Store Preview Modal */}
+      {storePreviewUrl && (
         <div
           className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
-          onClick={() => setPreviewUrl(null)}
+          onClick={() => setStorePreviewUrl(null)}
         >
           <div className="relative max-w-sm w-full" onClick={e => e.stopPropagation()}>
-            <img src={previewUrl} alt="Vista previa" className="w-full rounded-2xl" />
+            <img src={storePreviewUrl} alt="Vista previa" className="w-full rounded-2xl" />
             <button
-              onClick={() => setPreviewUrl(null)}
+              onClick={() => setStorePreviewUrl(null)}
               className="absolute top-2 right-2 w-8 h-8 bg-black/60 rounded-full flex items-center justify-center"
             >
               <X className="w-4 h-4 text-white" />
@@ -345,19 +298,7 @@ export default function AdminStoresTab() {
         </div>
       )}
 
-      {/* Store View Modal */}
-      {viewingStore && (
-        <StoreModal
-          store={viewingStore}
-          products={products}
-          categories={categories}
-          orders={orders}
-          reviews={reviews}
-          onClose={() => setViewingStore(null)}
-        />
-      )}
-
-      {/* Delete Confirmation */}
+      {/* Store Delete Confirmation */}
       <AlertDialog open={!!deletingStoreId} onOpenChange={(open) => { if (!open) setDeletingStoreId(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -370,7 +311,7 @@ export default function AdminStoresTab() {
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => deleteMutation.mutate(deletingStoreId)}
+              onClick={() => deleteStoreMutation.mutate(deletingStoreId)}
             >
               Eliminar
             </AlertDialogAction>
