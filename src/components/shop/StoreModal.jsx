@@ -79,7 +79,7 @@ export default function StoreModal({ store, products, categories, orders = [], r
       >
         {/* Header */}
         <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 py-3">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <img
                 src={storeLogo}
@@ -100,8 +100,39 @@ export default function StoreModal({ store, products, categories, orders = [], r
               <X className="w-5 h-5 text-foreground" />
             </button>
           </div>
+        </div>
 
-          {/* Tabs */}
+        {/* Store Info Cards */}
+        <div className="grid grid-cols-2 gap-2 px-4 py-4">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-card rounded-xl p-3 shadow-sm"
+          >
+            <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-1">
+              <Package className="w-4 h-4" />
+            </div>
+            <p className="text-lg font-extrabold text-foreground">{stats.totalProducts}</p>
+            <p className="text-[10px] text-muted-foreground">Productos</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-card rounded-xl p-3 shadow-sm"
+          >
+            <div className="w-7 h-7 rounded-lg bg-chart-5/10 text-chart-5 flex items-center justify-center mb-1">
+              <ShoppingBag className="w-4 h-4" />
+            </div>
+            <p className="text-lg font-extrabold text-foreground">{stats.totalSold}</p>
+            <p className="text-[10px] text-muted-foreground">Vendidos</p>
+          </motion.div>
+        </div>
+
+        {/* Tabs - After stats cards */}
+        <div className="sticky top-[88px] z-40 bg-card/95 backdrop-blur-lg border-b border-border px-4 py-2">
           <div className="flex gap-1 bg-secondary/50 p-1 rounded-lg">
             <button
               onClick={() => setActiveTab('products')}
@@ -139,132 +170,56 @@ export default function StoreModal({ store, products, categories, orders = [], r
           </div>
         </div>
 
-        {/* Store Info Cards - Only show on products tab */}
-        {activeTab === 'products' && (
-          <div className="grid grid-cols-2 gap-2 px-4 py-4">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-card rounded-xl p-3 shadow-sm"
-          >
-            <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-1">
-              <Package className="w-4 h-4" />
-            </div>
-            <p className="text-lg font-extrabold text-foreground">{stats.totalProducts}</p>
-            <p className="text-[10px] text-muted-foreground">Productos</p>
-          </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-card rounded-xl p-3 shadow-sm"
-          >
-            <div className="w-7 h-7 rounded-lg bg-chart-5/10 text-chart-5 flex items-center justify-center mb-1">
-              <ShoppingBag className="w-4 h-4" />
-            </div>
-            <p className="text-lg font-extrabold text-foreground">{stats.totalSold}</p>
-            <p className="text-[10px] text-muted-foreground">Vendidos</p>
-          </motion.div>
-        </div>
-        )}
 
-        {/* Contact Info - Only show on products tab */}
-        {activeTab === 'products' && (store.phone || store.owner_email) && (
-          <div className="px-4 mb-4 space-y-2">
-            {store.phone && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Phone className="w-3.5 h-3.5" />
-                <span>{store.phone}</span>
-              </div>
-            )}
-            {store.owner_email && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Mail className="w-3.5 h-3.5" />
-                <span>{store.owner_email}</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Categories - Only show on products tab */}
-        {activeTab === 'products' && storeCategories.length > 0 && (
-          <div className="mb-4">
-            <div className="flex gap-2 overflow-x-auto px-4 pb-2 hide-scrollbar">
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className={`px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                  selectedCategory === null
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary text-foreground hover:bg-muted'
-                }`}
-              >
-                Todos
-              </button>
-              {storeCategories.map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                    selectedCategory === cat.id
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary text-foreground hover:bg-muted'
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Products Grid - Scrollable */}
+        {/* Products Tab Content */}
         {activeTab === 'products' && (
           <div className="flex-1 overflow-y-auto px-4 pb-24">
-          {storeProducts.length === 0 ? (
-            <div className="text-center py-20">
-              <Package className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground text-sm">No hay productos disponibles</p>
-            </div>
-          ) : (
-            <>
+            {/* Categories */}
+            {storeCategories.length > 0 && (
+              <div className="mb-4">
+                <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className={`px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                      selectedCategory === null
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary text-foreground hover:bg-muted'
+                    }`}
+                  >
+                    Todos
+                  </button>
+                  {storeCategories.map(cat => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                        selectedCategory === cat.id
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary text-foreground hover:bg-muted'
+                      }`}
+                    >
+                      {cat.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Products Grid */}
+            {storeProducts.length === 0 ? (
+              <div className="text-center py-20">
+                <Package className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground text-sm">No hay productos disponibles</p>
+              </div>
+            ) : (
               <div className="grid grid-cols-2 gap-2.5 mb-8">
                 {storeProducts.map((product, i) => (
                   <ProductCard key={product.id} product={product} index={i} />
                 ))}
               </div>
-
-              {/* Reviews Section */}
-              {storeReviews.length > 0 && (
-                <div className="mt-6 pt-4 border-t border-border">
-                  <h3 className="text-sm font-semibold text-foreground mb-3">Reseñas de clientes</h3>
-                  <div className="space-y-3">
-                    {storeReviews.map(review => (
-                      <div key={review.id} className="bg-card rounded-lg p-3 border border-border/50">
-                        <div className="flex items-start justify-between mb-1.5">
-                          <div className="flex items-center gap-0.5">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-warning text-warning' : 'text-muted-foreground'}`}
-                              />
-                            ))}
-                          </div>
-                          <span className="text-[10px] text-muted-foreground">{review.reviewer_name}</span>
-                        </div>
-                        {review.title && (
-                          <p className="text-xs font-medium text-foreground mb-1">{review.title}</p>
-                        )}
-                        <p className="text-xs text-muted-foreground line-clamp-2">{review.body}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
+            )}
+          </div>
         )}
 
         {/* Reviews Tab Content */}
