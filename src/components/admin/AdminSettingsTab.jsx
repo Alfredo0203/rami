@@ -239,7 +239,7 @@ export default function AdminSettingsTab({ currentUser }) {
                   {store.logo_url ? (
                     <img src={store.logo_url} alt={store.name} className="w-full h-full object-cover" />
                   ) : (
-                    <img src="https://drive.google.com/uc?export=view&id=1XvzxcscLVC00UVnvggpG1qTLTiyQ_6d0" alt={store.name} className="w-full h-full object-cover" />
+                    <img src="https://drive.google.com/thumbnail?id=1XvzxcscLVC00UVnvggpG1qTLTiyQ_6d0&sz=w100" alt={store.name} className="w-full h-full object-cover" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
