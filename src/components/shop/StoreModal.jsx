@@ -177,8 +177,8 @@ export default function StoreModal({ store, products, categories, orders = [], r
           <div className="flex-1 overflow-y-auto px-4 pb-24">
             {/* Categories */}
             {storeCategories.length > 0 && (
-              <div className="mb-4">
-                <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
+              <div className="mb-4 pt-2">
+                <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 hide-scrollbar">
                   <button
                     onClick={() => setSelectedCategory(null)}
                     className={`px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
