@@ -33,6 +33,33 @@
       "default": [],
       "description": "List of page paths disabled for regular users (e.g. ['Browse', 'Orders'])"
     },
+    "promo_banner_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the promo banner is shown on the Home page"
+    },
+    "promo_banner_label": {
+      "type": "string",
+      "default": "Flash Sale",
+      "description": "Small label above the main banner text (e.g. 'Flash Sale', 'Oferta')"
+    },
+    "promo_banner_title": {
+      "type": "string",
+      "default": "Up to 70% OFF",
+      "description": "Main headline of the promo banner"
+    },
+    "promo_banner_subtitle": {
+      "type": "string",
+      "description": "Optional subtitle / description shown below the headline"
+    },
+    "promo_banner_link": {
+      "type": "string",
+      "description": "URL to navigate to when the banner is tapped (e.g. /Browse)"
+    },
+    "promo_banner_image_url": {
+      "type": "string",
+      "description": "Optional background image URL for the banner"
+    },
     "updated_by": {
       "type": "string",
       "description": "Email of admin who last updated"
