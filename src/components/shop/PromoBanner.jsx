@@ -53,19 +53,19 @@ export default function PromoBanner() {
       {/* dark overlay when image is set */}
       {imageUrl && <div className="absolute inset-0 bg-black/40" />}
 
-      <div className="relative p-5 flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-1.5 mb-1">
-            <Flame className="w-4 h-4 text-primary-foreground" />
-            <span className="text-primary-foreground/80 text-xs font-semibold uppercase tracking-wider">{label}</span>
-          </div>
-          <h2 className="text-primary-foreground text-xl font-extrabold">{title}</h2>
-          {subtitle && <p className="text-primary-foreground/70 text-xs mt-0.5">{subtitle}</p>}
+      <div className="relative p-5">
+        {/* Label badge */}
+        <div className="inline-flex items-center gap-1.5 bg-[#1a237e] text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-sm mb-2">
+          <Flame className="w-3.5 h-3.5 text-orange-400" />
+          {label}
         </div>
-        {link && (
-          <div className="bg-primary-foreground/20 backdrop-blur-sm rounded-full p-3">
-            <ArrowRight className="w-5 h-5 text-primary-foreground" />
-          </div>
+        {/* Title block */}
+        <div className="bg-[#1a237e] inline-block px-3 py-1.5 rounded-sm mb-1">
+          <h2 className="text-white text-2xl font-extrabold leading-tight">{title}</h2>
+        </div>
+        {/* Subtitle */}
+        {subtitle && (
+          <p className="text-white/90 text-sm font-medium mt-1">{subtitle}</p>
         )}
       </div>
     </motion.div>
