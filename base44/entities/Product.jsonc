@@ -18,6 +18,10 @@
       "type": "number",
       "description": "Original price before discount"
     },
+    "cost_per_unit": {
+      "type": "number",
+      "description": "Cost per unit for profit calculation"
+    },
     "category_id": {
       "type": "string",
       "description": "Category ID"

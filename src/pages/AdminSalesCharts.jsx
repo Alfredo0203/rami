@@ -26,6 +26,16 @@ export default function AdminSalesCharts() {
     queryFn: () => base44.entities.Order.list('-created_date'),
   });
 
+  const { data: products = [] } = useQuery({
+    queryKey: ['admin-products-for-charts'],
+    queryFn: () => base44.entities.Product.list(),
+  });
+
+  const { data: inventoryLogs = [] } = useQuery({
+    queryKey: ['admin-inventory-logs'],
+    queryFn: () => base44.entities.InventoryLog.list('-created_date'),
+  });
+
   // Process data for charts
   const chartData = useMemo(() => {
     if (!orders.length) return { daily: [], weekly: [] };
@@ -88,9 +98,22 @@ export default function AdminSalesCharts() {
         return true;
       })
     : [];
+  
+  // Calcular gastos totales
+  const totalCost = filteredForStats.reduce((sum, order) => {
+    const orderItems = order.items || [];
+    const itemsCost = orderItems.reduce((itemSum, item) => {
+      const product = products.find(p => p.id === item.product_id);
+      const costPerUnit = product?.cost_per_unit || 0;
+      return itemSum + (costPerUnit * (item.quantity || 0));
+    }, 0);
+    return sum + itemsCost;
+  }, 0);
+  
   const totalRevenue = filteredForStats.reduce((sum, o) => sum + (o.total || 0), 0);
   const totalOrders = filteredForStats.length;
   const avgOrderValue = totalOrders ? (totalRevenue / totalOrders).toFixed(2) : 0;
+  const totalProfit = totalRevenue - totalCost;
 
   return (
     <div className="min-h-screen bg-background pb-6">
@@ -102,7 +125,7 @@ export default function AdminSalesCharts() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-2 px-4 py-4">
+      <div className="grid grid-cols-2 gap-2 px-4 py-4">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -117,17 +140,19 @@ export default function AdminSalesCharts() {
           transition={{ delay: 0.1 }}
           className="bg-card rounded-lg p-3 shadow-sm"
         >
-          <p className="text-xs text-muted-foreground">Órdenes</p>
-          <p className="text-lg font-bold text-primary">{totalOrders}</p>
+          <p className="text-xs text-muted-foreground">Gastos</p>
+          <p className="text-lg font-bold text-chart-2">${totalCost.toFixed(0)}</p>
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-card rounded-lg p-3 shadow-sm"
+          className="bg-card rounded-lg p-3 shadow-sm col-span-2"
         >
-          <p className="text-xs text-muted-foreground">Promedio</p>
-          <p className="text-lg font-bold text-chart-2">${avgOrderValue}</p>
+          <p className="text-xs text-muted-foreground">Ganancia</p>
+          <p className={`text-lg font-bold ${totalProfit >= 0 ? 'text-success' : 'text-destructive'}`}>
+            ${totalProfit.toFixed(0)}
+          </p>
         </motion.div>
       </div>
 

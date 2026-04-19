@@ -10,6 +10,7 @@ import AdminSettingsTab from '../components/admin/AdminSettingsTab';
 import AdminReviewsTab from '../components/admin/AdminReviewsTab';
 import AdminCategoriesTab from '../components/admin/AdminCategoriesTab';
 import AdminCouponsTab from '../components/admin/AdminCouponsTab';
+import AdminInventoryModal from '../components/admin/AdminInventoryModal';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -23,6 +24,7 @@ export default function Admin() {
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [deletingProductId, setDeletingProductId] = useState(null);
+  const [inventoryProduct, setInventoryProduct] = useState(null);
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -193,19 +195,28 @@ export default function Admin() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <button
-                    onClick={() => { setEditingProduct(product); setShowProductForm(true); }}
-                    className="p-2 bg-secondary rounded-lg hover:bg-muted"
-                  >
-                    <Edit2 className="w-3.5 h-3.5 text-foreground" />
-                  </button>
-                  <button
-                    onClick={() => setDeletingProductId(product.id)}
-                    className="p-2 bg-secondary rounded-lg hover:bg-destructive/10"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                  </button>
-                </div>
+                   <button
+                     onClick={() => { setEditingProduct(product); setShowProductForm(true); }}
+                     className="p-2 bg-secondary rounded-lg hover:bg-muted"
+                     title="Editar producto"
+                   >
+                     <Edit2 className="w-3.5 h-3.5 text-foreground" />
+                   </button>
+                   <button
+                     onClick={() => setInventoryProduct(product)}
+                     className="p-2 bg-secondary rounded-lg hover:bg-primary/10"
+                     title="Agregar inventario"
+                   >
+                     <Package className="w-3.5 h-3.5 text-primary" />
+                   </button>
+                   <button
+                     onClick={() => setDeletingProductId(product.id)}
+                     className="p-2 bg-secondary rounded-lg hover:bg-destructive/10"
+                     title="Eliminar producto"
+                   >
+                     <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                   </button>
+                 </div>
               </div>
             ))
           )}
@@ -264,6 +275,14 @@ export default function Admin() {
           product={editingProduct}
           categories={categories}
           onClose={() => { setShowProductForm(false); setEditingProduct(null); }}
+        />
+      )}
+
+      {inventoryProduct && (
+        <AdminInventoryModal
+          product={inventoryProduct}
+          open={!!inventoryProduct}
+          onOpenChange={(open) => { if (!open) setInventoryProduct(null); }}
         />
       )}
 
