@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Loader2, TrendingUp, TrendingDown, Package, AlertTriangle } from 'lucide-react';
+import { Loader2, TrendingUp, Package, AlertTriangle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function AdminInventoryModal({ product, open, onOpenChange }) {
@@ -21,8 +21,8 @@ export default function AdminInventoryModal({ product, open, onOpenChange }) {
       let qty = parseFloat(quantity);
       const cost = parseFloat(costPerUnit);
       
-      // Para compras/devoluciones, el costo es obligatorio. Para ajustes/ventas, opcional.
-      const useExistingCost = (!cost || cost === 0) && (movementType === 'adjustment' || movementType === 'sale');
+      // Para compras/devoluciones, el costo es obligatorio. Para ajustes, usa costo existente.
+      const useExistingCost = (!cost || cost === 0) && movementType === 'adjustment';
       const finalCost = useExistingCost ? (product.cost_per_unit || 0) : cost;
       const totalCost = qty * finalCost;
 
@@ -130,30 +130,24 @@ export default function AdminInventoryModal({ product, open, onOpenChange }) {
                   </div>
                 </SelectItem>
                 <SelectItem value="adjustment">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-warning" />
-                    <span>Ajuste (Manual)</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="sale">
-                  <div className="flex items-center gap-2">
-                    <TrendingDown className="w-4 h-4 text-destructive" />
-                    <span>Venta/Salida</span>
-                  </div>
-                </SelectItem>
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-warning" />
+                      <span>Ajuste (Manual)</span>
+                    </div>
+                  </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div>
             <label className="text-xs font-medium text-muted-foreground">
-              Cantidad {movementType === 'adjustment' || movementType === 'sale' ? '(negativo para restar)' : ''}
+              Cantidad {movementType === 'adjustment' ? '(negativo para restar)' : ''}
             </label>
             <Input
               type="number"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
-              placeholder={movementType === 'purchase' ? "Ej: 10" : movementType === 'adjustment' ? "Ej: -5 (pérdida) o 3 (corrección)" : "Ej: -2"}
+              placeholder={movementType === 'purchase' ? "Ej: 10" : movementType === 'return' ? "Ej: 5" : "Ej: -5 (pérdida) o 3 (corrección)"}
             />
             <p className="text-[10px] text-muted-foreground mt-1">
               Stock actual: <span className="font-semibold">{product.stock || 0}</span> → 
@@ -182,18 +176,17 @@ export default function AdminInventoryModal({ product, open, onOpenChange }) {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder={
-                movementType === 'purchase' ? "Ej: Compra a proveedor XYZ" :
-                movementType === 'adjustment' ? "Ej: Producto dañado, pérdida en inventario" :
-                movementType === 'sale' ? "Ej: Salida por venta" :
-                "Ej: Devolución de cliente"
-              }
+                 movementType === 'purchase' ? "Ej: Compra a proveedor XYZ" :
+                 movementType === 'adjustment' ? "Ej: Producto dañado, pérdida en inventario" :
+                 "Ej: Devolución de cliente"
+               }
               className="h-20"
             />
-            {(movementType === 'adjustment' || movementType === 'sale') && (
-              <p className="text-[10px] text-warning mt-1">
-                ⚠️ Requerido para ajustes y salidas
-              </p>
-            )}
+            {movementType === 'adjustment' && (
+               <p className="text-[10px] text-warning mt-1">
+                 ⚠️ Requerido para ajustes
+               </p>
+             )}
           </div>
 
           {quantity && ((movementType === 'purchase' || movementType === 'return') ? costPerUnit : true) && (
@@ -221,7 +214,6 @@ export default function AdminInventoryModal({ product, open, onOpenChange }) {
             disabled={addInventoryMutation.isPending || !quantity}
             className={
               movementType === 'purchase' || movementType === 'return' ? 'bg-success hover:bg-success/90' :
-              movementType === 'sale' ? 'bg-destructive hover:bg-destructive/90' :
               'bg-primary hover:bg-primary/90'
             }
           >
@@ -234,7 +226,6 @@ export default function AdminInventoryModal({ product, open, onOpenChange }) {
                 {movementType === 'purchase' && 'Registrar Compra'}
                 {movementType === 'return' && 'Registrar Devolución'}
                 {movementType === 'adjustment' && 'Aplicar Ajuste'}
-                {movementType === 'sale' && 'Registrar Salida'}
               </>
             )}
           </Button>
