@@ -48,6 +48,7 @@ export default function AdminSettingsTab({ currentUser }) {
     description: '',
     phone: '',
     is_active: true,
+    store_type: 'external',
   });
 
   useEffect(() => {
@@ -99,6 +100,7 @@ export default function AdminSettingsTab({ currentUser }) {
         description: store.description || '',
         phone: store.phone || '',
         is_active: store.is_active !== false,
+        store_type: store.store_type || 'external',
       });
     } else {
       setEditingStore(null);
@@ -109,6 +111,7 @@ export default function AdminSettingsTab({ currentUser }) {
         description: '',
         phone: '',
         is_active: true,
+        store_type: 'external',
       });
     }
     setShowStoreForm(true);
@@ -245,6 +248,9 @@ export default function AdminSettingsTab({ currentUser }) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <h4 className="text-sm font-medium text-foreground truncate">{store.name}</h4>
+                    {store.store_type === 'owner' && (
+                      <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">Inversionista</span>
+                    )}
                     {!store.is_active && (
                       <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">Inactiva</span>
                     )}
@@ -255,9 +261,11 @@ export default function AdminSettingsTab({ currentUser }) {
                   <button onClick={() => handleStoreOpen(store)} className="p-1.5 bg-secondary rounded hover:bg-muted">
                     <Edit2 className="w-3.5 h-3.5 text-foreground" />
                   </button>
-                  <button onClick={() => setDeletingStoreId(store.id)} className="p-1.5 bg-secondary rounded hover:bg-destructive/10">
-                    <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                  </button>
+                  {store.store_type !== 'owner' && (
+                    <button onClick={() => setDeletingStoreId(store.id)} className="p-1.5 bg-secondary rounded hover:bg-destructive/10">
+                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -501,6 +509,16 @@ export default function AdminSettingsTab({ currentUser }) {
                 />
                 <Label className="text-xs">Tienda activa</Label>
               </div>
+
+              {!editingStore && (
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={storeForm.store_type === 'owner'}
+                    onCheckedChange={v => setStoreForm({...storeForm, store_type: v ? 'owner' : 'external'})}
+                  />
+                  <Label className="text-xs">Tienda de inversionista (no eliminable)</Label>
+                </div>
+              )}
             </div>
 
             <DialogFooter>

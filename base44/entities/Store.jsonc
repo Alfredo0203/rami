@@ -26,6 +26,15 @@
       "type": "boolean",
       "default": true,
       "description": "Si la tienda est\u00e1 activa"
+    },
+    "store_type": {
+      "type": "string",
+      "enum": [
+        "owner",
+        "external"
+      ],
+      "default": "external",
+      "description": "Tipo de tienda: owner (tienda principal) o external (tiendas de terceros)"
     }
   },
   "required": [

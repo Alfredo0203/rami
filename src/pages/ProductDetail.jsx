@@ -93,9 +93,21 @@ export default function ProductDetail() {
 
   const { data: store } = useQuery({
     queryKey: ['store', product?.store_id],
-    queryFn: () => base44.entities.Store.get(product.store_id),
+    queryFn: () => product?.store_id ? base44.entities.Store.get(product.store_id) : null,
     enabled: !!product?.store_id,
   });
+
+  // Buscar tienda por defecto (RAmi) si el producto no tiene store_id
+  const { data: defaultStore } = useQuery({
+    queryKey: ['default-store'],
+    queryFn: async () => {
+      const stores = await base44.entities.Store.filter({ store_type: 'owner' });
+      return stores[0] || null;
+    },
+    enabled: !product?.store_id,
+  });
+
+  const displayStore = store || defaultStore;
 
   // SEO: Update meta tags for social sharing (before early returns)
   const productUrl = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}?id=${productId}` : '';
@@ -411,17 +423,17 @@ export default function ProductDetail() {
             )}
           </div>
           <h1 className="text-base font-semibold text-foreground leading-tight">{product.name}</h1>
-          {(store || product.store_id === undefined) && (
+          {displayStore && (
             <div className="flex items-center gap-2 mt-2">
               <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-                {store?.logo_url ? (
-                  <img src={store.logo_url} alt={store.name} className="w-full h-full object-cover" />
+                {displayStore.logo_url ? (
+                  <img src={displayStore.logo_url} alt={displayStore.name} className="w-full h-full object-cover" />
                 ) : (
-                  <img src="https://drive.google.com/thumbnail?id=1XvzxcscLVC00UVnvggpG1qTLTiyQ_6d0&sz=w100" alt="RAmi" className="w-full h-full object-cover" />
+                  <img src="https://drive.google.com/thumbnail?id=1XvzxcscLVC00UVnvggpG1qTLTiyQ_6d0&sz=w100" alt={displayStore.name} className="w-full h-full object-cover" />
                 )}
               </div>
               <span className="text-xs text-muted-foreground">
-                Vendido por <span className="font-medium text-foreground">{store?.name || 'RAmi'}</span>
+                Vendido por <span className="font-medium text-foreground">{displayStore.name}</span>
               </span>
             </div>
           )}
