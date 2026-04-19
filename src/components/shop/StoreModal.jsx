@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { X, Package, ShoppingBag, Phone, Mail } from 'lucide-react';
+import { X, Package, ShoppingBag, Phone, Mail, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProductCard from './ProductCard';
 import { Button } from '@/components/ui/button';
@@ -202,9 +202,12 @@ export default function StoreModal({ store, products, categories, orders = [], r
                     {storeReviews.map(review => (
                       <div key={review.id} className="bg-card rounded-lg p-3 border border-border/50">
                         <div className="flex items-start justify-between mb-1.5">
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-0.5">
                             {[...Array(5)].map((_, i) => (
-                              <div key={i} className={`w-3 h-3 rounded-full ${i < review.rating ? 'bg-warning' : 'bg-muted'}`} />
+                              <Star
+                                key={i}
+                                className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-warning text-warning' : 'text-muted-foreground'}`}
+                              />
                             ))}
                           </div>
                           <span className="text-[10px] text-muted-foreground">{review.reviewer_name}</span>
