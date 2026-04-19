@@ -30,7 +30,7 @@ export default function Admin() {
   const [historyProduct, setHistoryProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [stockFilter, setStockFilter] = useState('all'); // 'all', 'low', 'out', 'in_stock'
-  const [sortBy, setSortBy] = useState('name'); // 'name', 'stock', 'sold'
+  const [sortBy, setSortBy] = useState('recent'); // 'recent', 'name', 'stock', 'sold'
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -204,6 +204,7 @@ export default function Admin() {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="flex-1 px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               >
+                <option value="recent">Más recientes</option>
                 <option value="name">Nombre</option>
                 <option value="stock">Stock</option>
                 <option value="sold">Más vendidos</option>
@@ -226,6 +227,7 @@ export default function Admin() {
                 return matchesSearch && matchesStock;
               });
 
+              if (sortBy === 'recent') filtered.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
               if (sortBy === 'name') filtered.sort((a, b) => a.name.localeCompare(b.name));
               if (sortBy === 'stock') filtered.sort((a, b) => getProductStock(a) - getProductStock(b));
               if (sortBy === 'sold') filtered.sort((a, b) => getProductSold(b) - getProductSold(a));
