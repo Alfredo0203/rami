@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard } from 'lucide-react';
+import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard, Megaphone } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -57,6 +59,23 @@ export default function AdminSettingsTab({ currentUser }) {
       setSaving(false);
     }
   };
+
+  const [bannerForm, setBannerForm] = useState(null);
+
+  // Initialize bannerForm when settings load
+  useEffect(() => {
+    if (settings && bannerForm === null) {
+      setBannerForm({
+        promo_banner_label:    settings.promo_banner_label    ?? 'Flash Sale',
+        promo_banner_title:    settings.promo_banner_title    ?? 'Up to 70% OFF',
+        promo_banner_subtitle: settings.promo_banner_subtitle ?? 'Created by Alfred & Raquel',
+        promo_banner_link:     settings.promo_banner_link     ?? '',
+        promo_banner_enabled:  settings.promo_banner_enabled  ?? true,
+      });
+    }
+  }, [settings]);
+
+  const saveBanner = () => saveSettings(bannerForm);
 
   const toggleDevMode = (value) => saveSettings({ development_mode: value });
 
@@ -149,6 +168,70 @@ export default function AdminSettingsTab({ currentUser }) {
           })}
         </div>
       </div>}
+
+      {/* Promo Banner */}
+      <div className="bg-card rounded-xl p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Megaphone className="w-4 h-4 text-primary" />
+            <p className="text-sm font-semibold text-foreground">Banner Promocional</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Mostrar</span>
+            {saving ? (
+              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+            ) : (
+              <Switch
+                checked={bannerForm?.promo_banner_enabled ?? true}
+                onCheckedChange={(v) => setBannerForm(f => ({ ...f, promo_banner_enabled: v }))}
+              />
+            )}
+          </div>
+        </div>
+        {bannerForm && (
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Etiqueta superior (ej: Flash Sale)</p>
+              <Input
+                value={bannerForm.promo_banner_label}
+                onChange={e => setBannerForm(f => ({ ...f, promo_banner_label: e.target.value }))}
+                placeholder="Flash Sale"
+                className="h-8 text-sm"
+              />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Título principal</p>
+              <Input
+                value={bannerForm.promo_banner_title}
+                onChange={e => setBannerForm(f => ({ ...f, promo_banner_title: e.target.value }))}
+                placeholder="Up to 70% OFF"
+                className="h-8 text-sm"
+              />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Subtítulo</p>
+              <Input
+                value={bannerForm.promo_banner_subtitle}
+                onChange={e => setBannerForm(f => ({ ...f, promo_banner_subtitle: e.target.value }))}
+                placeholder="Created by Alfred & Raquel"
+                className="h-8 text-sm"
+              />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Enlace al tocar (página o URL)</p>
+              <Input
+                value={bannerForm.promo_banner_link}
+                onChange={e => setBannerForm(f => ({ ...f, promo_banner_link: e.target.value }))}
+                placeholder="Browse (o https://...)"
+                className="h-8 text-sm"
+              />
+            </div>
+            <Button size="sm" onClick={saveBanner} disabled={saving} className="w-full mt-1">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar banner'}
+            </Button>
+          </div>
+        )}
+      </div>
 
       {/* Payment Methods */}
       <div className="bg-card rounded-xl p-4 shadow-sm">

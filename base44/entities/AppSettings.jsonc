@@ -33,6 +33,30 @@
       "default": [],
       "description": "List of page paths disabled for regular users (e.g. ['Browse', 'Orders'])"
     },
+    "promo_banner_label": {
+      "type": "string",
+      "default": "Flash Sale",
+      "description": "Small label text above the main banner title"
+    },
+    "promo_banner_title": {
+      "type": "string",
+      "default": "Up to 70% OFF",
+      "description": "Main bold title of the promo banner"
+    },
+    "promo_banner_subtitle": {
+      "type": "string",
+      "default": "Created by Alfred & Raquel",
+      "description": "Subtitle / description text of the promo banner"
+    },
+    "promo_banner_link": {
+      "type": "string",
+      "description": "URL or page path to navigate when tapping the banner"
+    },
+    "promo_banner_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to show the promo banner on the home page"
+    },
     "updated_by": {
       "type": "string",
       "description": "Email of admin who last updated"
