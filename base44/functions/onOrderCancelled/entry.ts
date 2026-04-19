@@ -17,7 +17,10 @@ Deno.serve(async (req) => {
     }
 
     const items = data.items || [];
+    const couponCode = data.coupon_code;
+    const customerEmail = data.customer_email;
 
+    // Restaurar stock de productos
     for (const item of items) {
       if (item.variant_id) {
         const variant = await base44.asServiceRole.entities.ProductVariant.get(item.variant_id);
@@ -34,6 +37,43 @@ Deno.serve(async (req) => {
             sold_count: Math.max(0, (product.sold_count || 0) - (item.quantity ?? 1)),
           });
         }
+      }
+    }
+
+    // Recuperar cupón si fue usado
+    if (couponCode && customerEmail) {
+      try {
+        const coupons = await base44.asServiceRole.entities.Coupon.filter({ 
+          code: couponCode.toUpperCase() 
+        });
+
+        if (coupons.length > 0) {
+          const coupon = coupons[0];
+
+          // Decrementar contador total del cupón
+          await base44.asServiceRole.entities.Coupon.update(coupon.id, {
+            used_count: Math.max(0, (coupon.used_count || 1) - 1),
+          });
+
+          // Si es específico de usuarios, recuperar el assignment
+          if (coupon.is_user_specific) {
+            const assignments = await base44.asServiceRole.entities.CouponAssignment.filter({
+              coupon_id: coupon.id,
+              user_email: customerEmail
+            });
+
+            if (assignments.length > 0) {
+              const assignment = assignments[0];
+              await base44.asServiceRole.entities.CouponAssignment.update(assignment.id, {
+                usage_count: Math.max(0, (assignment.usage_count || 1) - 1),
+                status: 'available',
+                used_date: null
+              });
+            }
+          }
+        }
+      } catch (couponErr) {
+        console.log('Warning: Could not restore coupon:', couponErr.message);
       }
     }
 
