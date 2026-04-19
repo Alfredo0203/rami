@@ -134,18 +134,18 @@ export default function Admin() {
         ))}
       </div>
 
-      <div className="px-4 mb-3 space-y-2">
+      <div className="px-4 mb-3 flex gap-2">
         <Button
           onClick={() => navigate('/AdminSalesCharts')}
-          className="w-full bg-chart-1 text-primary-foreground rounded-full h-10 hover:bg-chart-1/90"
+          className="flex-1 bg-chart-1 text-primary-foreground rounded-lg h-9 hover:bg-chart-1/90 text-xs"
         >
-          <BarChart3 className="w-4 h-4 mr-2" /> Ver Gráficas de Ventas
+          <BarChart3 className="w-3.5 h-3.5 mr-1" /> Ventas
         </Button>
         <Button
           onClick={() => navigate('/InventoryDashboard')}
-          className="w-full bg-chart-4 text-primary-foreground rounded-full h-10 hover:bg-chart-4/90"
+          className="flex-1 bg-chart-4 text-primary-foreground rounded-lg h-9 hover:bg-chart-4/90 text-xs"
         >
-          <Package className="w-4 h-4 mr-2" /> Dashboard de Inventario
+          <Package className="w-3.5 h-3.5 mr-1" /> Inventario
         </Button>
       </div>
 
@@ -232,71 +232,69 @@ export default function Admin() {
               return (
                 <div className="space-y-3">
                   {filtered.map(product => (
-                  <div key={product.id} className="bg-card rounded-xl p-3 shadow-sm flex gap-3">
-                <img
-                  src={product.images?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200'}
-                  alt={product.name}
-                  className="w-16 h-16 rounded-lg object-cover"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-foreground line-clamp-1">{product.name}</p>
-                      <p className="text-base font-bold text-primary">${product.price?.toFixed(2)}</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {getProductStock(product) === 0 && (
-                        <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
-                      )}
-                      {getProductStock(product) > 0 && getProductStock(product) < 5 && (
-                        <AlertTriangle className="w-3.5 h-3.5 text-warning" />
-                      )}
-                      {product.is_active ? (
-                        <Eye className="w-3.5 h-3.5 text-success" />
-                      ) : (
-                        <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />
-                      )}
-                    </div>
+                  <div key={product.id} className="bg-card rounded-xl p-3 shadow-sm space-y-2">
+                  <div className="flex gap-1">
+                  <button
+                   onClick={() => { setEditingProduct(product); setShowProductForm(true); }}
+                   className="p-1.5 bg-secondary rounded hover:bg-muted"
+                   title="Editar"
+                  >
+                   <Edit2 className="w-3.5 h-3.5 text-foreground" />
+                  </button>
+                  <button
+                   onClick={() => setInventoryProduct(product)}
+                   className="p-1.5 bg-secondary rounded hover:bg-primary/10"
+                   title="Inventario"
+                  >
+                   <Package className="w-3.5 h-3.5 text-primary" />
+                  </button>
+                  <button
+                   onClick={() => setHistoryProduct(product)}
+                   className="p-1.5 bg-secondary rounded hover:bg-chart-4/10"
+                   title="Histórico"
+                  >
+                   <TrendingUp className="w-3.5 h-3.5 text-chart-4" />
+                  </button>
+                  <button
+                   onClick={() => setDeletingProductId(product.id)}
+                   className="p-1.5 bg-secondary rounded hover:bg-destructive/10"
+                   title="Eliminar"
+                  >
+                   <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                  </button>
                   </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className={`text-[10px] ${getProductStock(product) === 0 ? 'text-destructive font-semibold' : getProductStock(product) < 5 ? 'text-warning font-semibold' : 'text-muted-foreground'}`}>
-                      Stock: {getProductStock(product)}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">Vendidos: {getProductSold(product)}</span>
-                    {product.has_variants && <span className="text-[10px] text-primary/70">variantes</span>}
+                  <div className="flex gap-3">
+                  <img
+                   src={product.images?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200'}
+                   alt={product.name}
+                   className="w-16 h-16 rounded-lg object-cover"
+                  />
+                  <div className="flex-1 min-w-0">
+                   <p className="text-sm font-medium text-foreground line-clamp-1">{product.name}</p>
+                   <p className="text-base font-bold text-primary">${product.price?.toFixed(2)}</p>
+                   <div className="flex items-center gap-2 mt-1">
+                     <span className={`text-[10px] ${getProductStock(product) === 0 ? 'text-destructive font-semibold' : getProductStock(product) < 5 ? 'text-warning font-semibold' : 'text-muted-foreground'}`}>
+                       Stock: {getProductStock(product)}
+                     </span>
+                     <span className="text-[10px] text-muted-foreground">Vendidos: {getProductSold(product)}</span>
+                   </div>
+                   <div className="flex items-center gap-1 mt-1">
+                     {getProductStock(product) === 0 && (
+                       <AlertTriangle className="w-3 h-3 text-destructive" />
+                     )}
+                     {getProductStock(product) > 0 && getProductStock(product) < 5 && (
+                       <AlertTriangle className="w-3 h-3 text-warning" />
+                     )}
+                     {product.is_active ? (
+                       <Eye className="w-3 h-3 text-success" />
+                     ) : (
+                       <EyeOff className="w-3 h-3 text-muted-foreground" />
+                     )}
+                     {product.has_variants && <span className="text-[10px] text-primary/70">variantes</span>}
+                   </div>
                   </div>
-                </div>
-                <div className="flex flex-col gap-1">
-                   <button
-                     onClick={() => { setEditingProduct(product); setShowProductForm(true); }}
-                     className="p-2 bg-secondary rounded-lg hover:bg-muted"
-                     title="Editar producto"
-                   >
-                     <Edit2 className="w-3.5 h-3.5 text-foreground" />
-                   </button>
-                   <button
-                      onClick={() => setInventoryProduct(product)}
-                      className="p-2 bg-secondary rounded-lg hover:bg-primary/10"
-                      title="Agregar inventario"
-                    >
-                      <Package className="w-3.5 h-3.5 text-primary" />
-                    </button>
-                    <button
-                      onClick={() => setHistoryProduct(product)}
-                      className="p-2 bg-secondary rounded-lg hover:bg-chart-4/10"
-                      title="Ver histórico"
-                    >
-                      <TrendingUp className="w-3.5 h-3.5 text-chart-4" />
-                    </button>
-                    <button
-                      onClick={() => setDeletingProductId(product.id)}
-                      className="p-2 bg-secondary rounded-lg hover:bg-destructive/10"
-                      title="Eliminar producto"
-                    >
-                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                    </button>
-                 </div>
-                 </div>
+                  </div>
+                  </div>
                   ))}
                  </div>
                  );
