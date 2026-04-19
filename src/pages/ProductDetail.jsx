@@ -12,7 +12,7 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import VariantSelector from '@/components/shop/VariantSelector';
 import RelatedProducts from '@/components/shop/RelatedProducts';
 import { useSEO } from '@/hooks/useSEO';
-import ProductShare from '@/components/shop/ProductShare';
+import ProductShareButton from '@/components/shop/ProductShare';
 
 export default function ProductDetail() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -320,6 +320,7 @@ export default function ProductDetail() {
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div className="flex gap-2">
+          <ProductShareButton product={product} productUrl={productUrl} />
           {!isGuest && (
             <button
               onClick={() => toggleWishlistMutation.mutate()}
@@ -453,11 +454,7 @@ export default function ProductDetail() {
           />
         )}
 
-        {/* Share buttons */}
-        <ProductShare 
-          product={product}
-          productUrl={productUrl}
-        />
+
 
         {/* Features */}
         <div className="flex gap-4 py-3 border-t border-b border-border">
