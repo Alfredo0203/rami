@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard, Megaphone } from 'lucide-react';
+import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard, Megaphone, Store, Plus, Edit2, Trash2, Upload, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useTranslation } from '../i18n/useTranslation';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const PAGES_CONFIG = [
   { path: 'Browse', label: 'Browse / Catálogo', description: 'Explorar productos por categoría' },
@@ -25,15 +31,109 @@ const PAYMENT_METHODS = [
 
 export default function AdminSettingsTab({ currentUser }) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  
+  // Store management state
+  const [showStoreForm, setShowStoreForm] = useState(false);
+  const [editingStore, setEditingStore] = useState(null);
+  const [deletingStoreId, setDeletingStoreId] = useState(null);
+  const [storePreviewUrl, setStorePreviewUrl] = useState(null);
+  const [storeForm, setStoreForm] = useState({
+    name: '',
+    owner_email: '',
+    logo_url: '',
+    description: '',
+    phone: '',
+    is_active: true,
+  });
 
   useEffect(() => {
     base44.entities.AppSettings.filter({ key: 'global' })
       .then(results => setSettings(results[0] || null))
       .finally(() => setLoading(false));
   }, []);
+
+  const { data: stores = [] } = useQuery({
+    queryKey: ['admin-stores-settings'],
+    queryFn: () => base44.entities.Store.list(),
+  });
+
+  const { data: users = [] } = useQuery({
+    queryKey: ['admin-users-settings'],
+    queryFn: () => base44.entities.User.list(),
+  });
+
+  const saveStoreMutation = useMutation({
+    mutationFn: (data) => {
+      if (editingStore) {
+        return base44.entities.Store.update(editingStore.id, data);
+      }
+      return base44.entities.Store.create(data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-stores-settings'] });
+      toast.success(editingStore ? 'Tienda actualizada' : 'Tienda creada');
+      handleStoreClose();
+    },
+  });
+
+  const deleteStoreMutation = useMutation({
+    mutationFn: (id) => base44.entities.Store.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-stores-settings'] });
+      toast.success('Tienda eliminada');
+      setDeletingStoreId(null);
+    },
+  });
+
+  const handleStoreOpen = (store = null) => {
+    if (store) {
+      setEditingStore(store);
+      setStoreForm({
+        name: store.name || '',
+        owner_email: store.owner_email || '',
+        logo_url: store.logo_url || '',
+        description: store.description || '',
+        phone: store.phone || '',
+        is_active: store.is_active !== false,
+      });
+    } else {
+      setEditingStore(null);
+      setStoreForm({
+        name: '',
+        owner_email: '',
+        logo_url: '',
+        description: '',
+        phone: '',
+        is_active: true,
+      });
+    }
+    setShowStoreForm(true);
+  };
+
+  const handleStoreClose = () => {
+    setShowStoreForm(false);
+    setEditingStore(null);
+    setStorePreviewUrl(null);
+  };
+
+  const handleStoreSubmit = () => {
+    if (!storeForm.name || !storeForm.owner_email) {
+      toast.error('Nombre y email del dueño son requeridos');
+      return;
+    }
+    saveStoreMutation.mutate(storeForm);
+  };
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    setStoreForm(prev => ({ ...prev, logo_url: file_url }));
+  };
 
   const saveSettings = async (patch) => {
     setSaving(true);
@@ -113,6 +213,57 @@ export default function AdminSettingsTab({ currentUser }) {
 
   return (
     <div className="space-y-4 mt-3 pb-6">
+      {/* Store Management Section */}
+      <div className="bg-card rounded-xl p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Store className="w-4 h-4 text-primary" />
+            <p className="text-sm font-semibold text-foreground">Gestión de Tiendas</p>
+          </div>
+          <Button
+            onClick={() => handleStoreOpen()}
+            size="sm"
+            className="h-8 rounded-full"
+          >
+            <Plus className="w-3.5 h-3.5 mr-1" /> Agregar
+          </Button>
+        </div>
+        
+        {stores.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No hay tiendas registradas</p>
+        ) : (
+          <div className="space-y-2">
+            {stores.map(store => (
+              <div key={store.id} className="flex items-center gap-3 p-2 bg-secondary/50 rounded-lg">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                  {store.logo_url ? (
+                    <img src={store.logo_url} alt={store.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-sm font-bold text-primary">{store.name.charAt(0).toUpperCase()}</span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-medium text-foreground truncate">{store.name}</h4>
+                    {!store.is_active && (
+                      <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">Inactiva</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">{store.owner_email}</p>
+                </div>
+                <div className="flex gap-1">
+                  <button onClick={() => handleStoreOpen(store)} className="p-1.5 bg-secondary rounded hover:bg-muted">
+                    <Edit2 className="w-3.5 h-3.5 text-foreground" />
+                  </button>
+                  <button onClick={() => setDeletingStoreId(store.id)} className="p-1.5 bg-secondary rounded hover:bg-destructive/10">
+                    <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
       {/* Dev Mode */}
       <div className="bg-card rounded-xl p-4 shadow-sm flex items-start gap-3">
         <div className="w-9 h-9 bg-warning/10 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
@@ -262,6 +413,148 @@ export default function AdminSettingsTab({ currentUser }) {
           })}
         </div>
       </div>
+
+      {/* Store Form Modal */}
+      {showStoreForm && (
+        <Dialog open={showStoreForm} onOpenChange={handleStoreClose}>
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editingStore ? 'Editar Tienda' : 'Nueva Tienda'}</DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs">Nombre de la tienda</Label>
+                <Input
+                  value={storeForm.name}
+                  onChange={e => setStoreForm({...storeForm, name: e.target.value})}
+                  placeholder="Ej: Tienda Oficial"
+                  className="h-9 text-sm"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs">Email del dueño</Label>
+                <Select
+                  value={storeForm.owner_email}
+                  onValueChange={v => setStoreForm({...storeForm, owner_email: v})}
+                >
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="Seleccionar usuario" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map(u => (
+                      <SelectItem key={u.id} value={u.email}>{u.email} - {u.full_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-xs">Logo</Label>
+                <div className="flex items-center gap-3 mt-1">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                    {storeForm.logo_url ? (
+                      <img
+                        src={storeForm.logo_url}
+                        alt="Logo"
+                        className="w-full h-full object-cover cursor-pointer"
+                        onClick={() => setStorePreviewUrl(storeForm.logo_url)}
+                      />
+                    ) : (
+                      <span className="text-lg font-bold text-primary">{storeForm.name ? storeForm.name.charAt(0).toUpperCase() : '?'}</span>
+                    )}
+                  </div>
+                  <label className="flex-1">
+                    <div className="w-full h-10 border-2 border-dashed border-border rounded-lg flex items-center justify-center cursor-pointer hover:border-primary transition-colors">
+                      <Upload className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-xs">Descripción</Label>
+                <Textarea
+                  value={storeForm.description}
+                  onChange={e => setStoreForm({...storeForm, description: e.target.value})}
+                  placeholder="Descripción de la tienda"
+                  className="text-sm h-20"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs">Teléfono</Label>
+                <Input
+                  value={storeForm.phone}
+                  onChange={e => setStoreForm({...storeForm, phone: e.target.value})}
+                  placeholder="+503 1234 5678"
+                  className="h-9 text-sm"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={storeForm.is_active}
+                  onCheckedChange={v => setStoreForm({...storeForm, is_active: v})}
+                />
+                <Label className="text-xs">Tienda activa</Label>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={handleStoreClose}>Cancelar</Button>
+              <Button
+                onClick={handleStoreSubmit}
+                disabled={saveStoreMutation.isPending}
+                className="bg-primary text-primary-foreground"
+              >
+                {saveStoreMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (editingStore ? 'Actualizar' : 'Crear')}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Store Preview Modal */}
+      {storePreviewUrl && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setStorePreviewUrl(null)}
+        >
+          <div className="relative max-w-sm w-full" onClick={e => e.stopPropagation()}>
+            <img src={storePreviewUrl} alt="Vista previa" className="w-full rounded-2xl" />
+            <button
+              onClick={() => setStorePreviewUrl(null)}
+              className="absolute top-2 right-2 w-8 h-8 bg-black/60 rounded-full flex items-center justify-center"
+            >
+              <X className="w-4 h-4 text-white" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Store Delete Confirmation */}
+      <AlertDialog open={!!deletingStoreId} onOpenChange={(open) => { if (!open) setDeletingStoreId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar tienda?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Los productos de esta tienda quedarán sin asignar.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteStoreMutation.mutate(deletingStoreId)}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

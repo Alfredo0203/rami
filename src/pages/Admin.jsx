@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import AdminProductForm from '../components/admin/AdminProductForm';
 import AdminOrderCard from '../components/admin/AdminOrderCard';
 import AdminUserCard from '../components/admin/AdminUserCard';
-import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, Trash2, Loader2, Eye, EyeOff, Users, Settings, MessageSquare, LayoutGrid, BarChart3, Ticket, Search, AlertTriangle, History, Store } from 'lucide-react';
+import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, Trash2, Loader2, Eye, EyeOff, Users, Settings, MessageSquare, LayoutGrid, BarChart3, Ticket, Search, AlertTriangle, History } from 'lucide-react';
 import AdminSettingsTab from '../components/admin/AdminSettingsTab';
 import AdminReviewsTab from '../components/admin/AdminReviewsTab';
 import AdminCategoriesTab from '../components/admin/AdminCategoriesTab';
@@ -158,7 +158,6 @@ export default function Admin() {
               <TabsTrigger value="orders" className="text-xs">Pedidos</TabsTrigger>
               <TabsTrigger value="users" className="text-xs">Usuarios</TabsTrigger>
               <TabsTrigger value="categories" className="px-2"><LayoutGrid className="w-4 h-4" /></TabsTrigger>
-              <TabsTrigger value="stores" className="px-2"><Store className="w-4 h-4" /></TabsTrigger>
               <TabsTrigger value="coupons" className="px-2"><Ticket className="w-4 h-4" /></TabsTrigger>
               <TabsTrigger value="reviews" className="px-2"><MessageSquare className="w-4 h-4" /></TabsTrigger>
               {user?.role === 'super_admin' && (
@@ -332,10 +331,6 @@ export default function Admin() {
 
         <TabsContent value="categories">
           <AdminCategoriesTab />
-        </TabsContent>
-
-        <TabsContent value="stores">
-          <AdminStoresTab />
         </TabsContent>
 
         <TabsContent value="coupons">
