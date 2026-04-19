@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Package, ShoppingBag, AlertTriangle, Edit2, Eye, EyeOff, Search, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Package, ShoppingBag, AlertTriangle, Edit2, Eye, EyeOff, Search, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import SellerProductForm from '@/components/seller/SellerProductForm';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 export default function SellerDashboard() {
   const navigate = useNavigate();
@@ -14,6 +16,9 @@ export default function SellerDashboard() {
   const [user, setUser] = useState(null);
   const [store, setStore] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showProductForm, setShowProductForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [deletingProductId, setDeletingProductId] = useState(null);
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -37,6 +42,12 @@ export default function SellerDashboard() {
       setStore(stores[0]);
     }
   }, [stores]);
+
+  // Obtener categorías
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => base44.entities.Category.list('sort_order'),
+  });
 
   // Obtener productos de la tienda del seller
   const { data: products = [], isLoading: loadingProducts } = useQuery({
@@ -76,6 +87,15 @@ export default function SellerDashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['seller-products'] });
       toast.success('Producto actualizado');
+    },
+  });
+
+  const deleteProductMutation = useMutation({
+    mutationFn: (id) => base44.entities.Product.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['seller-products'] });
+      toast.success('Producto eliminado');
+      setDeletingProductId(null);
     },
   });
 
@@ -176,7 +196,7 @@ export default function SellerDashboard() {
               {/* Productos Tab */}
               <TabsContent value="products" className="space-y-3 mt-3">
                 <Button
-                  onClick={() => navigate('/Admin')}
+                  onClick={() => { setEditingProduct(null); setShowProductForm(true); }}
                   className="w-full bg-primary text-primary-foreground rounded-full h-10"
                 >
                   <Plus className="w-4 h-4 mr-2" /> Agregar Producto
@@ -206,6 +226,22 @@ export default function SellerDashboard() {
                       <div className="space-y-3">
                         {filtered.map(product => (
                           <div key={product.id} className="bg-card rounded-xl p-3 shadow-sm space-y-2">
+                            <div className="flex gap-1 mb-2">
+                              <button
+                                onClick={() => { setEditingProduct(product); setShowProductForm(true); }}
+                                className="p-1.5 bg-secondary rounded hover:bg-muted"
+                                title="Editar"
+                              >
+                                <Edit2 className="w-3.5 h-3.5 text-foreground" />
+                              </button>
+                              <button
+                                onClick={() => setDeletingProductId(product.id)}
+                                className="p-1.5 bg-secondary rounded hover:bg-destructive/10"
+                                title="Eliminar"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                              </button>
+                            </div>
                             <div className="flex gap-3">
                               <img
                                 src={product.images?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200'}
@@ -307,6 +343,35 @@ export default function SellerDashboard() {
           </div>
         </Tabs>
       </div>
+
+      {showProductForm && (
+        <SellerProductForm
+          product={editingProduct}
+          storeId={store?.id}
+          categories={categories}
+          onClose={() => { setShowProductForm(false); setEditingProduct(null); }}
+        />
+      )}
+
+      <AlertDialog open={!!deletingProductId} onOpenChange={(open) => { if (!open) setDeletingProductId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar producto?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. El producto será eliminado permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { deleteProductMutation.mutate(deletingProductId); setDeletingProductId(null); }}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
