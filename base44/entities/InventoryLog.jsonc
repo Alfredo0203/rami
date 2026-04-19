@@ -6,9 +6,13 @@
       "type": "string",
       "description": "ID del producto"
     },
+    "variant_id": {
+      "type": "string",
+      "description": "ID de la variante (opcional - null si el producto no tiene variantes)"
+    },
     "quantity": {
       "type": "number",
-      "description": "Cantidad de unidades agregadas"
+      "description": "Cantidad de unidades (positivo = entrada, negativo = salida)"
     },
     "cost_per_unit": {
       "type": "number",
@@ -21,6 +25,21 @@
     "notes": {
       "type": "string",
       "description": "Notas opcionales"
+    },
+    "order_id": {
+      "type": "string",
+      "description": "ID de la orden (para salidas por venta)"
+    },
+    "movement_type": {
+      "type": "string",
+      "enum": [
+        "purchase",
+        "sale",
+        "adjustment",
+        "return"
+      ],
+      "default": "adjustment",
+      "description": "Tipo de movimiento: compra, venta, ajuste o devoluci\u00f3n"
     }
   },
   "required": [

@@ -184,21 +184,48 @@ Deno.serve(async (req) => {
        console.error('Error creating history record:', historyErr);
      }
 
-     // ── 4. Descontar stock ────────────────────────────────────────────
-      for (const item of cartItems) {
-        if (item.variant_id) {
-          const variant = await base44.asServiceRole.entities.ProductVariant.get(item.variant_id);
-          await base44.asServiceRole.entities.ProductVariant.update(item.variant_id, {
-            stock: Math.max(0, (variant.stock ?? 0) - item.quantity),
-          });
-        } else {
-          const product = await base44.asServiceRole.entities.Product.get(item.product_id);
-          await base44.asServiceRole.entities.Product.update(item.product_id, {
-            stock: Math.max(0, (product.stock ?? 0) - item.quantity),
-            sold_count: (product.sold_count || 0) + item.quantity,
-          });
-        }
-      }
+     // ── 4. Descontar stock y registrar en InventoryLog ────────────────────────────────────────────
+       for (const item of cartItems) {
+         if (item.variant_id) {
+           const variant = await base44.asServiceRole.entities.ProductVariant.get(item.variant_id);
+           const newVariantStock = Math.max(0, (variant.stock ?? 0) - item.quantity);
+
+           await base44.asServiceRole.entities.ProductVariant.update(item.variant_id, {
+             stock: newVariantStock,
+           });
+
+           // Registrar salida en InventoryLog
+           await base44.asServiceRole.entities.InventoryLog.create({
+             product_id: item.product_id,
+             variant_id: item.variant_id,
+             quantity: -item.quantity,
+             cost_per_unit: variant.cost_per_unit || 0,
+             total_cost: -item.quantity * (variant.cost_per_unit || 0),
+             notes: `Venta - Orden ${order.order_number}`,
+             movement_type: 'sale',
+             order_id: order.id,
+           });
+         } else {
+           const product = await base44.asServiceRole.entities.Product.get(item.product_id);
+           const newProductStock = Math.max(0, (product.stock ?? 0) - item.quantity);
+
+           await base44.asServiceRole.entities.Product.update(item.product_id, {
+             stock: newProductStock,
+             sold_count: (product.sold_count || 0) + item.quantity,
+           });
+
+           // Registrar salida en InventoryLog
+           await base44.asServiceRole.entities.InventoryLog.create({
+             product_id: item.product_id,
+             quantity: -item.quantity,
+             cost_per_unit: product.cost_per_unit || 0,
+             total_cost: -item.quantity * (product.cost_per_unit || 0),
+             notes: `Venta - Orden ${order.order_number}`,
+             movement_type: 'sale',
+             order_id: order.id,
+           });
+         }
+       }
 
     // ── 5. Actualizar contador del cupón ──────────────────────────────
     if (appliedCoupon) {

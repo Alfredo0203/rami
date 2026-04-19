@@ -5,12 +5,13 @@ import { useNavigate } from 'react-router-dom';
 import AdminProductForm from '../components/admin/AdminProductForm';
 import AdminOrderCard from '../components/admin/AdminOrderCard';
 import AdminUserCard from '../components/admin/AdminUserCard';
-import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, Trash2, Loader2, Eye, EyeOff, Users, Settings, MessageSquare, LayoutGrid, BarChart3, Ticket, Search, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, Trash2, Loader2, Eye, EyeOff, Users, Settings, MessageSquare, LayoutGrid, BarChart3, Ticket, Search, AlertTriangle, History } from 'lucide-react';
 import AdminSettingsTab from '../components/admin/AdminSettingsTab';
 import AdminReviewsTab from '../components/admin/AdminReviewsTab';
 import AdminCategoriesTab from '../components/admin/AdminCategoriesTab';
 import AdminCouponsTab from '../components/admin/AdminCouponsTab';
 import AdminInventoryModal from '../components/admin/AdminInventoryModal';
+import InventoryHistoryModal from '../components/admin/InventoryHistoryModal';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -25,6 +26,7 @@ export default function Admin() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [deletingProductId, setDeletingProductId] = useState(null);
   const [inventoryProduct, setInventoryProduct] = useState(null);
+  const [historyProduct, setHistoryProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [stockFilter, setStockFilter] = useState('all'); // 'all', 'low', 'out', 'in_stock'
   const [sortBy, setSortBy] = useState('name'); // 'name', 'stock', 'sold'
@@ -132,12 +134,18 @@ export default function Admin() {
         ))}
       </div>
 
-      <div className="px-4 mb-3">
+      <div className="px-4 mb-3 space-y-2">
         <Button
           onClick={() => navigate('/AdminSalesCharts')}
           className="w-full bg-chart-1 text-primary-foreground rounded-full h-10 hover:bg-chart-1/90"
         >
-          <BarChart3 className="w-4 h-4 mr-2" /> Ver Gráficas
+          <BarChart3 className="w-4 h-4 mr-2" /> Ver Gráficas de Ventas
+        </Button>
+        <Button
+          onClick={() => navigate('/InventoryDashboard')}
+          className="w-full bg-chart-4 text-primary-foreground rounded-full h-10 hover:bg-chart-4/90"
+        >
+          <Package className="w-4 h-4 mr-2" /> Dashboard de Inventario
         </Button>
       </div>
 
@@ -267,19 +275,26 @@ export default function Admin() {
                      <Edit2 className="w-3.5 h-3.5 text-foreground" />
                    </button>
                    <button
-                     onClick={() => setInventoryProduct(product)}
-                     className="p-2 bg-secondary rounded-lg hover:bg-primary/10"
-                     title="Agregar inventario"
-                   >
-                     <Package className="w-3.5 h-3.5 text-primary" />
-                   </button>
-                   <button
-                     onClick={() => setDeletingProductId(product.id)}
-                     className="p-2 bg-secondary rounded-lg hover:bg-destructive/10"
-                     title="Eliminar producto"
-                   >
-                     <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                   </button>
+                      onClick={() => setInventoryProduct(product)}
+                      className="p-2 bg-secondary rounded-lg hover:bg-primary/10"
+                      title="Agregar inventario"
+                    >
+                      <Package className="w-3.5 h-3.5 text-primary" />
+                    </button>
+                    <button
+                      onClick={() => setHistoryProduct(product)}
+                      className="p-2 bg-secondary rounded-lg hover:bg-chart-4/10"
+                      title="Ver histórico"
+                    >
+                      <TrendingUp className="w-3.5 h-3.5 text-chart-4" />
+                    </button>
+                    <button
+                      onClick={() => setDeletingProductId(product.id)}
+                      className="p-2 bg-secondary rounded-lg hover:bg-destructive/10"
+                      title="Eliminar producto"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                    </button>
                  </div>
                  </div>
                   ))}
@@ -350,6 +365,14 @@ export default function Admin() {
           product={inventoryProduct}
           open={!!inventoryProduct}
           onOpenChange={(open) => { if (!open) setInventoryProduct(null); }}
+        />
+      )}
+
+      {historyProduct && (
+        <InventoryHistoryModal
+          product={historyProduct}
+          open={!!historyProduct}
+          onOpenChange={(open) => { if (!open) setHistoryProduct(null); }}
         />
       )}
 
