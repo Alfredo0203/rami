@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import AdminProductForm from '../components/admin/AdminProductForm';
 import AdminOrderCard from '../components/admin/AdminOrderCard';
 import AdminUserCard from '../components/admin/AdminUserCard';
-import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, Trash2, Loader2, Eye, EyeOff, Users, Settings, MessageSquare, LayoutGrid, BarChart3, Ticket } from 'lucide-react';
+import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, Trash2, Loader2, Eye, EyeOff, Users, Settings, MessageSquare, LayoutGrid, BarChart3, Ticket, Search, AlertTriangle } from 'lucide-react';
 import AdminSettingsTab from '../components/admin/AdminSettingsTab';
 import AdminReviewsTab from '../components/admin/AdminReviewsTab';
 import AdminCategoriesTab from '../components/admin/AdminCategoriesTab';
@@ -25,6 +25,9 @@ export default function Admin() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [deletingProductId, setDeletingProductId] = useState(null);
   const [inventoryProduct, setInventoryProduct] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [stockFilter, setStockFilter] = useState('all'); // 'all', 'low', 'out', 'in_stock'
+  const [sortBy, setSortBy] = useState('name'); // 'name', 'stock', 'sold'
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -164,10 +167,61 @@ export default function Admin() {
             <Plus className="w-4 h-4 mr-2" /> Agregar Producto
           </Button>
 
+          {/* Filtros */}
+          <div className="space-y-2 mb-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Buscar producto..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+            <div className="flex gap-2">
+              <select
+                value={stockFilter}
+                onChange={(e) => setStockFilter(e.target.value)}
+                className="flex-1 px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="all">Todo el stock</option>
+                <option value="low">⚠️ Casi agotado (&lt;5)</option>
+                <option value="out">❌ Agotado</option>
+                <option value="in_stock">✅ En stock</option>
+              </select>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="flex-1 px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="name">Nombre</option>
+                <option value="stock">Stock</option>
+                <option value="sold">Más vendidos</option>
+              </select>
+            </div>
+          </div>
+
           {loadingProducts ? (
             <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
           ) : (
-            products.map(product => (
+            (() => {
+              let filtered = products.filter(p => {
+                const stock = getProductStock(p);
+                const sold = getProductSold(p);
+                const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+                const matchesStock = stockFilter === 'all' ||
+                  (stockFilter === 'low' && stock > 0 && stock < 5) ||
+                  (stockFilter === 'out' && stock === 0) ||
+                  (stockFilter === 'in_stock' && stock >= 5);
+                return matchesSearch && matchesStock;
+              });
+
+              if (sortBy === 'name') filtered.sort((a, b) => a.name.localeCompare(b.name));
+              if (sortBy === 'stock') filtered.sort((a, b) => getProductStock(a) - getProductStock(b));
+              if (sortBy === 'sold') filtered.sort((a, b) => getProductSold(b) - getProductSold(a));
+
+              return filtered.map(product => (
               <div key={product.id} className="bg-card rounded-xl p-3 shadow-sm flex gap-3">
                 <img
                   src={product.images?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200'}
@@ -181,6 +235,12 @@ export default function Admin() {
                       <p className="text-base font-bold text-primary">${product.price?.toFixed(2)}</p>
                     </div>
                     <div className="flex items-center gap-1">
+                      {getProductStock(product) === 0 && (
+                        <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
+                      )}
+                      {getProductStock(product) > 0 && getProductStock(product) < 5 && (
+                        <AlertTriangle className="w-3.5 h-3.5 text-warning" />
+                      )}
                       {product.is_active ? (
                         <Eye className="w-3.5 h-3.5 text-success" />
                       ) : (
@@ -189,7 +249,9 @@ export default function Admin() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[10px] text-muted-foreground">Stock: {getProductStock(product)}</span>
+                    <span className={`text-[10px] ${getProductStock(product) === 0 ? 'text-destructive font-semibold' : getProductStock(product) < 5 ? 'text-warning font-semibold' : 'text-muted-foreground'}`}>
+                      Stock: {getProductStock(product)}
+                    </span>
                     <span className="text-[10px] text-muted-foreground">Vendidos: {getProductSold(product)}</span>
                     {product.has_variants && <span className="text-[10px] text-primary/70">variantes</span>}
                   </div>
@@ -217,9 +279,10 @@ export default function Admin() {
                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
                    </button>
                  </div>
-              </div>
-            ))
-          )}
+                 </div>
+                 ))
+                 })
+                 )}
         </TabsContent>
 
         <TabsContent value="orders" className="space-y-3 mt-3">
