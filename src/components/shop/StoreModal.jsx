@@ -1,16 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { X, Package, ShoppingBag, Phone, Mail, Star, Info, MessageSquare, ZoomIn } from 'lucide-react';
+import { X, Package, ShoppingBag, Phone, Mail, Star, Info, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProductCard from './ProductCard';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import ReviewDetailModal from './ReviewDetailModal';
 
 export default function StoreModal({ store, products, categories, orders = [], reviews = [], onClose }) {
   const [activeTab, setActiveTab] = useState('products');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [viewingReview, setViewingReview] = useState(null);
-  const [imageIndex, setImageIndex] = useState(0);
 
   // Filtrar productos de esta tienda
   const storeProducts = useMemo(() => {
@@ -257,22 +256,16 @@ export default function StoreModal({ store, products, categories, orders = [], r
                         {review.images.slice(0, 4).map((img, idx) => (
                           <button
                             key={idx}
-                            onClick={() => {
-                              setViewingReview(review);
-                              setImageIndex(idx);
-                            }}
+                            onClick={() => setViewingReview(review)}
                             className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-border"
                           >
                             <img src={img} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
                           </button>
                         ))}
                         {review.images.length > 4 && (
-                          <button
-                            onClick={() => setViewingReview(review)}
-                            className="flex-shrink-0 w-12 h-12 rounded-lg bg-secondary flex items-center justify-center border border-border text-[10px] font-bold text-muted-foreground"
-                          >
+                          <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-secondary flex items-center justify-center border border-border text-[10px] font-bold text-muted-foreground">
                             +{review.images.length - 4}
-                          </button>
+                          </div>
                         )}
                       </div>
                     )}
@@ -288,90 +281,7 @@ export default function StoreModal({ store, products, categories, orders = [], r
           </div>
         )}
 
-        {/* Review Detail Modal */}
-        <Dialog open={!!viewingReview} onOpenChange={() => { setViewingReview(null); setImageIndex(0); }}>
-          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-            {viewingReview && (
-              <div className="space-y-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-4 h-4 ${i < viewingReview.rating ? 'fill-warning text-warning' : 'text-muted-foreground'}`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-xs text-muted-foreground">{viewingReview.reviewer_name}</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(viewingReview.created_date).toLocaleDateString('es-SV')}
-                  </span>
-                </div>
-
-                {viewingReview.title && (
-                  <h3 className="text-sm font-semibold text-foreground">{viewingReview.title}</h3>
-                )}
-
-                <p className="text-sm text-muted-foreground leading-relaxed">{viewingReview.body}</p>
-
-                {viewingReview.images && viewingReview.images.length > 0 && (
-                  <div>
-                    <p className="text-xs font-medium text-foreground mb-2">Fotos del cliente</p>
-                    {viewingReview.images.length === 1 ? (
-                      <img
-                        src={viewingReview.images[0]}
-                        alt="Foto del cliente"
-                        className="w-full rounded-xl border border-border"
-                      />
-                    ) : (
-                      <div className="relative">
-                        <img
-                          src={viewingReview.images[imageIndex]}
-                          alt={`Foto ${imageIndex + 1}`}
-                          className="w-full rounded-xl border border-border"
-                        />
-                        {viewingReview.images.length > 1 && (
-                          <>
-                            <button
-                              onClick={() => setImageIndex(prev => prev > 0 ? prev - 1 : viewingReview.images.length - 1)}
-                              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 rounded-full flex items-center justify-center text-white"
-                            >
-                              ‹
-                            </button>
-                            <button
-                              onClick={() => setImageIndex(prev => prev < viewingReview.images.length - 1 ? prev + 1 : 0)}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 rounded-full flex items-center justify-center text-white"
-                            >
-                              ›
-                            </button>
-                            <div className="flex justify-center gap-1 mt-2">
-                              {viewingReview.images.map((_, idx) => (
-                                <button
-                                  key={idx}
-                                  onClick={() => setImageIndex(idx)}
-                                  className={`w-2 h-2 rounded-full transition-colors ${idx === imageIndex ? 'bg-primary' : 'bg-muted'}`}
-                                />
-                              ))}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {viewingReview.is_verified_purchase && (
-                  <div className="flex items-center gap-1 text-xs text-success">
-                    <Star className="w-3 h-3 fill-success" />
-                    <span>Compra verificada</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
+        <ReviewDetailModal review={viewingReview} onClose={() => setViewingReview(null)} />
 
         {/* About Tab Content */}
         {activeTab === 'about' && (

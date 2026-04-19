@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { formatDateTimeSV } from '@/lib/dateUtils';
 import { motion, AnimatePresence } from 'framer-motion';
+import ReviewDetailModal from './ReviewDetailModal';
 
 function StarRating({ value, onChange, readonly = false }) {
   const [hover, setHover] = useState(0);
@@ -209,6 +210,7 @@ function ReviewForm({ productId, onClose, hasPurchased }) {
 export default function ProductReviews({ productId, isGuest }) {
   const [showForm, setShowForm] = useState(false);
   const [selectedImages, setSelectedImages] = useState(null);
+  const [viewingReview, setViewingReview] = useState(null);
 
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ['reviews', productId],
@@ -353,30 +355,39 @@ export default function ProductReviews({ productId, isGuest }) {
                   </div>
                 </div>
 
-                {review.title && (
-                  <p className="text-xs font-semibold text-foreground mt-1">{review.title}</p>
-                )}
-                {review.body && (
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{review.body}</p>
-                )}
+                <button
+                  onClick={() => setViewingReview(review)}
+                  className="text-left w-full"
+                >
+                  {review.title && (
+                    <p className="text-xs font-semibold text-foreground mt-1 hover:text-primary transition-colors">{review.title}</p>
+                  )}
+                  {review.body && (
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2">{review.body}</p>
+                  )}
 
-                {review.images?.length > 0 && (
-                  <div className="flex gap-2 mt-2 flex-wrap">
-                    {review.images.map((url, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setSelectedImages(review.images)}
-                        className="relative w-16 h-16 rounded-lg overflow-hidden border border-border hover:opacity-75 hover:shadow-md transition-all cursor-pointer active:scale-95"
-                      >
-                        <img
-                          src={url}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                )}
+                  {review.images?.length > 0 && (
+                    <div className="flex gap-2 mt-2 flex-wrap">
+                      {review.images.slice(0, 3).map((url, idx) => (
+                        <div
+                          key={idx}
+                          className="relative w-16 h-16 rounded-lg overflow-hidden border border-border"
+                        >
+                          <img
+                            src={url}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ))}
+                      {review.images.length > 3 && (
+                        <div className="w-16 h-16 rounded-lg bg-secondary flex items-center justify-center border border-border text-[10px] font-bold text-muted-foreground">
+                          +{review.images.length - 3}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </button>
               </motion.div>
             ))}
           </div>
@@ -384,6 +395,7 @@ export default function ProductReviews({ productId, isGuest }) {
       )}
 
       {selectedImages && <ImageGallery images={selectedImages} onClose={() => setSelectedImages(null)} />}
+      <ReviewDetailModal review={viewingReview} onClose={() => setViewingReview(null)} />
     </div>
   );
 }
