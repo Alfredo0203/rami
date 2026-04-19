@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -7,11 +7,16 @@ import { ArrowLeft, Heart, ShoppingCart, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useCurrentUser } from '@/lib/useCurrentUser';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export default function Wishlist() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { isGuest } = useCurrentUser();
+  const [deletingId, setDeletingId] = useState(null);
 
   const { data: wishlistItems = [], isLoading } = useQuery({
     queryKey: ['wishlist'],
@@ -100,8 +105,7 @@ export default function Wishlist() {
                     Ver
                   </Button>
                   <button
-                    onClick={() => removeMutation.mutate(item.id)}
-                    disabled={removeMutation.isPending}
+                    onClick={() => setDeletingId(item.id)}
                     className="p-2 rounded-full bg-secondary text-muted-foreground hover:text-destructive transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -112,6 +116,25 @@ export default function Wishlist() {
           ))}
         </div>
       )}
+      <AlertDialog open={!!deletingId} onOpenChange={(o) => { if (!o) setDeletingId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar de favoritos?</AlertDialogTitle>
+            <AlertDialogDescription>
+              El producto será removido de tu lista de favoritos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { removeMutation.mutate(deletingId); setDeletingId(null); }}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

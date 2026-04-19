@@ -4,6 +4,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { User, ShieldCheck, ShieldOff, Ban, CheckCircle2, Trash2, ChevronDown, ChevronUp, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const STATUS_STYLES = {
   active: 'bg-success/10 text-success',
@@ -27,6 +31,7 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
   const queryClient = useQueryClient();
   const [expanded, setExpanded] = useState(false);
   const [reason, setReason] = useState('');
+  const [confirmAction, setConfirmAction] = useState(null); // { label, data }
 
   const isSelf = currentUser?.id === targetUser?.id;
   const isOwner = currentUser?.role === 'super_admin';
@@ -101,7 +106,7 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
                     size="sm"
                     variant="outline"
                     className="text-xs h-7 border-warning text-warning hover:bg-warning/10"
-                    onClick={() => updateUser.mutate({ status: 'suspended', status_reason: reason || 'Suspended by admin', status_changed_at: new Date().toISOString() })}
+                    onClick={() => setConfirmAction({ label: 'Suspender', data: { status: 'suspended', status_reason: reason || 'Suspended by admin', status_changed_at: new Date().toISOString() } })}
                     disabled={updateUser.isPending}
                   >
                     <Ban className="w-3 h-3 mr-1" /> Suspender
@@ -123,7 +128,7 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
                     size="sm"
                     variant="outline"
                     className="text-xs h-7 border-destructive text-destructive hover:bg-destructive/10"
-                    onClick={() => updateUser.mutate({ status: 'deactivated', status_reason: reason || 'Deactivated by admin', status_changed_at: new Date().toISOString() })}
+                    onClick={() => setConfirmAction({ label: 'Desactivar', data: { status: 'deactivated', status_reason: reason || 'Deactivated by admin', status_changed_at: new Date().toISOString() } })}
                     disabled={updateUser.isPending}
                   >
                     <Trash2 className="w-3 h-3 mr-1" /> Desactivar
@@ -141,6 +146,26 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
                   </Button>
                 )}
               </div>
+
+              <AlertDialog open={!!confirmAction} onOpenChange={(o) => { if (!o) setConfirmAction(null); }}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>¿{confirmAction?.label} usuario?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta acción afectará la cuenta de <strong>{targetUser.full_name || targetUser.email}</strong>. ¿Estás seguro?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      onClick={() => { updateUser.mutate(confirmAction.data); setConfirmAction(null); }}
+                    >
+                      {confirmAction?.label}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           )}
 
