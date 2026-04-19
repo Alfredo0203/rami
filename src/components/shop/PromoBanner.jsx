@@ -50,7 +50,6 @@ export default function PromoBanner() {
       }}
     >
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary-foreground rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary-foreground rounded-full translate-y-1/2 -translate-x-1/2" />
       </div>
       <div className="relative p-5 flex items-center justify-between">
