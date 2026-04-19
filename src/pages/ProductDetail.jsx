@@ -46,12 +46,6 @@ export default function ProductDetail() {
     enabled: !!productId,
   });
 
-  const { data: store } = useQuery({
-    queryKey: ['store', product?.store_id],
-    queryFn: () => base44.entities.Store.get(product.store_id),
-    enabled: !!product?.store_id,
-  });
-
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart'],
     queryFn: () => base44.entities.CartItem.list().catch(() => []),
@@ -96,6 +90,12 @@ export default function ProductDetail() {
   const product = data?.product;
   const variants = data?.variants || [];
   const hasVariants = variants.length > 0;
+
+  const { data: store } = useQuery({
+    queryKey: ['store', product?.store_id],
+    queryFn: () => base44.entities.Store.get(product.store_id),
+    enabled: !!product?.store_id,
+  });
 
   // SEO: Update meta tags for social sharing (before early returns)
   const productUrl = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}?id=${productId}` : '';
