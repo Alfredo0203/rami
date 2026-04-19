@@ -29,6 +29,12 @@ export default function Home() {
     queryFn: () => base44.functions.invoke('getPublicCatalog', {}).then(r => r.data),
   });
 
+  const { data: appSettings } = useQuery({
+    queryKey: ['app-settings'],
+    queryFn: () => base44.entities.AppSettings.filter({ key: 'global' }).then(r => r[0] || null),
+    retry: false,
+  });
+
   const products = catalogData?.products ?? [];
   const categories = catalogData?.categories ?? [];
 
@@ -93,7 +99,7 @@ export default function Home() {
       />
 
       <PullToRefresh onRefresh={handleRefresh}>
-        <PromoBanner />
+        <PromoBanner settings={appSettings} />
 
         <CategoryBar
           categories={categories}
