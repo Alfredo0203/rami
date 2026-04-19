@@ -12,6 +12,7 @@ export default function SupportChatModal({ isOpen, onClose }) {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderSelection, setShowOrderSelection] = useState(false);
+  const [currentTopic, setCurrentTopic] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -26,11 +27,12 @@ export default function SupportChatModal({ isOpen, onClose }) {
     }
   }, [isOpen]);
 
-  const handleOrderQuestion = async () => {
+  const handleShowOrders = async (topic) => {
     // Fetch orders for the current user
     const userOrders = await base44.entities.Order.filter({ customer_email: user?.email });
     setOrders(userOrders || []);
     setShowOrderSelection(true);
+    setCurrentTopic(topic);
   };
 
   const handleSelectOrder = (order) => {
@@ -72,8 +74,20 @@ export default function SupportChatModal({ isOpen, onClose }) {
   };
 
   const handleQuickMessage = (preset) => {
-    const whatsappUrl = `https://wa.me/${whatsappPhone.replace(/\D/g, '')}?text=${encodeURIComponent(preset)}`;
+    let fullMessage = preset;
+    
+    if (selectedOrder) {
+      fullMessage += `\n\nPedido: ${selectedOrder.order_number}`;
+      if (selectedOrder.tracking_number) {
+        fullMessage += `\nRastreo: ${selectedOrder.tracking_number}`;
+      }
+    }
+
+    const whatsappUrl = `https://wa.me/${whatsappPhone.replace(/\D/g, '')}?text=${encodeURIComponent(fullMessage)}`;
     window.open(whatsappUrl, '_blank', 'width=500,height=600');
+    setSelectedOrder(null);
+    setShowOrderSelection(false);
+    setCurrentTopic(null);
     onClose();
   };
 
@@ -120,16 +134,24 @@ export default function SupportChatModal({ isOpen, onClose }) {
             {showOrderSelection ? (
               <>
                 <div className="flex items-center gap-2 mb-3">
-                  <button onClick={() => setShowOrderSelection(false)} className="p-1 hover:bg-gray-100 rounded">
+                  <button onClick={() => { setShowOrderSelection(false); setCurrentTopic(null); setSelectedOrder(null); }} className="p-1 hover:bg-gray-100 rounded">
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <p className="text-sm font-semibold text-gray-700">Selecciona un pedido</p>
+                  <p className="text-sm font-semibold text-gray-700">Selecciona un pedido (opcional)</p>
                 </div>
 
                 {orders.length === 0 ? (
                   <p className="text-sm text-gray-600 text-center py-4">No tienes pedidos registrados</p>
                 ) : (
                   <div className="space-y-2">
+                    <button
+                      onClick={() => handleQuickMessage(
+                        currentTopic === 'delivery_time' ? '¿Cuál es el tiempo de entrega?' : 'Tengo una pregunta sobre mi pedido'
+                      )}
+                      className="w-full text-left p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition text-xs text-gray-600 font-medium"
+                    >
+                      Continuar sin seleccionar pedido
+                    </button>
                     {orders.map(order => (
                       <button
                         key={order.id}
@@ -159,17 +181,17 @@ export default function SupportChatModal({ isOpen, onClose }) {
 
                 {/* Quick messages */}
                 <button
-                  onClick={handleOrderQuestion}
+                  onClick={() => handleShowOrders('order_question')}
                   className="w-full text-left p-3 rounded-lg hover:bg-green-50 border border-gray-200 transition text-sm text-gray-700"
                 >
                   📦 Pregunta sobre mi pedido
                 </button>
-          <button
-            onClick={() => handleQuickMessage('¿Cuál es el tiempo de entrega?')}
-            className="w-full text-left p-3 rounded-lg hover:bg-green-50 border border-gray-200 transition text-sm text-gray-700"
-          >
-            🚚 Tiempo de entrega
-          </button>
+                <button
+                  onClick={() => handleShowOrders('delivery_time')}
+                  className="w-full text-left p-3 rounded-lg hover:bg-green-50 border border-gray-200 transition text-sm text-gray-700"
+                >
+                  🚚 Tiempo de entrega
+                </button>
           <button
             onClick={() => handleQuickMessage('Tengo un problema con mi producto')}
             className="w-full text-left p-3 rounded-lg hover:bg-green-50 border border-gray-200 transition text-sm text-gray-700"
