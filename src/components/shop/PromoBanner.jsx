@@ -23,12 +23,12 @@ function getSecondsUntilMidnight() {
 function CountdownUnit({ value, label }) {
   return (
     <div className="flex flex-col items-center">
-      <div className="bg-black/30 backdrop-blur-sm rounded-md px-2 py-1 min-w-[32px] text-center">
-        <span className="text-primary-foreground text-sm font-black tabular-nums leading-none">
+      <div className="bg-black/30 backdrop-blur-sm rounded-md px-1.5 py-0.5 min-w-[24px] text-center">
+        <span className="text-primary-foreground text-xs font-black tabular-nums leading-none">
           {String(value).padStart(2, '0')}
         </span>
       </div>
-      <span className="text-primary-foreground/60 text-[9px] uppercase tracking-wide mt-0.5">{label}</span>
+      <span className="text-primary-foreground/60 text-[8px] uppercase tracking-wide mt-0.5">{label}</span>
     </div>
   );
 }
@@ -96,11 +96,11 @@ export default function PromoBanner() {
 
         {/* Right: countdown + arrow */}
         <div className="flex items-center gap-2 shrink-0">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <CountdownUnit value={h} label="hrs" />
-            <span className="text-primary-foreground/70 font-bold text-sm mb-3">:</span>
+            <span className="text-primary-foreground/70 font-bold text-xs mb-3">:</span>
             <CountdownUnit value={m} label="min" />
-            <span className="text-primary-foreground/70 font-bold text-sm mb-3">:</span>
+            <span className="text-primary-foreground/70 font-bold text-xs mb-3">:</span>
             <CountdownUnit value={s} label="seg" />
           </div>
           {link && (
