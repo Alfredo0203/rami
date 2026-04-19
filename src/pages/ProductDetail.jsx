@@ -90,6 +90,16 @@ export default function ProductDetail() {
   const variants = data?.variants || [];
   const hasVariants = variants.length > 0;
 
+  // SEO: Update meta tags for social sharing (before early returns)
+  const productUrl = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}?id=${productId}` : '';
+  useSEO({
+    title: `${product?.name} - Tienda`,
+    description: product?.description || `Compra ${product?.name} en nuestra tienda en línea`,
+    image: product?.images?.[0],
+    url: productUrl,
+    type: 'product',
+  });
+
   // Al seleccionar una variante con imagen, cambiar la imagen principal
   // Auto-select variant: only if coming from cart (variant_id in URL) or product is already in cart
   // Using refs to track if we've already done the initial selection
@@ -280,16 +290,6 @@ export default function ProductDetail() {
     !selectedVariant ||
     allAttrKeys.some(key => !selectedAttrMap[key])
   );
-
-  // SEO: Update meta tags for social sharing
-  const productUrl = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}?id=${productId}` : '';
-  useSEO({
-    title: `${product?.name} - Tienda`,
-    description: product?.description || `Compra ${product?.name} en nuestra tienda en línea`,
-    image: product?.images?.[0],
-    url: productUrl,
-    type: 'product',
-  });
 
   return (
     <div className="min-h-screen bg-background pb-24">
