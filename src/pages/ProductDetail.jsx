@@ -463,15 +463,15 @@ export default function ProductDetail() {
         )}
       </div>
 
-      {/* Related products */}
-      {product.category_id && (
-        <RelatedProducts categoryId={product.category_id} currentProductId={productId} />
-      )}
-
       {/* Reviews */}
       <div className="mt-4 border-t border-border">
         <ProductReviews productId={productId} isGuest={isGuest} />
       </div>
+
+      {/* Related products — al final */}
+      {product.category_id && (
+        <RelatedProducts categoryId={product.category_id} currentProductId={productId} />
+      )}
 
       {/* Bottom action bar */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border px-4 py-3 safe-area-bottom">
