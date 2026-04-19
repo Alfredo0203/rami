@@ -62,15 +62,24 @@ export default function AdminStoresTab() {
   });
 
   const saveMutation = useMutation({
-    mutationFn: (data) => {
+    mutationFn: async (data) => {
+      const storeData = data;
       if (editingStore) {
-        return base44.entities.Store.update(editingStore.id, data);
+        return base44.entities.Store.update(editingStore.id, storeData);
       }
-      return base44.entities.Store.create(data);
+      // Si es nueva tienda, crear la tienda y luego cambiar el rol del usuario a seller
+      const newStore = await base44.entities.Store.create(storeData);
+      // Cambiar el rol del usuario asignado a seller
+      await base44.entities.User.update(
+        users.find(u => u.email === storeData.owner_email)?.id,
+        { role: 'seller' }
+      );
+      return newStore;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-stores'] });
-      toast.success(editingStore ? 'Tienda actualizada' : 'Tienda creada');
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success(editingStore ? 'Tienda actualizada' : 'Tienda creada y usuario convertido a seller');
       handleClose();
     },
   });
@@ -223,7 +232,7 @@ export default function AdminStoresTab() {
               </div>
 
               <div>
-                <Label className="text-xs">Email del dueño</Label>
+                <Label className="text-xs">Email del dueño (se convertirá a seller)</Label>
                 <Select
                   value={form.owner_email}
                   onValueChange={v => setForm({...form, owner_email: v})}
@@ -232,8 +241,10 @@ export default function AdminStoresTab() {
                     <SelectValue placeholder="Seleccionar usuario" />
                   </SelectTrigger>
                   <SelectContent>
-                    {users.map(u => (
-                      <SelectItem key={u.id} value={u.email}>{u.email} - {u.full_name}</SelectItem>
+                    {users.filter(u => u.role !== 'super_admin').map(u => (
+                      <SelectItem key={u.id} value={u.email}>
+                        {u.email} - {u.full_name} {u.role === 'seller' ? '(ya es seller)' : ''}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
