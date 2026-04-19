@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { X, Package, ShoppingBag, DollarSign, Calendar, MapPin, Phone, Mail } from 'lucide-react';
+import { X, Package, ShoppingBag, Phone, Mail } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProductCard from './ProductCard';
 import { Button } from '@/components/ui/button';
@@ -31,9 +31,8 @@ export default function StoreModal({ store, products, categories, onClose }) {
   const stats = useMemo(() => {
     const totalProducts = storeProducts.length;
     const totalSold = storeProducts.reduce((sum, p) => sum + (p.sold_count || 0), 0);
-    const totalRevenue = storeProducts.reduce((sum, p) => sum + ((p.sold_count || 0) * (p.price || 0)), 0);
     
-    return { totalProducts, totalSold, totalRevenue };
+    return { totalProducts, totalSold };
   }, [storeProducts]);
 
   // Obtener categorías con productos en esta tienda
@@ -79,7 +78,7 @@ export default function StoreModal({ store, products, categories, onClose }) {
         </div>
 
         {/* Store Info Cards */}
-        <div className="grid grid-cols-3 gap-2 px-4 py-4">
+        <div className="grid grid-cols-2 gap-2 px-4 py-4">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -106,18 +105,7 @@ export default function StoreModal({ store, products, categories, onClose }) {
             <p className="text-[10px] text-muted-foreground">Vendidos</p>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-card rounded-xl p-3 shadow-sm"
-          >
-            <div className="w-7 h-7 rounded-lg bg-success/10 text-success flex items-center justify-center mb-1">
-              <DollarSign className="w-4 h-4" />
-            </div>
-            <p className="text-lg font-extrabold text-foreground">${stats.totalRevenue.toFixed(0)}</p>
-            <p className="text-[10px] text-muted-foreground">Ventas</p>
-          </motion.div>
+
         </div>
 
         {/* Contact Info */}

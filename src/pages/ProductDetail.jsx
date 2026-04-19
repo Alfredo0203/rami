@@ -13,6 +13,7 @@ import VariantSelector from '@/components/shop/VariantSelector';
 import RelatedProducts from '@/components/shop/RelatedProducts';
 import { useSEO } from '@/hooks/useSEO';
 import ProductShareButton from '@/components/shop/ProductShare';
+import StoreModal from '@/components/shop/StoreModal';
 
 export default function ProductDetail() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -27,6 +28,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(preselectedQty);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedAttrMap, setSelectedAttrMap] = useState({});
+  const [viewingStore, setViewingStore] = useState(null);
   const touchStartX = useRef(null);
 
   const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
@@ -105,6 +107,16 @@ export default function ProductDetail() {
       return stores[0] || null;
     },
     enabled: !product?.store_id,
+  });
+
+  const { data: products = [] } = useQuery({
+    queryKey: ['all-products'],
+    queryFn: () => base44.entities.Product.list(),
+  });
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => base44.entities.Category.list('sort_order'),
   });
 
   const displayStore = store || defaultStore;
@@ -424,7 +436,10 @@ export default function ProductDetail() {
           </div>
           <h1 className="text-base font-semibold text-foreground leading-tight">{product.name}</h1>
           {displayStore && (
-            <div className="flex items-center gap-2 mt-2">
+            <button
+              onClick={() => setViewingStore(displayStore)}
+              className="flex items-center gap-2 mt-2 hover:opacity-70 transition-opacity"
+            >
               <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
                 {displayStore.logo_url ? (
                   <img src={displayStore.logo_url} alt={displayStore.name} className="w-full h-full object-cover" />
@@ -435,7 +450,7 @@ export default function ProductDetail() {
               <span className="text-xs text-muted-foreground">
                 Vendido por <span className="font-medium text-foreground">{displayStore.name}</span>
               </span>
-            </div>
+            </button>
           )}
         </div>
 
@@ -521,6 +536,16 @@ export default function ProductDetail() {
           categoryId={product.category_id}
           currentProductId={productId}
           currentTags={product.tags || []}
+        />
+      )}
+
+      {/* Store Modal */}
+      {viewingStore && (
+        <StoreModal
+          store={viewingStore}
+          products={products}
+          categories={categories}
+          onClose={() => setViewingStore(null)}
         />
       )}
 
