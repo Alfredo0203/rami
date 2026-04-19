@@ -3,13 +3,11 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { ArrowLeft, MapPin, CreditCard, Banknote, Loader2, Plus, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Banknote, Loader2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
+import AddressForm from '@/components/addresses/AddressForm';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -18,9 +16,6 @@ export default function Checkout() {
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [allowedPaymentMethods, setAllowedPaymentMethods] = useState(['credit_card']);
   const [showAddressForm, setShowAddressForm] = useState(false);
-  const [newAddress, setNewAddress] = useState({
-    label: 'Home', full_name: '', phone: '', street: '', city: '', state: '', zip_code: '', country: 'United States'
-  });
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -57,9 +52,9 @@ export default function Checkout() {
 
   const saveAddressMutation = useMutation({
     mutationFn: (data) => base44.entities.Address.create(data),
-    onSuccess: (data) => {
+    onSuccess: (saved) => {
       queryClient.invalidateQueries({ queryKey: ['addresses'] });
-      setSelectedAddressId(data.id);
+      setSelectedAddressId(saved.id);
       setShowAddressForm(false);
       toast.success('¡Dirección guardada!');
     },
@@ -161,8 +156,15 @@ export default function Checkout() {
                     }`}>
                       <RadioGroupItem value={addr.id} className="mt-0.5" />
                       <div>
-                        <p className="text-sm font-medium text-foreground">{addr.full_name} · {addr.label}</p>
-                        <p className="text-xs text-muted-foreground">{addr.street}, {addr.city}, {addr.state} {addr.zip_code}</p>
+                        <p className="text-sm font-medium text-foreground">
+                          {addr.first_name} {addr.last_name} · {addr.label}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {addr.colonia}, {addr.street} {addr.house_number && `#${addr.house_number}`}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {addr.municipio}, {addr.departamento}
+                        </p>
                         <p className="text-xs text-muted-foreground">{addr.phone}</p>
                       </div>
                     </label>
@@ -184,47 +186,13 @@ export default function Checkout() {
           )}
 
           {showAddressForm && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-3 mt-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs">Nombre Completo</Label>
-                  <Input value={newAddress.full_name} onChange={e => setNewAddress({...newAddress, full_name: e.target.value})} className="h-9 text-sm" />
-                </div>
-                <div>
-                  <Label className="text-xs">Teléfono</Label>
-                  <Input value={newAddress.phone} onChange={e => setNewAddress({...newAddress, phone: e.target.value})} className="h-9 text-sm" />
-                </div>
-              </div>
-              <div>
-                <Label className="text-xs">Dirección</Label>
-                <Input value={newAddress.street} onChange={e => setNewAddress({...newAddress, street: e.target.value})} className="h-9 text-sm" />
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <Label className="text-xs">Ciudad</Label>
-                  <Input value={newAddress.city} onChange={e => setNewAddress({...newAddress, city: e.target.value})} className="h-9 text-sm" />
-                </div>
-                <div>
-                  <Label className="text-xs">Estado</Label>
-                  <Input value={newAddress.state} onChange={e => setNewAddress({...newAddress, state: e.target.value})} className="h-9 text-sm" />
-                </div>
-                <div>
-                  <Label className="text-xs">Código Postal</Label>
-                  <Input value={newAddress.zip_code} onChange={e => setNewAddress({...newAddress, zip_code: e.target.value})} className="h-9 text-sm" />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => setShowAddressForm(false)}>Cancelar</Button>
-                <Button
-                  size="sm"
-                  className="bg-primary text-primary-foreground"
-                  onClick={() => saveAddressMutation.mutate(newAddress)}
-                  disabled={saveAddressMutation.isPending}
-                >
-                  {saveAddressMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar Dirección'}
-                </Button>
-              </div>
-            </motion.div>
+            <div className="mt-3">
+              <AddressForm
+                onSave={(data) => saveAddressMutation.mutate(data)}
+                onCancel={() => setShowAddressForm(false)}
+                isSaving={saveAddressMutation.isPending}
+              />
+            </div>
           )}
         </div>
 
