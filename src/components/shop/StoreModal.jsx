@@ -8,10 +8,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 export default function StoreModal({ store, products, categories, onClose }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  if (!store) return null;
-
   // Filtrar productos de esta tienda
   const storeProducts = useMemo(() => {
+    if (!store) return [];
     let filtered = products.filter(p => {
       // Si el producto no tiene store_id, es de la tienda principal (owner)
       if (!p.store_id) {
@@ -39,9 +38,12 @@ export default function StoreModal({ store, products, categories, onClose }) {
 
   // Obtener categorías con productos en esta tienda
   const storeCategories = useMemo(() => {
+    if (!store || !categories) return [];
     const categoryIds = [...new Set(storeProducts.map(p => p.category_id))];
     return categories.filter(c => categoryIds.includes(c.id));
-  }, [storeProducts, categories]);
+  }, [storeProducts, categories, store]);
+
+  if (!store) return null;
 
   const storeLogo = store.logo_url || 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=200';
 
