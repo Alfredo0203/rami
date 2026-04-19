@@ -78,9 +78,18 @@ export default function AdminSalesCharts() {
     return { daily, weekly };
   }, [orders, timeframe]);
 
-  const deliveredOrders = orders.filter(o => o.status === 'delivered');
-  const totalRevenue = deliveredOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-  const totalOrders = deliveredOrders.length;
+  const filteredForStats = chartData.daily.length > 0 || chartData.weekly.length > 0 
+    ? orders.filter(o => {
+        if (o.status !== 'delivered') return false;
+        const now = new Date();
+        const orderDate = new Date(o.created_date);
+        if (timeframe === '7days') return (now - orderDate) <= 7 * 24 * 60 * 60 * 1000;
+        if (timeframe === '30days') return (now - orderDate) <= 30 * 24 * 60 * 60 * 1000;
+        return true;
+      })
+    : [];
+  const totalRevenue = filteredForStats.reduce((sum, o) => sum + (o.total || 0), 0);
+  const totalOrders = filteredForStats.length;
   const avgOrderValue = totalOrders ? (totalRevenue / totalOrders).toFixed(2) : 0;
 
   return (
