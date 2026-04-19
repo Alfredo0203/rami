@@ -187,7 +187,6 @@ export default function StoreModal({ store, products, categories, orders = [], r
             )}
           </div>
         )}
-        )}
 
         {/* Categories - Only show on products tab */}
         {activeTab === 'products' && storeCategories.length > 0 && (
@@ -218,7 +217,6 @@ export default function StoreModal({ store, products, categories, orders = [], r
               ))}
             </div>
           </div>
-        )}
         )}
 
         {/* Products Grid - Scrollable */}
