@@ -6,9 +6,13 @@
       "type": "string",
       "description": "Setting key (e.g. 'global')"
     },
+    "store_name": {
+      "type": "string",
+      "description": "Name of the store shown in the header"
+    },
     "logo_url": {
       "type": "string",
-      "description": "Logo URL for branding (used in PDFs, emails, etc.)"
+      "description": "Logo URL for branding (used in header, PDFs, emails, etc.)"
     },
     "development_mode": {
       "type": "boolean",
@@ -41,7 +45,7 @@
     "promo_banner_label": {
       "type": "string",
       "default": "Flash Sale",
-      "description": "Small label above the main banner text (e.g. 'Flash Sale', 'Oferta')"
+      "description": "Small label above the main banner text"
     },
     "promo_banner_title": {
       "type": "string",
@@ -50,11 +54,11 @@
     },
     "promo_banner_subtitle": {
       "type": "string",
-      "description": "Optional subtitle / description shown below the headline"
+      "description": "Optional subtitle shown below the headline"
     },
     "promo_banner_link": {
       "type": "string",
-      "description": "URL to navigate to when the banner is tapped (e.g. /Browse)"
+      "description": "URL to navigate to when the banner is tapped"
     },
     "promo_banner_image_url": {
       "type": "string",

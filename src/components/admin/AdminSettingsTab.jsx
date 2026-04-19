@@ -60,6 +60,20 @@ export default function AdminSettingsTab({ currentUser }) {
     }
   };
 
+  // Branding local state
+  const [brandingForm, setBrandingForm] = useState({ store_name: '', logo_url: '' });
+
+  useEffect(() => {
+    if (settings) {
+      setBrandingForm({
+        store_name: settings.store_name || '',
+        logo_url: settings.logo_url || '',
+      });
+    }
+  }, [settings]);
+
+  const saveBranding = () => saveSettings(brandingForm);
+
   // Banner local state (saved on button click)
   const [bannerForm, setBannerForm] = useState({
     promo_banner_enabled: true,
@@ -176,6 +190,37 @@ export default function AdminSettingsTab({ currentUser }) {
           })}
         </div>
       </div>}
+
+      {/* Branding */}
+      <div className="bg-card rounded-xl p-4 shadow-sm">
+        <div className="flex items-center gap-2 mb-1">
+          <Megaphone className="w-4 h-4 text-primary" />
+          <p className="text-sm font-semibold text-foreground">Branding de la Tienda</p>
+        </div>
+        <p className="text-xs text-muted-foreground mb-3">Nombre y logo que aparecen en la tienda.</p>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">Nombre de la tienda</label>
+            <Input
+              placeholder="Mi Tienda"
+              value={brandingForm.store_name}
+              onChange={e => setBrandingForm(f => ({ ...f, store_name: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">Logo URL</label>
+            <Input
+              placeholder="https://..."
+              value={brandingForm.logo_url}
+              onChange={e => setBrandingForm(f => ({ ...f, logo_url: e.target.value }))}
+            />
+          </div>
+          <Button size="sm" className="w-full mt-1" onClick={saveBranding} disabled={saving}>
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            Guardar branding
+          </Button>
+        </div>
+      </div>
 
       {/* Promo Banner */}
       <div className="bg-card rounded-xl p-4 shadow-sm">
