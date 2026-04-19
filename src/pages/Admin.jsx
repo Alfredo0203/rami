@@ -88,7 +88,7 @@ export default function Admin() {
     },
   });
 
-  const totalRevenue = orders.filter(o => o.status !== 'cancelled').reduce((sum, o) => sum + (o.total || 0), 0);
+  const totalRevenue = orders.filter(o => o.status === 'delivered').reduce((sum, o) => sum + (o.total || 0), 0);
   const activeProducts = products.filter(p => p.is_active).length;
   const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'processing').length;
 
