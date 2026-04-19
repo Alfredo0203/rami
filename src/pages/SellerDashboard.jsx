@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import SellerProductForm from '@/components/seller/SellerProductForm';
+import SellerStoreForm from '@/components/seller/SellerStoreForm';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 export default function SellerDashboard() {
@@ -18,7 +19,8 @@ export default function SellerDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [deletingProductId, setDeletingProductId] = useState(null);
+  const [deletingProductId, setDeleteingProductId] = useState(null);
+  const [showStoreForm, setShowStoreForm] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -235,7 +237,7 @@ export default function SellerDashboard() {
                                 <Edit2 className="w-3.5 h-3.5 text-foreground" />
                               </button>
                               <button
-                                onClick={() => setDeletingProductId(product.id)}
+                                onClick={() => setDeleteingProductId(product.id)}
                                 className="p-1.5 bg-secondary rounded hover:bg-destructive/10"
                                 title="Eliminar"
                               >
@@ -332,10 +334,10 @@ export default function SellerDashboard() {
                     </div>
                   )}
                   <Button
-                    onClick={() => navigate('/Admin')}
-                    className="w-full bg-secondary text-foreground rounded-full h-9 text-xs mt-2"
+                   onClick={() => setShowStoreForm(true)}
+                   className="w-full bg-primary text-primary-foreground rounded-full h-9 text-xs mt-2"
                   >
-                    <Edit2 className="w-3.5 h-3.5 mr-2" /> Editar Información
+                   <Edit2 className="w-3.5 h-3.5 mr-2" /> Editar Información
                   </Button>
                 </div>
               </TabsContent>
@@ -353,7 +355,7 @@ export default function SellerDashboard() {
         />
       )}
 
-      <AlertDialog open={!!deletingProductId} onOpenChange={(open) => { if (!open) setDeletingProductId(null); }}>
+      <AlertDialog open={!!deletingProductId} onOpenChange={(open) => { if (!open) setDeleteingProductId(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar producto?</AlertDialogTitle>
@@ -365,13 +367,20 @@ export default function SellerDashboard() {
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => { deleteProductMutation.mutate(deletingProductId); setDeletingProductId(null); }}
+              onClick={() => { deleteProductMutation.mutate(deletingProductId); setDeleteingProductId(null); }}
             >
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {showStoreForm && (
+        <SellerStoreForm
+          store={store}
+          onClose={() => setShowStoreForm(false)}
+        />
+      )}
     </div>
   );
 }
