@@ -417,7 +417,7 @@ export default function ProductDetail() {
                 {store?.logo_url ? (
                   <img src={store.logo_url} alt={store.name} className="w-full h-full object-cover" />
                 ) : (
-                  <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=100&h=100&fit=crop" alt="RAmi" className="w-full h-full object-cover" />
+                  <img src="https://drive.google.com/uc?export=view&id=1XvzxcscLVC00UVnvggpG1qTLTiyQ_6d0" alt="RAmi" className="w-full h-full object-cover" />
                 )}
               </div>
               <span className="text-xs text-muted-foreground">
