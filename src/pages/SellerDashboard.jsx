@@ -101,6 +101,14 @@ export default function SellerDashboard() {
     },
   });
 
+  const updateOrderStatusMutation = useMutation({
+    mutationFn: ({ orderId, status }) => base44.entities.Order.update(orderId, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['seller-orders'] });
+      toast.success('Estado de la orden actualizado');
+    },
+  });
+
   if (!user || !store) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -292,26 +300,32 @@ export default function SellerDashboard() {
                     <p className="text-muted-foreground text-sm">No hay pedidos aún</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {storeOrders.map(order => (
-                      <div key={order.id} className="bg-card rounded-xl p-3 shadow-sm">
-                        <div className="flex justify-between items-start mb-2">
-                          <p className="font-semibold text-foreground text-sm">Pedido #{order.order_number || order.id.slice(0, 8)}</p>
-                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                            order.status === 'delivered' ? 'bg-success/10 text-success' :
-                            order.status === 'shipped' ? 'bg-primary/10 text-primary' :
-                            order.status === 'processing' ? 'bg-chart-5/10 text-chart-5' :
-                            'bg-muted text-muted-foreground'
-                          }`}>
-                            {order.status}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground mb-1">Total: ${order.total?.toFixed(2)}</p>
-                        <p className="text-xs text-muted-foreground">Items: {order.items?.length || 0}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                   <div className="space-y-3">
+                     {storeOrders.map(order => (
+                       <div key={order.id} className="bg-card rounded-xl p-3 shadow-sm space-y-2">
+                         <div className="flex justify-between items-start">
+                           <p className="font-semibold text-foreground text-sm">Pedido #{order.order_number || order.id.slice(0, 8)}</p>
+                           <select
+                             value={order.status}
+                             onChange={(e) => updateOrderStatusMutation.mutate({ orderId: order.id, status: e.target.value })}
+                             className="text-xs px-2 py-1 rounded-full border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary font-medium"
+                           >
+                             <option value="pending">Pendiente</option>
+                             <option value="processing">Procesando</option>
+                             <option value="shipped">Enviado</option>
+                             <option value="delivered">Entregado</option>
+                             <option value="cancelled">Cancelado</option>
+                           </select>
+                         </div>
+                         <div className="space-y-1">
+                           <p className="text-xs text-muted-foreground">Total: ${order.total?.toFixed(2)}</p>
+                           <p className="text-xs text-muted-foreground">Items: {order.items?.length || 0}</p>
+                           {order.customer_name && <p className="text-xs text-muted-foreground">Cliente: {order.customer_name}</p>}
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                 )}
               </TabsContent>
 
               {/* Tienda Tab */}
