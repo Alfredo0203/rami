@@ -91,7 +91,7 @@ export default function StoreModal({ store, products, categories, orders = [], r
               <div>
                 <h1 className="text-lg font-bold text-foreground">{store.name}</h1>
                 {store.description && (
-                  <p className="text-xs text-muted-foreground line-clamp-1">{store.description}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{store.description}</p>
                 )}
               </div>
             </div>
@@ -176,10 +176,10 @@ export default function StoreModal({ store, products, categories, orders = [], r
 
         {/* Products Tab Content */}
         {activeTab === 'products' && (
-          <div className="flex-1 overflow-y-auto px-4 pb-24">
-            {/* Categories */}
+          <div className="flex flex-col flex-1 overflow-hidden">
+            {/* Categories - Sticky */}
             {storeCategories.length > 0 && (
-              <div className="mb-4 pt-2">
+              <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm mb-4 pt-2 pb-2">
                 <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 hide-scrollbar">
                   <button
                     onClick={() => setSelectedCategory(null)}
@@ -208,19 +208,21 @@ export default function StoreModal({ store, products, categories, orders = [], r
               </div>
             )}
 
-            {/* Products Grid */}
-            {storeProducts.length === 0 ? (
-              <div className="text-center py-20">
-                <Package className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground text-sm">No hay productos disponibles</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-2.5 mb-8">
-                {storeProducts.map((product, i) => (
-                  <ProductCard key={product.id} product={product} index={i} />
-                ))}
-              </div>
-            )}
+            {/* Products Grid - Scrollable */}
+            <div className="flex-1 overflow-y-auto px-4 pb-24">
+              {storeProducts.length === 0 ? (
+                <div className="text-center py-20">
+                  <Package className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground text-sm">No hay productos disponibles</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2.5 mb-8">
+                  {storeProducts.map((product, i) => (
+                    <ProductCard key={product.id} product={product} index={i} />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
