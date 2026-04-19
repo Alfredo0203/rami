@@ -12,6 +12,7 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import VariantSelector from '@/components/shop/VariantSelector';
 import RelatedProducts from '@/components/shop/RelatedProducts';
 import { useSEO } from '@/hooks/useSEO';
+import ProductShare from '@/components/shop/ProductShare';
 
 export default function ProductDetail() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -451,6 +452,12 @@ export default function ProductDetail() {
             onSelectionChange={setSelectedAttrMap}
           />
         )}
+
+        {/* Share buttons */}
+        <ProductShare 
+          product={product}
+          productUrl={productUrl}
+        />
 
         {/* Features */}
         <div className="flex gap-4 py-3 border-t border-b border-border">
