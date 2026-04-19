@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import VariantSelector from '@/components/shop/VariantSelector';
+import RelatedProducts from '@/components/shop/RelatedProducts';
 
 export default function ProductDetail() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -461,6 +462,11 @@ export default function ProductDetail() {
           </div>
         )}
       </div>
+
+      {/* Related products */}
+      {product.category_id && (
+        <RelatedProducts categoryId={product.category_id} currentProductId={productId} />
+      )}
 
       {/* Reviews */}
       <div className="mt-4 border-t border-border">
