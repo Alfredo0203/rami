@@ -1,0 +1,43 @@
+{
+  "name": "CouponAssignment",
+  "type": "object",
+  "properties": {
+    "coupon_id": {
+      "type": "string",
+      "description": "ID del cup\u00f3n asignado"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email del usuario asignado"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "available",
+        "used",
+        "expired"
+      ],
+      "default": "available",
+      "description": "Estado de la asignaci\u00f3n"
+    },
+    "assigned_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Fecha cuando se asign\u00f3 el cup\u00f3n"
+    },
+    "used_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Fecha cuando se us\u00f3 (null si no usado)"
+    },
+    "usage_count": {
+      "type": "number",
+      "default": 0,
+      "description": "N\u00famero de veces que este usuario ha usado este cup\u00f3n"
+    }
+  },
+  "required": [
+    "coupon_id",
+    "user_email"
+  ]
+}

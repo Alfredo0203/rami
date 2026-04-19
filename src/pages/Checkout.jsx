@@ -90,23 +90,27 @@ export default function Checkout() {
       if (coupon.expires_at && new Date(coupon.expires_at) < now) {
         throw new Error('Este cupón ha expirado');
       }
-      if (coupon.assigned_user_emails?.length > 0 && !coupon.assigned_user_emails.includes(user?.email)) {
-        throw new Error('Este cupón no está disponible para tu cuenta');
+      
+      // Si es específico de usuarios, validar asignación
+      if (coupon.is_user_specific) {
+        const assignments = await base44.entities.CouponAssignment.filter({
+          coupon_id: coupon.id,
+          user_email: user?.email
+        });
+        if (assignments.length === 0) {
+          throw new Error('Este cupón no está disponible para tu cuenta');
+        }
+        const assignment = assignments[0];
+        if (coupon.usage_limit_per_user && assignment.usage_count >= coupon.usage_limit_per_user) {
+          throw new Error('Ya has usado este cupón el máximo de veces permitidas');
+        }
       }
+      
       if (coupon.minimum_order_amount && subtotal < coupon.minimum_order_amount) {
         throw new Error(`Compra mínima requerida: $${coupon.minimum_order_amount.toFixed(2)}`);
       }
       if (coupon.usage_limit && coupon.used_count >= coupon.usage_limit) {
         throw new Error('Este cupón ya no está disponible');
-      }
-      if (coupon.usage_limit_per_user && coupon.usage_limit_per_user > 0) {
-        const userOrders = await base44.entities.Order.filter({ 
-          customer_email: user?.email, 
-          coupon_code: coupon.code 
-        });
-        if (userOrders.length >= coupon.usage_limit_per_user) {
-          throw new Error(`Ya has usado este cupón el máximo de veces permitidas`);
-        }
       }
       
       return coupon;

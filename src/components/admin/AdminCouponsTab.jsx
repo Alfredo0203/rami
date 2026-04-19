@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, Edit2, Loader2, Calendar, X } from 'lucide-react';
+import { Plus, Trash2, Edit2, Loader2, Calendar, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import AdminCouponAssignments from './AdminCouponAssignments';
 
 export default function AdminCouponsTab() {
   const queryClient = useQueryClient();
@@ -24,7 +25,7 @@ export default function AdminCouponsTab() {
     assigned_user_emails: [],
   });
   const [deletingId, setDeletingId] = useState(null);
-  const [userSearchInput, setUserSearchInput] = useState('');
+  const [selectedCouponForAssignment, setSelectedCouponForAssignment] = useState(null);
 
   const { data: coupons = [], isLoading } = useQuery({
     queryKey: ['admin-coupons'],
@@ -73,11 +74,10 @@ export default function AdminCouponsTab() {
       starts_at: '',
       expires_at: '',
       description: '',
-      assigned_user_emails: [],
+      is_user_specific: false,
     });
     setEditingCoupon(null);
     setShowForm(false);
-    setUserSearchInput('');
   };
 
   const handleSave = () => {
@@ -100,7 +100,7 @@ export default function AdminCouponsTab() {
       starts_at: formData.starts_at ? new Date(formData.starts_at).toISOString() : undefined,
       expires_at: formData.expires_at ? new Date(formData.expires_at).toISOString() : undefined,
       description: formData.description || undefined,
-      assigned_user_emails: formData.assigned_user_emails.length > 0 ? formData.assigned_user_emails : undefined,
+      is_user_specific: formData.is_user_specific,
     };
 
     saveCouponMutation.mutate(dataToSave);
@@ -118,15 +118,10 @@ export default function AdminCouponsTab() {
       starts_at: coupon.starts_at ? coupon.starts_at.split('T')[0] : '',
       expires_at: coupon.expires_at ? coupon.expires_at.split('T')[0] : '',
       description: coupon.description || '',
-      assigned_user_emails: coupon.assigned_user_emails || [],
+      is_user_specific: coupon.is_user_specific || false,
     });
     setShowForm(true);
   };
-
-  const filteredUsers = allUsers.filter(u => 
-    u.email.toLowerCase().includes(userSearchInput.toLowerCase()) &&
-    !formData.assigned_user_emails.includes(u.email)
-  );
 
   return (
     <div className="space-y-3 mt-3 pb-6">
@@ -234,57 +229,14 @@ export default function AdminCouponsTab() {
             <label className="text-sm text-foreground">Activo</label>
           </div>
 
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground block mb-1">Usuarios Asignados (opcional)</label>
-            <p className="text-xs text-muted-foreground mb-2">Deja vacío para permitir a todos los usuarios</p>
-            
-            {formData.assigned_user_emails.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-2">
-                {formData.assigned_user_emails.map(email => (
-                  <div key={email} className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-lg text-xs">
-                    {email}
-                    <button
-                      onClick={() => setFormData({
-                        ...formData,
-                        assigned_user_emails: formData.assigned_user_emails.filter(e => e !== email)
-                      })}
-                      className="hover:bg-primary/20 p-0.5 rounded"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            <div className="relative">
-              <Input
-                value={userSearchInput}
-                onChange={(e) => setUserSearchInput(e.target.value)}
-                placeholder="Buscar usuario por email..."
-                className="text-sm"
-              />
-              {userSearchInput && filteredUsers.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
-                  {filteredUsers.map(user => (
-                    <button
-                      key={user.id}
-                      onClick={() => {
-                        setFormData({
-                          ...formData,
-                          assigned_user_emails: [...formData.assigned_user_emails, user.email]
-                        });
-                        setUserSearchInput('');
-                      }}
-                      className="w-full text-left px-3 py-2 hover:bg-muted text-sm text-foreground border-b border-border last:border-b-0"
-                    >
-                      {user.email}
-                      {user.full_name && <span className="text-muted-foreground text-xs ml-1">({user.full_name})</span>}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={formData.is_user_specific}
+              onChange={(e) => setFormData({ ...formData, is_user_specific: e.target.checked })}
+              className="w-4 h-4"
+            />
+            <label className="text-sm text-foreground">Asignado a usuarios específicos</label>
           </div>
 
           <div className="flex gap-2">
@@ -322,19 +274,27 @@ export default function AdminCouponsTab() {
                   <p className="text-xs text-muted-foreground">{coupon.description}</p>
                 </div>
                 <div className="flex gap-1">
-                  <button
-                    onClick={() => handleEdit(coupon)}
-                    className="p-1.5 bg-secondary rounded-lg hover:bg-muted"
-                  >
-                    <Edit2 className="w-3 h-3 text-foreground" />
-                  </button>
-                  <button
-                    onClick={() => setDeletingId(coupon.id)}
-                    className="p-1.5 bg-secondary rounded-lg hover:bg-destructive/10"
-                  >
-                    <Trash2 className="w-3 h-3 text-destructive" />
-                  </button>
-                </div>
+                   <button
+                     onClick={() => handleEdit(coupon)}
+                     className="p-1.5 bg-secondary rounded-lg hover:bg-muted"
+                   >
+                     <Edit2 className="w-3 h-3 text-foreground" />
+                   </button>
+                   {coupon.is_user_specific && (
+                     <button
+                       onClick={() => setSelectedCouponForAssignment(coupon)}
+                       className="p-1.5 bg-secondary rounded-lg hover:bg-primary/10"
+                     >
+                       <Users className="w-3 h-3 text-primary" />
+                     </button>
+                   )}
+                   <button
+                     onClick={() => setDeletingId(coupon.id)}
+                     className="p-1.5 bg-secondary rounded-lg hover:bg-destructive/10"
+                   >
+                     <Trash2 className="w-3 h-3 text-destructive" />
+                   </button>
+                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-2 text-[10px] mb-2">
@@ -358,9 +318,9 @@ export default function AdminCouponsTab() {
                 </div>
               </div>
 
-              {coupon.assigned_user_emails?.length > 0 && (
+              {coupon.is_user_specific && (
                 <p className="text-[10px] text-muted-foreground mb-2">
-                  👤 Asignado a {coupon.assigned_user_emails.length} usuario{coupon.assigned_user_emails.length > 1 ? 's' : ''}
+                  👤 Asignado a usuarios específicos
                 </p>
               )}
 
@@ -375,24 +335,31 @@ export default function AdminCouponsTab() {
       )}
 
       <AlertDialog open={!!deletingId} onOpenChange={(open) => { if (!open) setDeletingId(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar cupón?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción no se puede deshacer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => { deleteCouponMutation.mutate(deletingId); }}
-            >
-              Eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
-}
+         <AlertDialogContent>
+           <AlertDialogHeader>
+             <AlertDialogTitle>¿Eliminar cupón?</AlertDialogTitle>
+             <AlertDialogDescription>
+               Esta acción no se puede deshacer.
+             </AlertDialogDescription>
+           </AlertDialogHeader>
+           <AlertDialogFooter>
+             <AlertDialogCancel>Cancelar</AlertDialogCancel>
+             <AlertDialogAction
+               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+               onClick={() => { deleteCouponMutation.mutate(deletingId); }}
+             >
+               Eliminar
+             </AlertDialogAction>
+           </AlertDialogFooter>
+         </AlertDialogContent>
+       </AlertDialog>
+
+       {selectedCouponForAssignment && (
+         <AdminCouponAssignments
+           coupon={selectedCouponForAssignment}
+           onClose={() => setSelectedCouponForAssignment(null)}
+         />
+       )}
+      </div>
+      );
+      }
