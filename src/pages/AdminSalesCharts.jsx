@@ -182,7 +182,7 @@ export default function AdminSalesCharts() {
                     />
                     <Legend />
                     <Line type="monotone" dataKey="revenue" stroke="hsl(var(--success))" strokeWidth={2} name="Ingresos ($)" />
-                    <Line type="monotone" dataKey="orders" stroke="hsl(var(--primary))" strokeWidth={2} name="Órdenes" yAxisId="right" />
+                    <Line type="monotone" dataKey="orders" stroke="hsl(var(--primary))" strokeWidth={2} name="Órdenes" />
                   </LineChart>
                 </ResponsiveContainer>
               )}
