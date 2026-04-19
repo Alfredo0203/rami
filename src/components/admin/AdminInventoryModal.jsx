@@ -13,7 +13,7 @@ export default function AdminInventoryModal({ product, open, onOpenChange }) {
   const [quantity, setQuantity] = useState('');
   const [costPerUnit, setCostPerUnit] = useState('');
   const [notes, setNotes] = useState('');
-  const [movementType, setMovementType] = useState('adjustment'); // purchase, sale, adjustment, return
+  const [movementType, setMovementType] = useState('return'); // return, adjustment
   const queryClient = useQueryClient();
 
   const addInventoryMutation = useMutation({
@@ -34,10 +34,10 @@ export default function AdminInventoryModal({ product, open, onOpenChange }) {
         throw new Error('El stock no puede ser negativo');
       }
 
-      // Calcular costo promedio ponderado SOLO para entradas (compras/devoluciones)
+      // Calcular costo promedio ponderado SOLO para devoluciones
       let updatedCostPerUnit = product.cost_per_unit || 0;
       
-      if (movementType === 'purchase' || movementType === 'return') {
+      if (movementType === 'return') {
         const currentTotalValue = currentStock * updatedCostPerUnit;
         const newTotalValue = currentTotalValue + totalCost;
         const newTotalStock = currentStock + qty;
@@ -62,11 +62,11 @@ export default function AdminInventoryModal({ product, open, onOpenChange }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
-      toast.success(movementType === 'purchase' ? 'Inventario agregado' : 'Inventario actualizado');
+      toast.success('Inventario actualizado');
       setQuantity('');
       setCostPerUnit('');
       setNotes('');
-      setMovementType('adjustment');
+      setMovementType('return');
       onOpenChange(false);
     },
     onError: (error) => {
@@ -82,9 +82,9 @@ export default function AdminInventoryModal({ product, open, onOpenChange }) {
     
     const qty = parseFloat(quantity);
     
-    // Para compras y devoluciones, el costo es obligatorio
-    if ((movementType === 'purchase' || movementType === 'return') && (!costPerUnit || isNaN(costPerUnit))) {
-      toast.error('Completa el costo unitario para compras/devoluciones');
+    // Para devoluciones, el costo es obligatorio
+    if (movementType === 'return' && (!costPerUnit || isNaN(costPerUnit))) {
+      toast.error('Completa el costo unitario para devoluciones');
       return;
     }
     
@@ -117,12 +117,6 @@ export default function AdminInventoryModal({ product, open, onOpenChange }) {
                 <SelectValue placeholder="Seleccionar tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="purchase">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-success" />
-                    <span>Compra (Entrada)</span>
-                  </div>
-                </SelectItem>
                 <SelectItem value="return">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-chart-4" />
@@ -130,11 +124,11 @@ export default function AdminInventoryModal({ product, open, onOpenChange }) {
                   </div>
                 </SelectItem>
                 <SelectItem value="adjustment">
-                    <div className="flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4 text-warning" />
-                      <span>Ajuste (Manual)</span>
-                    </div>
-                  </SelectItem>
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-warning" />
+                    <span>Ajuste (Manual)</span>
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -147,7 +141,7 @@ export default function AdminInventoryModal({ product, open, onOpenChange }) {
               type="number"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
-              placeholder={movementType === 'purchase' ? "Ej: 10" : movementType === 'return' ? "Ej: 5" : "Ej: -5 (pérdida) o 3 (corrección)"}
+              placeholder={movementType === 'return' ? "Ej: 5" : "Ej: -5 (pérdida) o 3 (corrección)"}
             />
             <p className="text-[10px] text-muted-foreground mt-1">
               Stock actual: <span className="font-semibold">{product.stock || 0}</span> → 
@@ -157,7 +151,7 @@ export default function AdminInventoryModal({ product, open, onOpenChange }) {
             </p>
           </div>
 
-          {(movementType === 'purchase' || movementType === 'return') && (
+          {movementType === 'return' && (
             <div>
               <label className="text-xs font-medium text-muted-foreground">Costo Unitario</label>
               <Input
@@ -176,9 +170,8 @@ export default function AdminInventoryModal({ product, open, onOpenChange }) {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder={
-                 movementType === 'purchase' ? "Ej: Compra a proveedor XYZ" :
-                 movementType === 'adjustment' ? "Ej: Producto dañado, pérdida en inventario" :
-                 "Ej: Devolución de cliente"
+                 movementType === 'return' ? "Ej: Devolución de cliente" :
+                 "Ej: Producto dañado, pérdida en inventario"
                }
               className="h-20"
             />
@@ -189,18 +182,18 @@ export default function AdminInventoryModal({ product, open, onOpenChange }) {
              )}
           </div>
 
-          {quantity && ((movementType === 'purchase' || movementType === 'return') ? costPerUnit : true) && (
+          {quantity && (movementType === 'return' ? costPerUnit : true) && (
             <div className={`rounded-lg p-2 ${parseFloat(quantity) < 0 ? 'bg-destructive/10' : 'bg-secondary/50'}`}>
               <p className="text-xs text-muted-foreground">
                 {parseFloat(quantity) < 0 ? 'Reducción de' : 'Costo total:'} <span className="font-semibold">${Math.abs(parseFloat(quantity) * ((costPerUnit && parseFloat(costPerUnit)) || (product.cost_per_unit || 0))).toFixed(2)}</span>
               </p>
-              {movementType === 'purchase' || movementType === 'return' ? (
+              {movementType === 'return' && (
                 <p className="text-[10px] text-muted-foreground mt-1">
                   Nuevo costo promedio: <span className="font-semibold text-primary">
                     ${((product.stock * product.cost_per_unit + parseFloat(quantity) * parseFloat(costPerUnit)) / (product.stock + parseFloat(quantity))).toFixed(2)}
                   </span>
                 </p>
-              ) : null}
+              )}
             </div>
           )}
         </div>
@@ -213,7 +206,7 @@ export default function AdminInventoryModal({ product, open, onOpenChange }) {
             onClick={handleSubmit}
             disabled={addInventoryMutation.isPending || !quantity}
             className={
-              movementType === 'purchase' || movementType === 'return' ? 'bg-success hover:bg-success/90' :
+              movementType === 'return' ? 'bg-success hover:bg-success/90' :
               'bg-primary hover:bg-primary/90'
             }
           >
@@ -223,7 +216,6 @@ export default function AdminInventoryModal({ product, open, onOpenChange }) {
               </>
             ) : (
               <>
-                {movementType === 'purchase' && 'Registrar Compra'}
                 {movementType === 'return' && 'Registrar Devolución'}
                 {movementType === 'adjustment' && 'Aplicar Ajuste'}
               </>
