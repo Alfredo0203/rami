@@ -2,6 +2,7 @@ import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLocation, useNavigationType } from 'react-router-dom';
 import DevModeGuard from './components/DevModeGuard';
+import WhatsAppButton from './components/support/WhatsAppButton';
 
 const TAB_PAGES = ['Home', 'Browse', 'Orders', 'Account'];
 let prevTabIdx = 0;
@@ -42,6 +43,7 @@ export default function Layout({ children, currentPageName }) {
           </DevModeGuard>
         </motion.div>
       </AnimatePresence>
+      <WhatsAppButton />
     </div>
   );
 }
