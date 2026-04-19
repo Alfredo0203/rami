@@ -179,6 +179,10 @@ export default function AdminSalesCharts() {
                         borderRadius: '8px',
                       }}
                       labelStyle={{ color: 'hsl(var(--foreground))' }}
+                      formatter={(value, name) => {
+                        if (name === 'Ingresos ($)') return `$${value.toFixed(2)}`;
+                        return value;
+                      }}
                     />
                     <Legend />
                     <Line type="monotone" dataKey="revenue" stroke="hsl(var(--success))" strokeWidth={2} name="Ingresos ($)" />
@@ -207,6 +211,10 @@ export default function AdminSalesCharts() {
                         borderRadius: '8px',
                       }}
                       labelStyle={{ color: 'hsl(var(--foreground))' }}
+                      formatter={(value, name) => {
+                        if (name === 'Ingresos ($)') return `$${value.toFixed(2)}`;
+                        return value;
+                      }}
                     />
                     <Legend />
                     <Bar dataKey="revenue" fill="hsl(var(--success))" name="Ingresos ($)" />
