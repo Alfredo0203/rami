@@ -3,9 +3,10 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { ArrowLeft, MapPin, CreditCard, Banknote, Loader2, Plus } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Banknote, Loader2, Plus, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import AddressForm from '@/components/addresses/AddressForm';
 
@@ -17,6 +18,9 @@ export default function Checkout() {
   const [allowedPaymentMethods, setAllowedPaymentMethods] = useState(['credit_card']);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [user, setUser] = useState(null);
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -48,7 +52,18 @@ export default function Checkout() {
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.product_price || 0) * (item.quantity || 0), 0);
   const shipping = subtotal >= 15 ? 0 : 4.99;
-  const total = subtotal + shipping;
+  let discount = 0;
+  if (appliedCoupon) {
+    if (appliedCoupon.discount_type === 'percentage') {
+      discount = (subtotal * appliedCoupon.discount_value) / 100;
+      if (appliedCoupon.maximum_discount_amount) {
+        discount = Math.min(discount, appliedCoupon.maximum_discount_amount);
+      }
+    } else {
+      discount = appliedCoupon.discount_value;
+    }
+  }
+  const total = Math.max(0, subtotal - discount + shipping);
 
   const saveAddressMutation = useMutation({
     mutationFn: (data) => base44.entities.Address.create(data),
@@ -59,6 +74,54 @@ export default function Checkout() {
       toast.success('¡Dirección guardada!');
     },
   });
+
+  const validateCouponMutation = useMutation({
+    mutationFn: async (code) => {
+      const coupons = await base44.entities.Coupon.filter({ code: code.toUpperCase(), is_active: true });
+      if (coupons.length === 0) throw new Error('Cupón no válido o expirado');
+      
+      const coupon = coupons[0];
+      const now = new Date();
+      if (coupon.starts_at && new Date(coupon.starts_at) > now) {
+        throw new Error('Este cupón aún no está disponible');
+      }
+      if (coupon.expires_at && new Date(coupon.expires_at) < now) {
+        throw new Error('Este cupón ha expirado');
+      }
+      if (coupon.minimum_order_amount && subtotal < coupon.minimum_order_amount) {
+        throw new Error(`Compra mínima requerida: $${coupon.minimum_order_amount.toFixed(2)}`);
+      }
+      if (coupon.usage_limit && coupon.used_count >= coupon.usage_limit) {
+        throw new Error('Este cupón ha alcanzado su límite de uso');
+      }
+      
+      return coupon;
+    },
+  });
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error('Ingresa un código de cupón');
+      return;
+    }
+    
+    setValidatingCoupon(true);
+    try {
+      const coupon = await validateCouponMutation.mutateAsync(couponCode);
+      setAppliedCoupon(coupon);
+      setCouponCode('');
+      toast.success('¡Cupón aplicado correctamente!');
+    } catch (err) {
+      toast.error(err.message || 'Error al validar cupón');
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+  };
 
   const placeOrderMutation = useMutation({
     mutationFn: async () => {
@@ -91,6 +154,7 @@ export default function Checkout() {
         cartItems: cleanedCartItems,
         shippingAddress,
         paymentMethod,
+        couponCode: appliedCoupon?.code,
       });
 
       if (res.data?.error) throw new Error(res.data.details?.join('\n') || res.data.error);
@@ -224,6 +288,48 @@ export default function Checkout() {
           </RadioGroup>
         </div>
 
+        {/* Coupon */}
+        <div className="bg-card rounded-xl p-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <Ticket className="w-4 h-4 text-primary" />
+            <h2 className="text-sm font-bold text-foreground">Código de Cupón</h2>
+          </div>
+          {appliedCoupon ? (
+            <div className="flex items-center justify-between bg-success/10 border border-success rounded-lg p-3">
+              <div>
+                <p className="text-sm font-medium text-foreground">{appliedCoupon.code}</p>
+                <p className="text-xs text-muted-foreground">
+                  {appliedCoupon.discount_type === 'percentage' 
+                    ? `${appliedCoupon.discount_value}% descuento` 
+                    : `$${appliedCoupon.discount_value.toFixed(2)} descuento`}
+                </p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={handleRemoveCoupon} className="text-xs">
+                Quitar
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Input
+                placeholder="Ingresa tu código"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                disabled={validatingCoupon}
+                className="text-sm"
+              />
+              <Button
+                onClick={handleApplyCoupon}
+                disabled={validatingCoupon || !couponCode.trim()}
+                variant="outline"
+                className="px-3"
+              >
+                {validatingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Aplicar'}
+              </Button>
+            </div>
+          )}
+        </div>
+
         {/* Order Summary */}
         <div className="bg-card rounded-xl p-4 shadow-sm">
           <h2 className="text-sm font-bold text-foreground mb-3">Resumen del Pedido</h2>
@@ -238,6 +344,12 @@ export default function Checkout() {
               <span className="text-muted-foreground">Subtotal</span>
               <span className="text-foreground">${subtotal.toFixed(2)}</span>
             </div>
+            {discount > 0 && (
+              <div className="flex justify-between text-sm text-success">
+                <span>Descuento</span>
+                <span>-${discount.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Envío</span>
               <span className={shipping === 0 ? 'text-success' : 'text-foreground'}>{shipping === 0 ? 'GRATIS' : `$${shipping.toFixed(2)}`}</span>
