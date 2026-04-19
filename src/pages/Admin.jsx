@@ -138,16 +138,16 @@ export default function Admin() {
 
       <div className="flex flex-col h-[calc(100vh-310px)]">
         <Tabs defaultValue="products" className="flex flex-col flex-1 min-h-0">
-          <div className="px-4 sticky top-0 z-40 bg-background">
-            <TabsList className="w-full grid grid-cols-6">
-              <TabsTrigger value="products" className="flex-1">Productos</TabsTrigger>
-              <TabsTrigger value="orders" className="flex-1">Pedidos</TabsTrigger>
-              <TabsTrigger value="users" className="flex-1">Usuarios</TabsTrigger>
-              <TabsTrigger value="categories" className="flex-1"><LayoutGrid className="w-3.5 h-3.5" /></TabsTrigger>
-              <TabsTrigger value="coupons" className="flex-1"><Ticket className="w-3.5 h-3.5" /></TabsTrigger>
-              <TabsTrigger value="reviews" className="flex-1"><MessageSquare className="w-3.5 h-3.5" /></TabsTrigger>
+          <div className="px-4 sticky top-0 z-40 bg-background overflow-x-auto">
+            <TabsList className="w-full justify-start bg-transparent">
+              <TabsTrigger value="products" className="text-xs">Productos</TabsTrigger>
+              <TabsTrigger value="orders" className="text-xs">Pedidos</TabsTrigger>
+              <TabsTrigger value="users" className="text-xs">Usuarios</TabsTrigger>
+              <TabsTrigger value="categories" className="px-2"><LayoutGrid className="w-4 h-4" /></TabsTrigger>
+              <TabsTrigger value="coupons" className="px-2"><Ticket className="w-4 h-4" /></TabsTrigger>
+              <TabsTrigger value="reviews" className="px-2"><MessageSquare className="w-4 h-4" /></TabsTrigger>
               {user?.role === 'super_admin' && (
-                <TabsTrigger value="settings" className="flex-1"><Settings className="w-3.5 h-3.5" /></TabsTrigger>
+                <TabsTrigger value="settings" className="px-2"><Settings className="w-4 h-4" /></TabsTrigger>
               )}
             </TabsList>
           </div>
