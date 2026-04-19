@@ -138,20 +138,18 @@ export default function Admin() {
 
       <div className="flex flex-col h-[calc(100vh-310px)]">
         <Tabs defaultValue="products" className="flex flex-col flex-1 min-h-0">
-          <div className="sticky top-0 z-40 bg-background border-b border-border">
-            <div className="overflow-x-auto hide-scrollbar">
-              <TabsList className="w-max px-4 bg-transparent">
-                <TabsTrigger value="products">Productos</TabsTrigger>
-                <TabsTrigger value="orders">Pedidos</TabsTrigger>
-                <TabsTrigger value="users">Usuarios</TabsTrigger>
-                <TabsTrigger value="categories" className="px-3"><LayoutGrid className="w-4 h-4" /></TabsTrigger>
-                <TabsTrigger value="coupons" className="px-3"><Ticket className="w-4 h-4" /></TabsTrigger>
-                <TabsTrigger value="reviews" className="px-3"><MessageSquare className="w-4 h-4" /></TabsTrigger>
-                {user?.role === 'super_admin' && (
-                  <TabsTrigger value="settings" className="px-3"><Settings className="w-4 h-4" /></TabsTrigger>
-                )}
-              </TabsList>
-            </div>
+          <div className="px-4 sticky top-0 z-40 bg-background overflow-x-auto">
+            <TabsList className="w-full justify-start bg-transparent">
+              <TabsTrigger value="products" className="text-xs">Productos</TabsTrigger>
+              <TabsTrigger value="orders" className="text-xs">Pedidos</TabsTrigger>
+              <TabsTrigger value="users" className="text-xs">Usuarios</TabsTrigger>
+              <TabsTrigger value="categories" className="px-2"><LayoutGrid className="w-4 h-4" /></TabsTrigger>
+              <TabsTrigger value="coupons" className="px-2"><Ticket className="w-4 h-4" /></TabsTrigger>
+              <TabsTrigger value="reviews" className="px-2"><MessageSquare className="w-4 h-4" /></TabsTrigger>
+              {user?.role === 'super_admin' && (
+                <TabsTrigger value="settings" className="px-2"><Settings className="w-4 h-4" /></TabsTrigger>
+              )}
+            </TabsList>
           </div>
 
           <div className="flex-1 overflow-y-auto">
