@@ -49,6 +49,9 @@ export default function SupportChatModal({ isOpen, onClose }) {
       
       if (selectedOrder) {
         fullMessage += `\n\nPedido: ${selectedOrder.order_number}`;
+        if (selectedOrder.created_date) {
+          fullMessage += `\nFecha: ${formatDate(selectedOrder.created_date)}`;
+        }
         if (selectedOrder.tracking_number) {
           fullMessage += `\nRastreo: ${selectedOrder.tracking_number}`;
         }
@@ -78,6 +81,9 @@ export default function SupportChatModal({ isOpen, onClose }) {
     
     if (selectedOrder) {
       fullMessage += `\n\nPedido: ${selectedOrder.order_number}`;
+      if (selectedOrder.created_date) {
+        fullMessage += `\nFecha: ${formatDate(selectedOrder.created_date)}`;
+      }
       if (selectedOrder.tracking_number) {
         fullMessage += `\nRastreo: ${selectedOrder.tracking_number}`;
       }
@@ -100,6 +106,15 @@ export default function SupportChatModal({ isOpen, onClose }) {
     shipped: 'Enviado',
     delivered: 'Entregado',
     cancelled: 'Cancelado'
+  };
+
+  const formatDate = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('es-SV', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch {
+      return dateString;
+    }
   };
 
   return (
@@ -162,7 +177,10 @@ export default function SupportChatModal({ isOpen, onClose }) {
                             : 'border-gray-200 hover:bg-gray-50'
                         }`}
                       >
-                        <div className="font-medium text-gray-900">Pedido #{order.order_number}</div>
+                        <div className="flex justify-between items-start">
+                          <div className="font-medium text-gray-900">Pedido #{order.order_number}</div>
+                          <div className="text-xs text-gray-500">{formatDate(order.created_date)}</div>
+                        </div>
                         <div className="text-xs text-gray-600 mt-1">Total: ${order.total?.toFixed(2)}</div>
                         <div className="text-xs text-gray-600">Estado: {statusLabels[order.status] || order.status}</div>
                         {order.tracking_number && (
@@ -214,6 +232,9 @@ export default function SupportChatModal({ isOpen, onClose }) {
             <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
               <p className="text-xs text-blue-600 font-medium">Pedido seleccionado:</p>
               <p className="text-sm font-semibold text-blue-900">#{selectedOrder.order_number}</p>
+              {selectedOrder.created_date && (
+                <p className="text-xs text-blue-700">Fecha: {formatDate(selectedOrder.created_date)}</p>
+              )}
               {selectedOrder.tracking_number && (
                 <p className="text-xs text-blue-700">Rastreo: {selectedOrder.tracking_number}</p>
               )}
