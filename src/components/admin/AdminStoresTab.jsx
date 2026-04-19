@@ -6,11 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Edit2, Trash2, Loader2, Store, Upload, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader2, Store, Upload, X, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import StoreModal from '../shop/StoreModal';
 
 export default function AdminStoresTab() {
   const queryClient = useQueryClient();
@@ -18,6 +19,7 @@ export default function AdminStoresTab() {
   const [editingStore, setEditingStore] = useState(null);
   const [deletingStoreId, setDeletingStoreId] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [viewingStore, setViewingStore] = useState(null);
 
   const [form, setForm] = useState({
     name: '',
@@ -37,6 +39,16 @@ export default function AdminStoresTab() {
   const { data: users = [] } = useQuery({
     queryKey: ['admin-users'],
     queryFn: () => base44.entities.User.list(),
+  });
+
+  const { data: products = [] } = useQuery({
+    queryKey: ['admin-products'],
+    queryFn: () => base44.entities.Product.list(),
+  });
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => base44.entities.Category.list('sort_order'),
   });
 
   const saveMutation = useMutation({
@@ -151,8 +163,16 @@ export default function AdminStoresTab() {
                   )}
                   <div className="flex gap-2 mt-2">
                     <button
+                      onClick={() => setViewingStore(store)}
+                      className="p-1.5 bg-secondary rounded hover:bg-primary/10"
+                      title="Ver tienda"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-primary" />
+                    </button>
+                    <button
                       onClick={() => handleOpen(store)}
                       className="p-1.5 bg-secondary rounded hover:bg-muted"
+                      title="Editar"
                     >
                       <Edit2 className="w-3.5 h-3.5 text-foreground" />
                     </button>
@@ -160,6 +180,7 @@ export default function AdminStoresTab() {
                       <button
                         onClick={() => setDeletingStoreId(store.id)}
                         className="p-1.5 bg-secondary rounded hover:bg-destructive/10"
+                        title="Eliminar"
                       >
                         <Trash2 className="w-3.5 h-3.5 text-destructive" />
                       </button>
@@ -301,6 +322,16 @@ export default function AdminStoresTab() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Store View Modal */}
+      {viewingStore && (
+        <StoreModal
+          store={viewingStore}
+          products={products}
+          categories={categories}
+          onClose={() => setViewingStore(null)}
+        />
       )}
 
       {/* Delete Confirmation */}
