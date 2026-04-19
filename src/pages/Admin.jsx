@@ -315,43 +315,20 @@ export default function Admin() {
           {/* Filtro multi-selección de tiendas */}
           <div className="space-y-2">
             <label className="text-xs font-medium text-foreground block">Filtrar por tienda:</label>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => {
-                  if (selectedStoreFilters.includes('main')) {
-                    setSelectedStoreFilters(selectedStoreFilters.filter(s => s !== 'main'));
-                  } else {
-                    setSelectedStoreFilters([...selectedStoreFilters, 'main']);
-                  }
-                }}
-                className={`px-3 py-2 rounded-lg text-xs font-medium transition ${
-                  selectedStoreFilters.includes('main')
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary text-secondary-foreground hover:bg-muted'
-                }`}
-              >
-                Mi Tienda (Empresa)
-              </button>
+            <select
+              multiple
+              value={selectedStoreFilters}
+              onChange={(e) => {
+                const values = Array.from(e.target.selectedOptions, option => option.value);
+                setSelectedStoreFilters(values);
+              }}
+              className="w-full px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="main">Rami</option>
               {stores.map(store => (
-                <button
-                  key={store.id}
-                  onClick={() => {
-                    if (selectedStoreFilters.includes(store.id)) {
-                      setSelectedStoreFilters(selectedStoreFilters.filter(s => s !== store.id));
-                    } else {
-                      setSelectedStoreFilters([...selectedStoreFilters, store.id]);
-                    }
-                  }}
-                  className={`px-3 py-2 rounded-lg text-xs font-medium transition ${
-                    selectedStoreFilters.includes(store.id)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary text-secondary-foreground hover:bg-muted'
-                  }`}
-                >
-                  {store.name}
-                </button>
+                <option key={store.id} value={store.id}>{store.name}</option>
               ))}
-            </div>
+            </select>
           </div>
 
           {loadingOrders ? (
