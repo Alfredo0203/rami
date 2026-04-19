@@ -136,20 +136,25 @@ export default function Admin() {
         </Button>
       </div>
 
-      <Tabs defaultValue="products" className="px-4">
-         <TabsList className="w-full grid grid-cols-6">
-           <TabsTrigger value="products" className="flex-1">Productos</TabsTrigger>
-           <TabsTrigger value="orders" className="flex-1">Pedidos</TabsTrigger>
-           <TabsTrigger value="users" className="flex-1">Usuarios</TabsTrigger>
-           <TabsTrigger value="categories" className="flex-1"><LayoutGrid className="w-3.5 h-3.5" /></TabsTrigger>
-           <TabsTrigger value="coupons" className="flex-1"><Ticket className="w-3.5 h-3.5" /></TabsTrigger>
-           <TabsTrigger value="reviews" className="flex-1"><MessageSquare className="w-3.5 h-3.5" /></TabsTrigger>
-           {user?.role === 'super_admin' && (
-             <TabsTrigger value="settings" className="flex-1"><Settings className="w-3.5 h-3.5" /></TabsTrigger>
-           )}
-         </TabsList>
+      <div className="flex flex-col h-[calc(100vh-310px)]">
+        <Tabs defaultValue="products" className="flex flex-col flex-1 min-h-0">
+          <div className="px-4 sticky top-0 z-40 bg-background">
+            <TabsList className="w-full grid grid-cols-6">
+              <TabsTrigger value="products" className="flex-1">Productos</TabsTrigger>
+              <TabsTrigger value="orders" className="flex-1">Pedidos</TabsTrigger>
+              <TabsTrigger value="users" className="flex-1">Usuarios</TabsTrigger>
+              <TabsTrigger value="categories" className="flex-1"><LayoutGrid className="w-3.5 h-3.5" /></TabsTrigger>
+              <TabsTrigger value="coupons" className="flex-1"><Ticket className="w-3.5 h-3.5" /></TabsTrigger>
+              <TabsTrigger value="reviews" className="flex-1"><MessageSquare className="w-3.5 h-3.5" /></TabsTrigger>
+              {user?.role === 'super_admin' && (
+                <TabsTrigger value="settings" className="flex-1"><Settings className="w-3.5 h-3.5" /></TabsTrigger>
+              )}
+            </TabsList>
+          </div>
 
-        <TabsContent value="products" className="space-y-3 mt-3">
+          <div className="flex-1 overflow-y-auto">
+            <div className="px-4">
+              <TabsContent value="products" className="space-y-3 mt-3">
           <Button
             onClick={() => { setEditingProduct(null); setShowProductForm(true); }}
             className="w-full bg-primary text-primary-foreground rounded-full h-10"
@@ -218,7 +223,7 @@ export default function Admin() {
           )}
         </TabsContent>
 
-        <TabsContent value="users" className="space-y-3 mt-3 pb-6">
+        <TabsContent value="users" className="space-y-3 mt-3">
           {loadingUsers ? (
             <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
           ) : allUsers.length === 0 ? (
@@ -249,7 +254,10 @@ export default function Admin() {
             <AdminSettingsTab currentUser={user} />
           </TabsContent>
         )}
-      </Tabs>
+        </div>
+        </div>
+        </Tabs>
+        </div>
 
       {showProductForm && (
         <AdminProductForm
