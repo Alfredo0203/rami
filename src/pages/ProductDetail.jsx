@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import VariantSelector from '@/components/shop/VariantSelector';
 import RelatedProducts from '@/components/shop/RelatedProducts';
+import { useSEO } from '@/hooks/useSEO';
 
 export default function ProductDetail() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -271,6 +272,16 @@ export default function ProductDetail() {
     : 0;
 
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+
+  // SEO: Update meta tags for social sharing
+  const productUrl = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}?id=${productId}` : '';
+  useSEO({
+    title: `${product?.name} - Tienda`,
+    description: product?.description || `Compra ${product?.name} en nuestra tienda en línea`,
+    image: images?.[safeImageIndex] || product?.images?.[0],
+    url: productUrl,
+    type: 'product',
+  });
 
   // All attribute keys that exist across variants
   const allAttrKeys = hasVariants
