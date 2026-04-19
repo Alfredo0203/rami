@@ -11,6 +11,7 @@ import AdminReviewsTab from '../components/admin/AdminReviewsTab';
 import AdminCategoriesTab from '../components/admin/AdminCategoriesTab';
 import AdminCouponsTab from '../components/admin/AdminCouponsTab';
 import AdminStoresTab from '../components/admin/AdminStoresTab';
+import AdminOrdersByStoreTab from '../components/admin/AdminOrdersByStoreTab';
 import AdminInventoryModal from '../components/admin/AdminInventoryModal';
 import InventoryHistoryModal from '../components/admin/InventoryHistoryModal';
 import { Button } from '@/components/ui/button';
@@ -156,6 +157,7 @@ export default function Admin() {
             <TabsList className="w-full justify-start bg-transparent">
               <TabsTrigger value="products" className="text-xs">Productos</TabsTrigger>
               <TabsTrigger value="orders" className="text-xs">Pedidos</TabsTrigger>
+              <TabsTrigger value="orders-by-store" className="text-xs">Por Tienda</TabsTrigger>
               <TabsTrigger value="users" className="text-xs">Usuarios</TabsTrigger>
               <TabsTrigger value="categories" className="px-2"><LayoutGrid className="w-4 h-4" /></TabsTrigger>
               <TabsTrigger value="coupons" className="px-2"><Ticket className="w-4 h-4" /></TabsTrigger>
@@ -315,6 +317,10 @@ export default function Admin() {
           ) : (
             orders.map(order => <AdminOrderCard key={order.id} order={order} />)
           )}
+        </TabsContent>
+
+        <TabsContent value="orders-by-store" className="space-y-3 mt-3">
+          <AdminOrdersByStoreTab />
         </TabsContent>
 
         <TabsContent value="users" className="space-y-3 mt-3">
