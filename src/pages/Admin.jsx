@@ -221,8 +221,10 @@ export default function Admin() {
               if (sortBy === 'stock') filtered.sort((a, b) => getProductStock(a) - getProductStock(b));
               if (sortBy === 'sold') filtered.sort((a, b) => getProductSold(b) - getProductSold(a));
 
-              return filtered.map(product => (
-              <div key={product.id} className="bg-card rounded-xl p-3 shadow-sm flex gap-3">
+              return (
+                <div className="space-y-3">
+                  {filtered.map(product => (
+                  <div key={product.id} className="bg-card rounded-xl p-3 shadow-sm flex gap-3">
                 <img
                   src={product.images?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200'}
                   alt={product.name}
@@ -280,8 +282,10 @@ export default function Admin() {
                    </button>
                  </div>
                  </div>
-                 ))
-                 })
+                  ))}
+                 </div>
+                 );
+                 })()
                  )}
         </TabsContent>
 
