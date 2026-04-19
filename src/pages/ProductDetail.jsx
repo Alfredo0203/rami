@@ -412,17 +412,26 @@ export default function ProductDetail() {
           </div>
           <h1 className="text-base font-semibold text-foreground leading-tight">{product.name}</h1>
           {(store || product.store_id === undefined) && (
-            <div className="flex items-center gap-2 mt-2">
-              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-                {store?.logo_url ? (
-                  <img src={store.logo_url} alt={store.name} className="w-full h-full object-cover" />
-                ) : (
-                  <img src="https://drive.google.com/uc?export=view&id=1XvzxcscLVC00UVnvggpG1qTLTiyQ_6d0" alt="RAmi" className="w-full h-full object-cover" />
-                )}
+            <div className="mt-3 p-3 bg-secondary/50 rounded-lg space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                  {store?.logo_url ? (
+                    <img src={store.logo_url} alt={store.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <img src="https://drive.google.com/uc?export=view&id=1XvzxcscLVC00UVnvggpG1qTLTiyQ_6d0" alt="RAmi" className="w-full h-full object-cover" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-foreground">{store?.name || 'RAmi'}</h3>
+                  <p className="text-xs text-muted-foreground">Vendedor oficial</p>
+                </div>
               </div>
-              <span className="text-xs text-muted-foreground">
-                Vendido por <span className="font-medium text-foreground">{store?.name || 'RAmi'}</span>
-              </span>
+              {store?.description && (
+                <p className="text-xs text-muted-foreground leading-relaxed">{store.description}</p>
+              )}
+              {store?.phone && (
+                <p className="text-xs text-muted-foreground">📞 {store.phone}</p>
+              )}
             </div>
           )}
         </div>
