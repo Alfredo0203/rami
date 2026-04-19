@@ -20,6 +20,14 @@ export default function AdminInventoryModal({ product, open, onOpenChange }) {
       const cost = parseFloat(costPerUnit);
       const totalCost = qty * cost;
 
+      // Calcular costo promedio ponderado
+      const currentStock = product.stock || 0;
+      const currentCost = product.cost_per_unit || 0;
+      const currentTotalValue = currentStock * currentCost;
+      const newTotalValue = currentTotalValue + totalCost;
+      const newTotalStock = currentStock + qty;
+      const averageCost = newTotalStock > 0 ? newTotalValue / newTotalStock : cost;
+
       // Crear registro en InventoryLog
       await base44.entities.InventoryLog.create({
         product_id: product.id,
@@ -29,10 +37,10 @@ export default function AdminInventoryModal({ product, open, onOpenChange }) {
         notes,
       });
 
-      // Actualizar stock y cost_per_unit del producto
+      // Actualizar stock y cost_per_unit del producto con costo promedio
       await base44.entities.Product.update(product.id, {
-        stock: (product.stock || 0) + qty,
-        cost_per_unit: cost,
+        stock: newTotalStock,
+        cost_per_unit: averageCost,
       });
     },
     onSuccess: () => {
