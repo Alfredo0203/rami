@@ -91,7 +91,7 @@ export default function StoreModal({ store, products, categories, orders = [], r
               <div>
                 <h1 className="text-lg font-bold text-foreground">{store.name}</h1>
                 {store.description && (
-                  <p className="text-xs text-muted-foreground line-clamp-2">{store.description}</p>
+                  <p className="text-xs text-muted-foreground">{store.description}</p>
                 )}
               </div>
             </div>
