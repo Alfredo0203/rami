@@ -470,7 +470,11 @@ export default function ProductDetail() {
 
       {/* Related products — al final */}
       {product.category_id && (
-        <RelatedProducts categoryId={product.category_id} currentProductId={productId} />
+        <RelatedProducts
+          categoryId={product.category_id}
+          currentProductId={productId}
+          currentTags={product.tags || []}
+        />
       )}
 
       {/* Bottom action bar */}
