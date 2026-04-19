@@ -1,0 +1,35 @@
+{
+  "name": "Store",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nombre de la tienda"
+    },
+    "owner_email": {
+      "type": "string",
+      "description": "Email del usuario due\u00f1o de la tienda"
+    },
+    "logo_url": {
+      "type": "string",
+      "description": "URL del logo de la tienda"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descripci\u00f3n de la tienda"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Tel\u00e9fono de contacto"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Si la tienda est\u00e1 activa"
+    }
+  },
+  "required": [
+    "name",
+    "owner_email"
+  ]
+}

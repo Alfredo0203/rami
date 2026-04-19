@@ -109,6 +109,10 @@
           "type": "number"
         }
       }
+    },
+    "store_id": {
+      "type": "string",
+      "description": "ID de la tienda (opcional - null si no tiene tienda)"
     }
   },
   "required": [

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,6 +24,7 @@ export default function AdminProductForm({ product, categories, onClose }) {
     brand: product?.brand || '',
     color: product?.color || '',
     stock: product?.stock || 0,
+    store_id: product?.store_id || '',
     rating: product?.rating || 0,
     review_count: product?.review_count || 0,
     sold_count: product?.sold_count || 0,
@@ -32,6 +33,11 @@ export default function AdminProductForm({ product, categories, onClose }) {
     has_variants: product?.has_variants || false,
     images: product?.images || [],
     tags: product?.tags?.join(', ') || '',
+  });
+
+  const { data: stores = [] } = useQuery({
+    queryKey: ['stores'],
+    queryFn: () => base44.entities.Store.list(),
   });
 
   const [uploading, setUploading] = useState(false);
@@ -123,6 +129,17 @@ export default function AdminProductForm({ product, categories, onClose }) {
         <div className="grid grid-cols-2 gap-3">
           <div><Label className="text-xs">Marca</Label><Input value={form.brand} onChange={e => setForm({...form, brand: e.target.value})} className="h-9 text-sm" placeholder="Nike, Samsung…" /></div>
           <div><Label className="text-xs">Color</Label><Input value={form.color} onChange={e => setForm({...form, color: e.target.value})} className="h-9 text-sm" placeholder="Rojo, Azul…" /></div>
+        </div>
+
+        <div>
+          <Label className="text-xs">Tienda (opcional)</Label>
+          <Select value={form.store_id} onValueChange={v => setForm({...form, store_id: v})}>
+            <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Sin tienda" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value={null}>Sin tienda</SelectItem>
+              {stores.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
 
         <div><Label className="text-xs">Etiquetas (separadas por coma)</Label><Input value={form.tags} onChange={e => setForm({...form, tags: e.target.value})} className="h-9 text-sm" placeholder="moda, verano" /></div>

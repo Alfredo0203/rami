@@ -46,6 +46,12 @@ export default function ProductDetail() {
     enabled: !!productId,
   });
 
+  const { data: store } = useQuery({
+    queryKey: ['store', product?.store_id],
+    queryFn: () => base44.entities.Store.get(product.store_id),
+    enabled: !!product?.store_id,
+  });
+
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart'],
     queryFn: () => base44.entities.CartItem.list().catch(() => []),
@@ -405,6 +411,20 @@ export default function ProductDetail() {
             )}
           </div>
           <h1 className="text-base font-semibold text-foreground leading-tight">{product.name}</h1>
+          {(store || product.store_id === undefined) && (
+            <div className="flex items-center gap-2 mt-2">
+              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                {store?.logo_url ? (
+                  <img src={store.logo_url} alt={store.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-[10px] font-bold text-primary">{(store?.name || 'Rami').charAt(0).toUpperCase()}</span>
+                )}
+              </div>
+              <span className="text-xs text-muted-foreground">
+                Vendido por <span className="font-medium text-foreground">{store?.name || 'Rami'}</span>
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Rating and sold */}
