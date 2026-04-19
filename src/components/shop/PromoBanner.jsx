@@ -17,7 +17,7 @@ function getSecondsUntilMidnight() {
   const now = new Date();
   const midnight = new Date();
   midnight.setHours(24, 0, 0, 0);
-  return Math.floor((midnight - now) / 1000);
+  return Math.max(Math.floor((midnight - now) / 1000), 0);
 }
 
 function CountdownUnit({ value, label }) {
@@ -38,7 +38,10 @@ export default function PromoBanner() {
   const [seconds, setSeconds] = useState(getSecondsUntilMidnight);
 
   useEffect(() => {
-    const id = setInterval(() => setSeconds(getSecondsUntilMidnight()), 1000);
+    const id = setInterval(() => {
+      const secs = getSecondsUntilMidnight();
+      setSeconds(secs === 0 ? 86400 : secs); // reinicia a 24h al llegar a 0
+    }, 1000);
     return () => clearInterval(id);
   }, []);
 
