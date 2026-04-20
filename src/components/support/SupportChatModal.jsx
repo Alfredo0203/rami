@@ -42,6 +42,10 @@ export default function SupportChatModal({ isOpen, onClose }) {
 
   const handleSelectOrder = (order) => {
     setSelectedOrder(order);
+    setShowOrderSelection(false);
+    const name = user?.full_name || 'Cliente';
+    const topic = currentTopic === 'delivery_time' ? '¿Cuál es el tiempo de entrega?' : 'Tengo una pregunta sobre mi pedido';
+    setMessage(`Hola, soy ${name}. ${topic}`);
   };
 
   const handleSendMessage = async () => {
