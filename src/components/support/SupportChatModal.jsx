@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send, MessageSquare, Phone, ChevronLeft } from 'lucide-react';
+import { X, Send, MessageSquare, ChevronLeft } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,10 @@ export default function SupportChatModal({ isOpen, onClose }) {
 
   useEffect(() => {
     if (isOpen) {
-      base44.auth.me().then(setUser);
+      base44.auth.me().then(u => {
+        setUser(u);
+        if (u?.full_name) setMessage(`Hola, soy ${u.full_name}. `);
+      });
       // Fetch WhatsApp number from settings
       base44.entities.AppSettings.filter({ key: 'global' })
         .then(results => {
@@ -24,6 +27,8 @@ export default function SupportChatModal({ isOpen, onClose }) {
             setWhatsappPhone(results[0].whatsapp_phone);
           }
         });
+    } else {
+      setMessage('');
     }
   }, [isOpen]);
 
@@ -42,38 +47,27 @@ export default function SupportChatModal({ isOpen, onClose }) {
   const handleSendMessage = async () => {
     if (!message.trim()) return;
 
-    setLoading(true);
-    try {
-      // Construir mensaje con detalles del pedido si está seleccionado
-      let fullMessage = `Hola, soy ${user?.full_name || 'Cliente'}. ${message}`;
-      
-      if (selectedOrder) {
-        fullMessage += `\n\nPedido: ${selectedOrder.order_number}`;
-        if (selectedOrder.created_date) {
-          fullMessage += `\nFecha: ${formatDate(selectedOrder.created_date)}`;
-        }
-        if (selectedOrder.tracking_number) {
-          fullMessage += `\nRastreo: ${selectedOrder.tracking_number}`;
-        }
-        if (selectedOrder.status) {
-          fullMessage += `\nEstado: ${selectedOrder.status}`;
-        }
+    let fullMessage = message;
+
+    if (selectedOrder) {
+      fullMessage += `\n\nPedido: ${selectedOrder.order_number}`;
+      if (selectedOrder.created_date) {
+        fullMessage += `\nFecha: ${formatDate(selectedOrder.created_date)}`;
       }
-
-      const messageText = encodeURIComponent(fullMessage);
-      const whatsappUrl = `https://wa.me/${whatsappPhone.replace(/\D/g, '')}?text=${messageText}`;
-
-      // Abrir WhatsApp en nueva ventana
-      window.open(whatsappUrl, '_blank', 'width=500,height=600');
-
-      // Limpiar y cerrar modal
-      setMessage('');
-      setSelectedOrder(null);
-      setShowOrderSelection(false);
-      setTimeout(() => onClose(), 1000);
-    } finally {
-      setLoading(false);
+      if (selectedOrder.tracking_number) {
+        fullMessage += `\nRastreo: ${selectedOrder.tracking_number}`;
+      }
+      if (selectedOrder.status) {
+        fullMessage += `\nEstado: ${selectedOrder.status}`;
+      }
     }
+
+    const whatsappUrl = `https://wa.me/${whatsappPhone.replace(/\D/g, '')}?text=${encodeURIComponent(fullMessage)}`;
+    window.open(whatsappUrl, '_blank', 'width=500,height=600');
+    setMessage('');
+    setSelectedOrder(null);
+    setShowOrderSelection(false);
+    onClose();
   };
 
   const handleQuickMessage = (preset) => {
@@ -259,16 +253,7 @@ export default function SupportChatModal({ isOpen, onClose }) {
             </Button>
           </div>
 
-          {/* Direct call option */}
-           <a
-             href={`https://wa.me/${whatsappPhone.replace(/\D/g, '')}`}
-             target="_blank"
-             rel="noopener noreferrer"
-             className="flex items-center justify-center gap-2 w-full p-2 bg-white border border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition text-sm font-medium"
-           >
-            <Phone className="w-4 h-4" />
-            Llamar directo a WhatsApp
-          </a>
+
         </div>
       </div>
     </div>
