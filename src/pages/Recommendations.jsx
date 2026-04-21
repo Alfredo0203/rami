@@ -7,6 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 
 const LAST_CONSULTED_KEY = 'recommendations_last_consulted';
+const CONVERSATION_ID_KEY = 'recommendations_conversation_id';
 const AGENT_NAME = 'product_recommender';
 
 const INITIAL_SUGGESTIONS = [
@@ -80,7 +81,23 @@ export default function Recommendations() {
   useEffect(() => {
     const stored = localStorage.getItem(LAST_CONSULTED_KEY);
     if (stored) setLastConsulted(new Date(stored));
-    base44.auth.me().then(setUser).catch(() => {}).finally(() => setInitializing(false));
+
+    const savedConvId = localStorage.getItem(CONVERSATION_ID_KEY);
+
+    base44.auth.me().then(setUser).catch(() => {}).finally(async () => {
+      if (savedConvId) {
+        try {
+          const conv = await base44.agents.getConversation(savedConvId);
+          if (conv) {
+            setConversation(conv);
+            setMessages(conv.messages || []);
+          }
+        } catch {
+          localStorage.removeItem(CONVERSATION_ID_KEY);
+        }
+      }
+      setInitializing(false);
+    });
   }, []);
 
   useEffect(() => {
@@ -106,6 +123,7 @@ export default function Recommendations() {
           metadata: { name: `Chat de ${user?.full_name || 'usuario'}` }
         });
         setConversation(conv);
+        localStorage.setItem(CONVERSATION_ID_KEY, conv.id);
         const now = new Date();
         localStorage.setItem(LAST_CONSULTED_KEY, now.toISOString());
         setLastConsulted(now);
