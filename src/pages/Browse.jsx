@@ -5,7 +5,8 @@ import PullToRefresh from '../components/shop/PullToRefresh';
 import ProductCard from '../components/shop/ProductCard';
 import BottomNav from '../components/shop/BottomNav';
 import SearchHeaderWithHistory from '../components/shop/SearchHeaderWithHistory';
-import { SlidersHorizontal, X, Loader2, Star, Tag, Package } from 'lucide-react';
+import { SlidersHorizontal, X, Loader2, Star, Tag, Package, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -432,6 +433,15 @@ export default function Browse() {
           )}
         </div>
       </PullToRefresh>
+
+      {/* Floating AI recommendations button */}
+      <Link
+        to="/Recommendations"
+        className="fixed bottom-24 right-4 z-50 flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-full shadow-lg text-sm font-medium active:scale-95 transition-transform"
+      >
+        <Sparkles className="w-4 h-4" />
+        Para ti
+      </Link>
 
       <BottomNav cartCount={cartCount} />
     </div>

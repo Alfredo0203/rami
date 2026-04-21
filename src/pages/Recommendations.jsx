@@ -50,17 +50,27 @@ export default function Recommendations() {
   useEffect(() => {
     const stored = localStorage.getItem(LAST_CONSULTED_KEY);
     if (stored) setLastConsulted(new Date(stored));
-    initChat();
+    loadUser();
   }, []);
 
-  const initChat = async () => {
+  const loadUser = async () => {
     try {
       const me = await base44.auth.me();
       setUser(me);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setInitializing(false);
+    }
+  };
 
+  const startChat = async () => {
+    if (conversation) return;
+    setLoading(true);
+    try {
       const conv = await base44.agents.createConversation({
         agent_name: AGENT_NAME,
-        metadata: { name: `Recomendaciones para ${me?.full_name || 'usuario'}` }
+        metadata: { name: `Recomendaciones para ${user?.full_name || 'usuario'}` }
       });
       setConversation(conv);
 
@@ -70,12 +80,12 @@ export default function Recommendations() {
 
       await base44.agents.addMessage(conv, {
         role: 'user',
-        content: `Usuario: ${me?.full_name || 'cliente'}, email: ${me?.email}. Recomiéndame productos según mi wishlist e historial de búsquedas.`
+        content: `Usuario: ${user?.full_name || 'cliente'}, email: ${user?.email}. Recomiéndame productos según mi wishlist e historial de búsquedas.`
       });
     } catch (e) {
       console.error(e);
     } finally {
-      setInitializing(false);
+      setLoading(false);
     }
   };
 
@@ -92,11 +102,32 @@ export default function Recommendations() {
   }, [conversation]);
 
   const sendMessage = async () => {
-    if (!input.trim() || !conversation || loading) return;
+    if (!input.trim() || loading) return;
     const text = input.trim();
     setInput('');
-    setLoading(true);
     setSuggestions(getRandomSuggestions());
+
+    if (!conversation) {
+      // Start chat with the typed message as the first prompt
+      setLoading(true);
+      try {
+        const conv = await base44.agents.createConversation({
+          agent_name: AGENT_NAME,
+          metadata: { name: `Recomendaciones para ${user?.full_name || 'usuario'}` }
+        });
+        setConversation(conv);
+        const now = new Date();
+        localStorage.setItem(LAST_CONSULTED_KEY, now.toISOString());
+        setLastConsulted(now);
+        await base44.agents.addMessage(conv, { role: 'user', content: text });
+      } catch (e) {
+        console.error(e);
+        setLoading(false);
+      }
+      return;
+    }
+
+    setLoading(true);
     await base44.agents.addMessage(conversation, { role: 'user', content: text });
   };
 
@@ -110,6 +141,8 @@ export default function Recommendations() {
   const visibleMessages = messages.filter(
     m => m.role === 'user' || (m.role === 'assistant' && m.content)
   ).slice(1); // skip the initial auto-sent message
+
+  const chatStarted = !!conversation;
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -142,12 +175,23 @@ export default function Recommendations() {
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {initializing ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                <Sparkles className="w-6 h-6 text-primary animate-pulse" />
-              </div>
-              <p className="text-muted-foreground text-sm">Analizando tus preferencias...</p>
+            <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+          </div>
+        ) : !chatStarted ? (
+          /* Welcome screen */
+          <div className="flex flex-col items-center justify-center h-full text-center px-6 gap-5">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <Sparkles className="w-8 h-8 text-primary" />
             </div>
+            <div>
+              <p className="text-lg font-semibold text-foreground">¿Qué buscamos hoy{user?.full_name ? `, ${user.full_name.split(' ')[0]}` : ''}?</p>
+              <p className="text-sm text-muted-foreground mt-1">Puedo sugerirte productos según tus gustos o lo que me pidas.</p>
+            </div>
+            <Button onClick={startChat} className="rounded-full px-6 gap-2" disabled={loading}>
+              {loading ? <span className="w-4 h-4 border-2 border-primary-foreground/40 border-t-primary-foreground rounded-full animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              Sugerirme productos
+            </Button>
+            <p className="text-xs text-muted-foreground">O escribe directamente lo que buscas abajo ↓</p>
           </div>
         ) : (
           <>
