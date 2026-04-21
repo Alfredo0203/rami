@@ -11,11 +11,25 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 const AGENT_NAME = 'product_recommender';
 
-// Keys are scoped per user so each user has their own history
-const getKeys = (userId) => ({
-  lastConsulted: `recommendations_last_consulted_${userId || 'guest'}`,
-  conversationId: `recommendations_conversation_id_${userId || 'guest'}`,
+// Keys for guests only — authenticated users use their profile
+const getGuestKeys = () => ({
+  lastConsulted: `recommendations_last_consulted_guest`,
+  conversationId: `recommendations_conversation_id_guest`,
 });
+
+// Save conversationId to user profile (so it syncs across devices)
+const saveConvIdToProfile = async (convId, lastConsultedISO) => {
+  try {
+    await base44.auth.updateMe({ rami_conv_id: convId, rami_last_consulted: lastConsultedISO });
+  } catch {}
+};
+
+// Clear conversationId from user profile
+const clearConvIdFromProfile = async () => {
+  try {
+    await base44.auth.updateMe({ rami_conv_id: null, rami_last_consulted: null });
+  } catch {}
+};
 
 const INITIAL_SUGGESTIONS = [
   { label: '🔥 Más vendidos', query: 'Muéstrame los productos más vendidos' },
@@ -196,25 +210,25 @@ export default function RecommendationsModal({ open, onClose }) {
     if (!open) return;
     setInitializing(true);
 
-    base44.auth.me().then(u => {
+    base44.auth.me().then(async u => {
       setUser(u);
-      const keys = getKeys(u?.id);
-      const stored = localStorage.getItem(keys.lastConsulted);
+      // Authenticated: use profile-stored convId (syncs across devices)
+      const savedConvId = u?.rami_conv_id;
+      const stored = u?.rami_last_consulted;
       if (stored) setLastConsulted(new Date(stored));
 
-      const savedConvId = localStorage.getItem(keys.conversationId);
       if (savedConvId) {
-        base44.agents.getConversation(savedConvId).then(conv => {
+        try {
+          const conv = await base44.agents.getConversation(savedConvId);
           if (conv) { setConversation(conv); setMessages(conv.messages || []); }
-        }).catch(() => {
-          localStorage.removeItem(keys.conversationId);
-        }).finally(() => setInitializing(false));
-      } else {
-        setInitializing(false);
+        } catch {
+          await clearConvIdFromProfile();
+        }
       }
+      setInitializing(false);
     }).catch(() => {
-      // guest user
-      const keys = getKeys(null);
+      // Guest: fallback to localStorage
+      const keys = getGuestKeys();
       const stored = localStorage.getItem(keys.lastConsulted);
       if (stored) setLastConsulted(new Date(stored));
       const savedConvId = localStorage.getItem(keys.conversationId);
@@ -230,10 +244,14 @@ export default function RecommendationsModal({ open, onClose }) {
     });
   }, [open]);
 
-  const clearHistory = () => {
-    const keys = getKeys(user?.id);
-    localStorage.removeItem(keys.conversationId);
-    localStorage.removeItem(keys.lastConsulted);
+  const clearHistory = async () => {
+    if (user) {
+      await clearConvIdFromProfile();
+    } else {
+      const keys = getGuestKeys();
+      localStorage.removeItem(keys.conversationId);
+      localStorage.removeItem(keys.lastConsulted);
+    }
     setConversation(null);
     setMessages([]);
     setLastConsulted(null);
@@ -254,7 +272,6 @@ export default function RecommendationsModal({ open, onClose }) {
     if (!text.trim() || loading) return;
     setInput('');
     setFollowups(getRandomFollowups());
-    const keys = getKeys(user?.id);
 
     if (!conversation) {
       setLoading(true);
@@ -264,10 +281,15 @@ export default function RecommendationsModal({ open, onClose }) {
           metadata: { name: `Chat de ${user?.full_name || 'usuario'}` }
         });
         setConversation(conv);
-        localStorage.setItem(keys.conversationId, conv.id);
         const now = new Date();
-        localStorage.setItem(keys.lastConsulted, now.toISOString());
         setLastConsulted(now);
+        if (user) {
+          await saveConvIdToProfile(conv.id, now.toISOString());
+        } else {
+          const keys = getGuestKeys();
+          localStorage.setItem(keys.conversationId, conv.id);
+          localStorage.setItem(keys.lastConsulted, now.toISOString());
+        }
         await base44.agents.addMessage(conv, { role: 'user', content: text });
       } catch (e) {
         console.error(e);
