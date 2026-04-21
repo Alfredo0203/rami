@@ -178,7 +178,7 @@ export default function Recommendations() {
             <Sparkles className="w-5 h-5 text-primary" />
           </div>
           <div className="min-w-0">
-            <p className="font-semibold text-sm leading-tight">Asistente de Compras</p>
+            <p className="font-semibold text-sm leading-tight">Asistente de Compras - RAmi</p>
             {lastConsulted ? (
               <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
                 <Clock className="w-3 h-3 shrink-0" />
