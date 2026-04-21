@@ -7,8 +7,30 @@ import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 
 const LAST_CONSULTED_KEY = 'recommendations_last_consulted';
-
 const AGENT_NAME = 'product_recommender';
+
+const SUGGESTION_POOL = [
+  'Muéstrame más opciones',
+  'Busco algo económico',
+  'Quiero ver ofertas',
+  'Algo para regalo',
+  'Productos nuevos',
+  'Lo más vendido',
+  'Algo para el hogar',
+  'Ropa y accesorios',
+  'Tecnología y gadgets',
+  'Productos para niños',
+  'Busco algo de marca',
+  'Opciones en descuento',
+  'Algo diferente a lo anterior',
+  'Productos populares',
+  'Menos de $20',
+];
+
+function getRandomSuggestions(n = 6) {
+  const shuffled = [...SUGGESTION_POOL].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, n);
+}
 
 export default function Recommendations() {
   const [user, setUser] = useState(null);
@@ -18,6 +40,7 @@ export default function Recommendations() {
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
   const [lastConsulted, setLastConsulted] = useState(null);
+  const [suggestions, setSuggestions] = useState(() => getRandomSuggestions());
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -73,6 +96,7 @@ export default function Recommendations() {
     const text = input.trim();
     setInput('');
     setLoading(true);
+    setSuggestions(getRandomSuggestions());
     await base44.agents.addMessage(conversation, { role: 'user', content: text });
   };
 
@@ -156,12 +180,12 @@ export default function Recommendations() {
 
       {/* Input */}
       <div className="px-4 py-3 border-t bg-card safe-area-bottom space-y-2">
-        <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
-          {['Muéstrame más', 'Busco algo económico', 'Quiero ver ofertas', 'Algo para regalo'].map(s => (
+        <div className="flex gap-2 overflow-x-auto pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
+          {suggestions.map(s => (
             <button
               key={s}
               onClick={() => { setInput(s); }}
-              className="shrink-0 text-xs px-3 py-1.5 rounded-full border border-border bg-secondary text-secondary-foreground hover:bg-primary/10 hover:border-primary/30 transition-colors"
+              className="shrink-0 text-xs px-3 py-1.5 rounded-full border border-border bg-secondary text-secondary-foreground hover:bg-primary/10 hover:border-primary/30 transition-colors whitespace-nowrap"
             >
               {s}
             </button>
