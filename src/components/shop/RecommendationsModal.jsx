@@ -183,13 +183,18 @@ export default function RecommendationsModal({ open, onClose }) {
 
   // Scroll al último mensaje cuando se abre o reabre el modal
   useEffect(() => {
+    if (!open) {
+      prevOpenRef.current = false;
+      return;
+    }
+    
     if (open && !prevOpenRef.current) {
+      prevOpenRef.current = true;
       const t = setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
-      }, 50);
+      }, 100);
       return () => clearTimeout(t);
     }
-    prevOpenRef.current = open;
   }, [open]);
 
   useEffect(() => {
