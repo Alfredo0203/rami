@@ -172,6 +172,16 @@ export default function RecommendationsModal({ open, onClose }) {
   const messagesEndRef = useRef(null);
   const navigate = useNavigate();
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
     const t = setTimeout(() => {
