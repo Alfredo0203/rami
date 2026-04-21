@@ -129,6 +129,23 @@ export default function ProductDetail() {
     queryFn: () => base44.entities.Review.list(),
   });
 
+  // Calcular ventas reales desde órdenes completadas
+  const realSoldCount = orders.reduce((sum, order) => {
+    if (order.status === 'delivered' || order.status === 'shipped') {
+      const itemsForProduct = order.items?.filter(item => item.product_id === productId) || [];
+      const qty = itemsForProduct.reduce((itemSum, item) => itemSum + (item.quantity || 0), 0);
+      return sum + qty;
+    }
+    return sum;
+  }, 0);
+
+  // Calcular rating dinámico desde reseñas aprobadas
+  const productReviews = allReviews.filter(r => r.product_id === productId && r.is_approved);
+  const dynamicRating = productReviews.length > 0
+    ? (productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length)
+    : 0;
+  const dynamicReviewCount = productReviews.length;
+
   const displayStore = store || defaultStore;
 
   // SEO: Update meta tags for social sharing (before early returns)
@@ -466,15 +483,15 @@ export default function ProductDetail() {
 
         {/* Rating and sold */}
         <div className="flex items-center gap-3">
-          {product.rating > 0 && (
+          {dynamicRating > 0 && (
             <div className="flex items-center gap-1">
               <Star className="w-4 h-4 fill-warning text-warning" />
-              <span className="text-sm font-semibold text-foreground">{product.rating?.toFixed(1)}</span>
-              <span className="text-xs text-muted-foreground">({product.review_count || 0})</span>
+              <span className="text-sm font-semibold text-foreground">{dynamicRating?.toFixed(1)}</span>
+              <span className="text-xs text-muted-foreground">({dynamicReviewCount})</span>
             </div>
           )}
-          {product.sold_count > 0 && (
-            <span className="text-xs text-muted-foreground">{product.sold_count}+ vendidos</span>
+          {realSoldCount > 0 && (
+            <span className="text-xs text-muted-foreground">{realSoldCount} vendidos</span>
           )}
           {inStock ? (
             <span className="text-xs text-success font-medium flex items-center gap-1">
