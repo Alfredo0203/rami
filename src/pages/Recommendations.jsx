@@ -2,9 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Sparkles, ArrowLeft } from 'lucide-react';
+import { Send, Sparkles, ArrowLeft, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+
+const LAST_CONSULTED_KEY = 'recommendations_last_consulted';
 
 const AGENT_NAME = 'product_recommender';
 
@@ -15,6 +17,7 @@ export default function Recommendations() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
+  const [lastConsulted, setLastConsulted] = useState(null);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -22,6 +25,8 @@ export default function Recommendations() {
   }, [messages]);
 
   useEffect(() => {
+    const stored = localStorage.getItem(LAST_CONSULTED_KEY);
+    if (stored) setLastConsulted(new Date(stored));
     initChat();
   }, []);
 
@@ -36,17 +41,14 @@ export default function Recommendations() {
       });
       setConversation(conv);
 
-      const unsubscribe = base44.agents.subscribeToConversation(conv.id, (data) => {
-        setMessages(data.messages || []);
-      });
+      const now = new Date();
+      localStorage.setItem(LAST_CONSULTED_KEY, now.toISOString());
+      setLastConsulted(now);
 
-      // Send initial prompt automatically
       await base44.agents.addMessage(conv, {
         role: 'user',
-        content: `Hola! Soy ${me?.full_name || 'un cliente'}. Mi email es ${me?.email}. Por favor recomiéndame productos basados en mi lista de deseos e historial de búsquedas.`
+        content: `Usuario: ${me?.full_name || 'cliente'}, email: ${me?.email}. Recomiéndame productos según mi wishlist e historial de búsquedas.`
       });
-
-      return unsubscribe;
     } catch (e) {
       console.error(e);
     } finally {
@@ -94,13 +96,20 @@ export default function Recommendations() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
         </Link>
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
             <Sparkles className="w-5 h-5 text-primary" />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="font-semibold text-sm leading-tight">Asistente de Compras</p>
-            <p className="text-xs text-muted-foreground">Recomendaciones personalizadas</p>
+            {lastConsulted ? (
+              <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
+                <Clock className="w-3 h-3 shrink-0" />
+                Última consulta: {lastConsulted.toLocaleDateString('es-SV', { day: '2-digit', month: 'short', year: 'numeric' })} {lastConsulted.toLocaleTimeString('es-SV', { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">Recomendaciones personalizadas</p>
+            )}
           </div>
         </div>
       </div>
@@ -146,13 +155,24 @@ export default function Recommendations() {
       </div>
 
       {/* Input */}
-      <div className="px-4 py-3 border-t bg-card safe-area-bottom">
+      <div className="px-4 py-3 border-t bg-card safe-area-bottom space-y-2">
+        <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+          {['Muéstrame más', 'Busco algo económico', 'Quiero ver ofertas', 'Algo para regalo'].map(s => (
+            <button
+              key={s}
+              onClick={() => { setInput(s); }}
+              className="shrink-0 text-xs px-3 py-1.5 rounded-full border border-border bg-secondary text-secondary-foreground hover:bg-primary/10 hover:border-primary/30 transition-colors"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
         <div className="flex gap-2">
           <Input
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Pregunta algo o pide más recomendaciones..."
+            placeholder="Describe lo que buscas..."
             className="flex-1"
             disabled={loading || initializing}
           />
