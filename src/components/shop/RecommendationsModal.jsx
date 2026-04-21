@@ -168,6 +168,7 @@ export default function RecommendationsModal({ open, onClose }) {
   const [lastConsulted, setLastConsulted] = useState(null);
   const [followups, setFollowups] = useState(() => getRandomFollowups());
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const navigate = useNavigate();
   const prevOpenRef = useRef(false);
 
@@ -191,7 +192,9 @@ export default function RecommendationsModal({ open, onClose }) {
     if (open && !prevOpenRef.current) {
       prevOpenRef.current = true;
       const t = setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
       }, 100);
       return () => clearTimeout(t);
     }
@@ -339,7 +342,7 @@ export default function RecommendationsModal({ open, onClose }) {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3" onPointerDownCapture={e => e.stopPropagation()}>
+            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3" onPointerDownCapture={e => e.stopPropagation()}>
               {initializing ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="w-7 h-7 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
