@@ -129,12 +129,6 @@ export default function ProductDetail() {
     queryFn: () => base44.entities.Review.list(),
   });
 
-  // Generar número pseudoaleatorio consistente basado en productId
-  const getConsistentRandom = (min, max, seed) => {
-    const x = Math.sin(seed) * 10000;
-    return Math.floor((x - Math.floor(x)) * (max - min + 1)) + min;
-  };
-
   // Calcular ventas reales desde órdenes completadas
   const realSoldCount = orders.reduce((sum, order) => {
     if (order.status === 'delivered' || order.status === 'shipped') {
@@ -145,19 +139,12 @@ export default function ProductDetail() {
     return sum;
   }, 0);
 
-  // Mostrar vendidos reales o número random si no hay ventas
-  const displaySoldCount = realSoldCount > 0 
-    ? realSoldCount 
-    : getConsistentRandom(15, 30, parseInt(productId, 36));
-
   // Calcular rating dinámico desde reseñas aprobadas
   const productReviews = allReviews.filter(r => r.product_id === productId && r.is_approved);
   const dynamicRating = productReviews.length > 0
     ? (productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length)
-    : getConsistentRandom(40, 50, parseInt(productId, 36)) / 10; // 4.0 - 5.0
-  const dynamicReviewCount = productReviews.length > 0 
-    ? productReviews.length 
-    : getConsistentRandom(5, 25, parseInt(productId, 36) + 1);
+    : 0;
+  const dynamicReviewCount = productReviews.length;
 
   const displayStore = store || defaultStore;
 
@@ -496,12 +483,16 @@ export default function ProductDetail() {
 
         {/* Rating and sold */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <Star className="w-4 h-4 fill-warning text-warning" />
-            <span className="text-sm font-semibold text-foreground">{dynamicRating?.toFixed(1)}</span>
-            <span className="text-xs text-muted-foreground">({dynamicReviewCount})</span>
-          </div>
-          <span className="text-xs text-muted-foreground">{displaySoldCount}+ vendidos</span>
+          {dynamicRating > 0 && (
+            <div className="flex items-center gap-1">
+              <Star className="w-4 h-4 fill-warning text-warning" />
+              <span className="text-sm font-semibold text-foreground">{dynamicRating?.toFixed(1)}</span>
+              <span className="text-xs text-muted-foreground">({dynamicReviewCount})</span>
+            </div>
+          )}
+          {realSoldCount > 0 && (
+            <span className="text-xs text-muted-foreground">{realSoldCount} vendidos</span>
+          )}
           {inStock ? (
             <span className="text-xs text-success font-medium flex items-center gap-1">
               <Check className="w-3 h-3" />
