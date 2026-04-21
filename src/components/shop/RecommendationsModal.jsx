@@ -168,9 +168,7 @@ export default function RecommendationsModal({ open, onClose }) {
   const [lastConsulted, setLastConsulted] = useState(null);
   const [followups, setFollowups] = useState(() => getRandomFollowups());
   const messagesEndRef = useRef(null);
-  const messagesContainerRef = useRef(null);
   const navigate = useNavigate();
-  const prevOpenRef = useRef(false);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -182,23 +180,13 @@ export default function RecommendationsModal({ open, onClose }) {
     return () => { document.body.style.overflow = ''; };
   }, [open]);
 
-  // Scroll al último mensaje cuando se abre o reabre el modal
   useEffect(() => {
-    if (!open) {
-      prevOpenRef.current = false;
-      return;
-    }
-    
-    if (open && !prevOpenRef.current) {
-      prevOpenRef.current = true;
-      const t = setTimeout(() => {
-        if (messagesContainerRef.current) {
-          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-        }
-      }, 100);
-      return () => clearTimeout(t);
-    }
-  }, [open]);
+    if (!open) return;
+    const t = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
+    return () => clearTimeout(t);
+  }, [messages, open, loading]);
 
   useEffect(() => {
     if (!open) return;
@@ -342,7 +330,7 @@ export default function RecommendationsModal({ open, onClose }) {
             </div>
 
             {/* Messages */}
-            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3" onPointerDownCapture={e => e.stopPropagation()}>
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3" onPointerDownCapture={e => e.stopPropagation()}>
               {initializing ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="w-7 h-7 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
