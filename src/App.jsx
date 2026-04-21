@@ -13,6 +13,7 @@ import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import AdminSalesCharts from './pages/AdminSalesCharts';
 import InventoryDashboard from './pages/InventoryDashboard';
 import SellerDashboard from './pages/SellerDashboard';
+import Recommendations from './pages/Recommendations';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -72,6 +73,7 @@ const AuthenticatedApp = () => {
       <Route path="/AdminSalesCharts" element={<AdminSalesCharts />} />
       <Route path="/InventoryDashboard" element={<InventoryDashboard />} />
       <Route path="/SellerDashboard" element={<SellerDashboard />} />
+      <Route path="/Recommendations" element={<LayoutWrapper currentPageName="Recommendations"><Recommendations /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
