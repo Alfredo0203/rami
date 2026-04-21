@@ -440,7 +440,6 @@ export default function Browse() {
         className="fixed bottom-24 right-4 z-50 flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-full shadow-lg text-sm font-medium active:scale-95 transition-transform"
       >
         <Sparkles className="w-4 h-4" />
-        Para ti
       </Link>
 
       <BottomNav cartCount={cartCount} />
