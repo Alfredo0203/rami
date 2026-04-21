@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Sparkles, Clock, ExternalLink, ShoppingBag, ChevronDown, Trash2 } from 'lucide-react';
+import { Send, Sparkles, Clock, ExternalLink, ShoppingBag, ChevronDown, Trash2, Mic, MicOff } from 'lucide-react';
 
 const APP_LOGO_URL = 'https://lh3.googleusercontent.com/d/1XvzxcscLVC00UVnvggpG1qTLTiyQ_6d0';
 import { useNavigate } from 'react-router-dom';
@@ -159,16 +159,18 @@ function MessageBubble({ message, onNavigate }) {
 }
 
 export default function RecommendationsModal({ open, onClose }) {
-  const [user, setUser] = useState(null);
-  const [conversation, setConversation] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [initializing, setInitializing] = useState(true);
-  const [lastConsulted, setLastConsulted] = useState(null);
-  const [followups, setFollowups] = useState(() => getRandomFollowups());
-  const messagesEndRef = useRef(null);
-  const navigate = useNavigate();
+   const [user, setUser] = useState(null);
+   const [conversation, setConversation] = useState(null);
+   const [messages, setMessages] = useState([]);
+   const [input, setInput] = useState('');
+   const [loading, setLoading] = useState(false);
+   const [initializing, setInitializing] = useState(true);
+   const [lastConsulted, setLastConsulted] = useState(null);
+   const [followups, setFollowups] = useState(() => getRandomFollowups());
+   const messagesEndRef = useRef(null);
+   const navigate = useNavigate();
+   const [isListening, setIsListening] = useState(false);
+   const recognitionRef = useRef(null);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -256,6 +258,47 @@ export default function RecommendationsModal({ open, onClose }) {
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendText(input.trim()); }
+  };
+
+  const startListening = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Tu navegador no soporta reconocimiento de voz');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'es-SV';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+
+    recognition.onresult = (event) => {
+      let transcript = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      if (transcript.trim()) {
+        setInput(transcript.trim());
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Error en reconocimiento de voz:', event.error);
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
   };
 
   const visibleMessages = messages
@@ -413,9 +456,18 @@ export default function RecommendationsModal({ open, onClose }) {
                   onKeyDown={handleKeyDown}
                   placeholder="Describe lo que buscas..."
                   className="flex-1"
-                  disabled={loading || initializing}
+                  disabled={loading || initializing || isListening}
                 />
-                <Button onClick={() => sendText(input.trim())} disabled={!input.trim() || loading || initializing} size="icon" className="shrink-0">
+                <Button
+                  onClick={isListening ? stopListening : startListening}
+                  size="icon"
+                  className="shrink-0"
+                  variant={isListening ? 'destructive' : 'outline'}
+                  title={isListening ? 'Detener grabación' : 'Grabar'}
+                >
+                  {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                </Button>
+                <Button onClick={() => sendText(input.trim())} disabled={!input.trim() || loading || initializing || isListening} size="icon" className="shrink-0">
                   <Send className="w-4 h-4" />
                 </Button>
               </div>
