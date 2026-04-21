@@ -263,8 +263,8 @@ export default function RecommendationsModal({ open, onClose }) {
 
           {/* Sheet */}
           <motion.div
-            className="fixed bottom-0 left-0 right-0 z-[200] flex flex-col bg-background rounded-t-3xl shadow-2xl"
-            style={{ maxHeight: '88vh', height: '88vh' }}
+            className="fixed left-0 right-0 z-[200] flex flex-col bg-background rounded-t-3xl shadow-2xl"
+            style={{ bottom: 'env(safe-area-inset-bottom, 0px)', maxHeight: '85dvh', height: '85dvh' }}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
@@ -356,7 +356,7 @@ export default function RecommendationsModal({ open, onClose }) {
             </div>
 
             {/* Input */}
-            <div className="px-4 pt-3 pb-5 border-t bg-card shrink-0 safe-area-bottom space-y-2">
+            <div className="px-4 pt-3 pb-6 border-t bg-card shrink-0 space-y-2" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom, 1.5rem))' }}>
               {chatStarted && (
                 <div className="flex gap-2 overflow-x-auto pb-0.5 hide-scrollbar">
                   {followups.map(s => (
