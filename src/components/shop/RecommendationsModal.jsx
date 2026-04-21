@@ -2,14 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Sparkles, X, Clock, ExternalLink, ShoppingBag, ChevronDown } from 'lucide-react';
+import { Send, Sparkles, Clock, ExternalLink, ShoppingBag, ChevronDown, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { AnimatePresence, motion } from 'framer-motion';
 
-const LAST_CONSULTED_KEY = 'recommendations_last_consulted';
-const CONVERSATION_ID_KEY = 'recommendations_conversation_id';
 const AGENT_NAME = 'product_recommender';
+
+// Keys are scoped per user so each user has their own history
+const getKeys = (userId) => ({
+  lastConsulted: `recommendations_last_consulted_${userId || 'guest'}`,
+  conversationId: `recommendations_conversation_id_${userId || 'guest'}`,
+});
 
 const INITIAL_SUGGESTIONS = [
   { label: '🔥 Más vendidos', query: 'Muéstrame los productos más vendidos' },
@@ -170,7 +174,6 @@ export default function RecommendationsModal({ open, onClose }) {
 
   useEffect(() => {
     if (!open) return;
-    // Small timeout so the DOM has painted the new message before scrolling
     const t = setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, 50);
@@ -179,25 +182,51 @@ export default function RecommendationsModal({ open, onClose }) {
 
   useEffect(() => {
     if (!open) return;
-    const stored = localStorage.getItem(LAST_CONSULTED_KEY);
-    if (stored) setLastConsulted(new Date(stored));
+    setInitializing(true);
 
-    const savedConvId = localStorage.getItem(CONVERSATION_ID_KEY);
-    base44.auth.me().then(setUser).catch(() => {}).finally(async () => {
+    base44.auth.me().then(u => {
+      setUser(u);
+      const keys = getKeys(u?.id);
+      const stored = localStorage.getItem(keys.lastConsulted);
+      if (stored) setLastConsulted(new Date(stored));
+
+      const savedConvId = localStorage.getItem(keys.conversationId);
       if (savedConvId) {
-        try {
-          const conv = await base44.agents.getConversation(savedConvId);
-          if (conv) {
-            setConversation(conv);
-            setMessages(conv.messages || []);
-          }
-        } catch {
-          localStorage.removeItem(CONVERSATION_ID_KEY);
-        }
+        base44.agents.getConversation(savedConvId).then(conv => {
+          if (conv) { setConversation(conv); setMessages(conv.messages || []); }
+        }).catch(() => {
+          localStorage.removeItem(keys.conversationId);
+        }).finally(() => setInitializing(false));
+      } else {
+        setInitializing(false);
       }
-      setInitializing(false);
+    }).catch(() => {
+      // guest user
+      const keys = getKeys(null);
+      const stored = localStorage.getItem(keys.lastConsulted);
+      if (stored) setLastConsulted(new Date(stored));
+      const savedConvId = localStorage.getItem(keys.conversationId);
+      if (savedConvId) {
+        base44.agents.getConversation(savedConvId).then(conv => {
+          if (conv) { setConversation(conv); setMessages(conv.messages || []); }
+        }).catch(() => {
+          localStorage.removeItem(keys.conversationId);
+        }).finally(() => setInitializing(false));
+      } else {
+        setInitializing(false);
+      }
     });
   }, [open]);
+
+  const clearHistory = () => {
+    const keys = getKeys(user?.id);
+    localStorage.removeItem(keys.conversationId);
+    localStorage.removeItem(keys.lastConsulted);
+    setConversation(null);
+    setMessages([]);
+    setLastConsulted(null);
+    setFollowups(getRandomFollowups());
+  };
 
   useEffect(() => {
     if (!conversation) return;
@@ -213,6 +242,7 @@ export default function RecommendationsModal({ open, onClose }) {
     if (!text.trim() || loading) return;
     setInput('');
     setFollowups(getRandomFollowups());
+    const keys = getKeys(user?.id);
 
     if (!conversation) {
       setLoading(true);
@@ -222,9 +252,9 @@ export default function RecommendationsModal({ open, onClose }) {
           metadata: { name: `Chat de ${user?.full_name || 'usuario'}` }
         });
         setConversation(conv);
-        localStorage.setItem(CONVERSATION_ID_KEY, conv.id);
+        localStorage.setItem(keys.conversationId, conv.id);
         const now = new Date();
-        localStorage.setItem(LAST_CONSULTED_KEY, now.toISOString());
+        localStorage.setItem(keys.lastConsulted, now.toISOString());
         setLastConsulted(now);
         await base44.agents.addMessage(conv, { role: 'user', content: text });
       } catch (e) {
@@ -288,9 +318,22 @@ export default function RecommendationsModal({ open, onClose }) {
                     <p className="text-xs text-muted-foreground">Recomendaciones personalizadas</p>
                   )}
                 </div>
-                <Button variant="ghost" size="icon" onClick={onClose} className="shrink-0">
-                  <ChevronDown className="w-5 h-5" />
-                </Button>
+                <div className="flex items-center gap-1 shrink-0">
+                  {chatStarted && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={clearHistory}
+                      className="text-muted-foreground hover:text-destructive"
+                      title="Borrar historial"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="icon" onClick={onClose}>
+                    <ChevronDown className="w-5 h-5" />
+                  </Button>
+                </div>
               </div>
             </div>
 
