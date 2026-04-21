@@ -7,13 +7,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 
 const AGENT_NAME = 'product_recommender';
-
-const saveConvIdToProfile = async (convId, lastConsultedISO) => {
-  try { await base44.auth.updateMe({ rami_conv_id: convId, rami_last_consulted: lastConsultedISO }); } catch {}
-};
-const clearConvIdFromProfile = async () => {
-  try { await base44.auth.updateMe({ rami_conv_id: null, rami_last_consulted: null }); } catch {}
-};
+const LS_CONV_ID = 'rami_conversation_id';
+const LS_LAST_CONSULTED = 'rami_last_consulted';
 
 const INITIAL_SUGGESTIONS = [
   { label: '🔥 Más vendidos', query: 'Muéstrame los productos más vendidos' },
@@ -97,22 +92,19 @@ export default function Recommendations() {
   }, [messages]);
 
   useEffect(() => {
-    base44.auth.me().then(async u => {
-      setUser(u);
-      // Authenticated: use profile-stored convId (syncs across devices)
-      if (u?.rami_last_consulted) setLastConsulted(new Date(u.rami_last_consulted));
-      if (u?.rami_conv_id) {
-        try {
-          const conv = await base44.agents.getConversation(u.rami_conv_id);
-          if (conv) { setConversation(conv); setMessages(conv.messages || []); }
-        } catch {
-          await clearConvIdFromProfile();
-        }
-      }
+    base44.auth.me().then(u => setUser(u)).catch(() => {});
+
+    const stored = localStorage.getItem(LS_LAST_CONSULTED);
+    if (stored) setLastConsulted(new Date(stored));
+    const savedConvId = localStorage.getItem(LS_CONV_ID);
+    if (savedConvId) {
+      base44.agents.getConversation(savedConvId)
+        .then(conv => { if (conv) { setConversation(conv); setMessages(conv.messages || []); } })
+        .catch(() => localStorage.removeItem(LS_CONV_ID))
+        .finally(() => setInitializing(false));
+    } else {
       setInitializing(false);
-    }).catch(() => {
-      setInitializing(false);
-    });
+    }
   }, []);
 
   useEffect(() => {
@@ -140,7 +132,8 @@ export default function Recommendations() {
         setConversation(conv);
         const now = new Date();
         setLastConsulted(now);
-        await saveConvIdToProfile(conv.id, now.toISOString());
+        localStorage.setItem(LS_CONV_ID, conv.id);
+        localStorage.setItem(LS_LAST_CONSULTED, now.toISOString());
         await base44.agents.addMessage(conv, { role: 'user', content: text });
       } catch (e) {
         console.error(e);

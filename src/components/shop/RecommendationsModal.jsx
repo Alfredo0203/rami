@@ -10,26 +10,8 @@ import ReactMarkdown from 'react-markdown';
 import { AnimatePresence, motion } from 'framer-motion';
 
 const AGENT_NAME = 'product_recommender';
-
-// Keys for guests only — authenticated users use their profile
-const getGuestKeys = () => ({
-  lastConsulted: `recommendations_last_consulted_guest`,
-  conversationId: `recommendations_conversation_id_guest`,
-});
-
-// Save conversationId to user profile (so it syncs across devices)
-const saveConvIdToProfile = async (convId, lastConsultedISO) => {
-  try {
-    await base44.auth.updateMe({ rami_conv_id: convId, rami_last_consulted: lastConsultedISO });
-  } catch {}
-};
-
-// Clear conversationId from user profile
-const clearConvIdFromProfile = async () => {
-  try {
-    await base44.auth.updateMe({ rami_conv_id: null, rami_last_consulted: null });
-  } catch {}
-};
+const LS_CONV_ID = 'rami_conversation_id';
+const LS_LAST_CONSULTED = 'rami_last_consulted';
 
 const INITIAL_SUGGESTIONS = [
   { label: '🔥 Más vendidos', query: 'Muéstrame los productos más vendidos' },
@@ -209,49 +191,24 @@ export default function RecommendationsModal({ open, onClose }) {
   useEffect(() => {
     if (!open) return;
     setInitializing(true);
+    base44.auth.me().then(u => setUser(u)).catch(() => {});
 
-    base44.auth.me().then(async u => {
-      setUser(u);
-      // Authenticated: use profile-stored convId (syncs across devices)
-      const savedConvId = u?.rami_conv_id;
-      const stored = u?.rami_last_consulted;
-      if (stored) setLastConsulted(new Date(stored));
-
-      if (savedConvId) {
-        try {
-          const conv = await base44.agents.getConversation(savedConvId);
-          if (conv) { setConversation(conv); setMessages(conv.messages || []); }
-        } catch {
-          await clearConvIdFromProfile();
-        }
-      }
+    const stored = localStorage.getItem(LS_LAST_CONSULTED);
+    if (stored) setLastConsulted(new Date(stored));
+    const savedConvId = localStorage.getItem(LS_CONV_ID);
+    if (savedConvId) {
+      base44.agents.getConversation(savedConvId)
+        .then(conv => { if (conv) { setConversation(conv); setMessages(conv.messages || []); } })
+        .catch(() => localStorage.removeItem(LS_CONV_ID))
+        .finally(() => setInitializing(false));
+    } else {
       setInitializing(false);
-    }).catch(() => {
-      // Guest: fallback to localStorage
-      const keys = getGuestKeys();
-      const stored = localStorage.getItem(keys.lastConsulted);
-      if (stored) setLastConsulted(new Date(stored));
-      const savedConvId = localStorage.getItem(keys.conversationId);
-      if (savedConvId) {
-        base44.agents.getConversation(savedConvId).then(conv => {
-          if (conv) { setConversation(conv); setMessages(conv.messages || []); }
-        }).catch(() => {
-          localStorage.removeItem(keys.conversationId);
-        }).finally(() => setInitializing(false));
-      } else {
-        setInitializing(false);
-      }
-    });
+    }
   }, [open]);
 
-  const clearHistory = async () => {
-    if (user) {
-      await clearConvIdFromProfile();
-    } else {
-      const keys = getGuestKeys();
-      localStorage.removeItem(keys.conversationId);
-      localStorage.removeItem(keys.lastConsulted);
-    }
+  const clearHistory = () => {
+    localStorage.removeItem(LS_CONV_ID);
+    localStorage.removeItem(LS_LAST_CONSULTED);
     setConversation(null);
     setMessages([]);
     setLastConsulted(null);
@@ -283,13 +240,8 @@ export default function RecommendationsModal({ open, onClose }) {
         setConversation(conv);
         const now = new Date();
         setLastConsulted(now);
-        if (user) {
-          await saveConvIdToProfile(conv.id, now.toISOString());
-        } else {
-          const keys = getGuestKeys();
-          localStorage.setItem(keys.conversationId, conv.id);
-          localStorage.setItem(keys.lastConsulted, now.toISOString());
-        }
+        localStorage.setItem(LS_CONV_ID, conv.id);
+        localStorage.setItem(LS_LAST_CONSULTED, now.toISOString());
         await base44.agents.addMessage(conv, { role: 'user', content: text });
       } catch (e) {
         console.error(e);
