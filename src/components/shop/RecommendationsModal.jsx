@@ -461,11 +461,14 @@ export default function RecommendationsModal({ open, onClose }) {
                 <Button
                   onClick={isListening ? stopListening : startListening}
                   size="icon"
-                  className="shrink-0"
-                  variant={isListening ? 'destructive' : 'outline'}
+                  className={`shrink-0 relative ${isListening ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' : ''}`}
+                  variant={isListening ? undefined : 'outline'}
                   title={isListening ? 'Detener grabación' : 'Grabar'}
                 >
-                  {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  <Mic className={`w-4 h-4 ${isListening ? 'animate-bounce' : ''}`} />
+                  {isListening && (
+                    <span className="absolute inset-0 rounded-md border-2 border-red-400 animate-pulse" />
+                  )}
                 </Button>
                 <Button onClick={() => sendText(input.trim())} disabled={!input.trim() || loading || initializing || isListening} size="icon" className="shrink-0">
                   <Send className="w-4 h-4" />
