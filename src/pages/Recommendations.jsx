@@ -39,7 +39,8 @@ function getRandomFollowups(n = 5) {
 }
 
 // Parse message content: split into text segments and product blocks
-function parseContent(content) {
+// Incomplete product blocks (still streaming) are hidden entirely
+function parseContent(content, isStreaming = false) {
   const parts = [];
   const regex = /```products\n([\s\S]*?)```/g;
   let lastIndex = 0;
@@ -52,13 +53,25 @@ function parseContent(content) {
       const products = JSON.parse(match[1]);
       parts.push({ type: 'products', products });
     } catch {
-      parts.push({ type: 'text', content: match[0] });
+      // Malformed JSON inside a closed block — skip silently
     }
     lastIndex = match.index + match[0].length;
   }
-  if (lastIndex < content.length) {
-    parts.push({ type: 'text', content: content.slice(lastIndex) });
+
+  // Handle remaining content after last closed block
+  const remainder = content.slice(lastIndex);
+  if (remainder) {
+    const openBlock = remainder.indexOf('```products');
+    if (openBlock !== -1) {
+      // There's an unclosed product block — show text before it, hide the partial block
+      const textBefore = remainder.slice(0, openBlock).trim();
+      if (textBefore) parts.push({ type: 'text', content: textBefore });
+      // The partial block is intentionally omitted
+    } else {
+      parts.push({ type: 'text', content: remainder });
+    }
   }
+
   return parts;
 }
 
