@@ -169,7 +169,7 @@ export default function RecommendationsModal({ open, onClose }) {
   const [followups, setFollowups] = useState(() => getRandomFollowups());
   const messagesEndRef = useRef(null);
   const navigate = useNavigate();
-  const hasScrolledOnOpen = useRef(false);
+  const prevOpenRef = useRef(false);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -181,20 +181,16 @@ export default function RecommendationsModal({ open, onClose }) {
     return () => { document.body.style.overflow = ''; };
   }, [open]);
 
-  // Solo scroll al abrir el modal si hay historial previo
+  // Scroll al último mensaje cuando se abre o reabre el modal
   useEffect(() => {
-    if (!open) {
-      hasScrolledOnOpen.current = false;
-      return;
-    }
-    if (!initializing && messages.length > 0 && !hasScrolledOnOpen.current) {
-      hasScrolledOnOpen.current = true;
+    if (open && !prevOpenRef.current) {
       const t = setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
       }, 50);
       return () => clearTimeout(t);
     }
-  }, [open, initializing, messages.length]);
+    prevOpenRef.current = open;
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
