@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Sparkles, Clock, ExternalLink, ShoppingBag, ChevronDown, Trash2 } from 'lucide-react';
 
-const APP_LOGO_URL = 'https://drive.google.com/uc?export=view&id=1XvzxcscLVC00UVnvggpG1qTLTiyQ_6d0';
+const APP_LOGO_URL = 'https://lh3.googleusercontent.com/d/1XvzxcscLVC00UVnvggpG1qTLTiyQ_6d0';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { AnimatePresence, motion } from 'framer-motion';
