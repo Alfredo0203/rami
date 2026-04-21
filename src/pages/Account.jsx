@@ -63,7 +63,7 @@ export default function Account() {
     { icon: Package, label: t('my_orders'), page: 'Orders' },
     { icon: MapPin, label: t('my_addresses'), page: 'Addresses' },
     { icon: Heart, label: 'Mis favoritos', page: 'Wishlist' },
-    { icon: MessageCircle, label: 'Chat de soporte', action: 'support' },
+    { icon: MessageCircle, label: 'Contáctanos', action: 'support' },
   ];
 
   if (user?.role === 'admin' || user?.role === 'super_admin') {
