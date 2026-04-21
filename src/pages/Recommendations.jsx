@@ -9,26 +9,36 @@ import ReactMarkdown from 'react-markdown';
 const LAST_CONSULTED_KEY = 'recommendations_last_consulted';
 const AGENT_NAME = 'product_recommender';
 
-const SUGGESTION_POOL = [
-  'Muéstrame más opciones',
-  'Busco algo económico',
-  'Quiero ver ofertas',
-  'Algo para regalo',
-  'Productos nuevos',
-  'Lo más vendido',
-  'Algo para el hogar',
-  'Ropa y accesorios',
-  'Tecnología y gadgets',
-  'Productos para niños',
-  'Busco algo de marca',
-  'Opciones en descuento',
-  'Algo diferente a lo anterior',
-  'Productos populares',
-  'Menos de $20',
+// Suggestions shown before chat starts
+const INITIAL_SUGGESTIONS = [
+  { label: '🔥 Más vendidos', query: 'Muéstrame los productos más vendidos' },
+  { label: '🏷️ Ofertas', query: 'Muéstrame productos en oferta con descuento' },
+  { label: '✨ Novedades', query: 'Muéstrame los productos más nuevos' },
+  { label: '🎁 Para regalo', query: 'Busco un producto para regalo' },
+  { label: '🏠 Para el hogar', query: 'Busco productos para el hogar' },
+  { label: '📱 Tecnología', query: 'Busco gadgets y tecnología' },
+  { label: '👗 Ropa y moda', query: 'Quiero ver ropa y accesorios de moda' },
+  { label: '💰 Menos de $20', query: 'Busco productos económicos menos de $20' },
 ];
 
-function getRandomSuggestions(n = 6) {
-  const shuffled = [...SUGGESTION_POOL].sort(() => Math.random() - 0.5);
+// Suggestions shown after chat starts (contextual)
+const FOLLOWUP_POOL = [
+  'Muéstrame más opciones',
+  'Algo más barato',
+  'Algo de mejor calidad',
+  'Opciones en otra categoría',
+  'Busco algo diferente',
+  'Con mejor rating',
+  'Lo más popular',
+  'Ver más colores o tallas',
+  'Algo para regalo',
+  'Menos de $30',
+  'Con envío rápido',
+  'De otra marca',
+];
+
+function getRandomFollowups(n = 5) {
+  const shuffled = [...FOLLOWUP_POOL].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, n);
 }
 
@@ -40,7 +50,7 @@ export default function Recommendations() {
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
   const [lastConsulted, setLastConsulted] = useState(null);
-  const [suggestions, setSuggestions] = useState(() => getRandomSuggestions());
+  const [followups, setFollowups] = useState(() => getRandomFollowups());
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -101,19 +111,17 @@ export default function Recommendations() {
     return unsubscribe;
   }, [conversation]);
 
-  const sendMessage = async () => {
-    if (!input.trim() || loading) return;
-    const text = input.trim();
+  const sendText = async (text) => {
+    if (!text.trim() || loading) return;
     setInput('');
-    setSuggestions(getRandomSuggestions());
+    setFollowups(getRandomFollowups());
 
     if (!conversation) {
-      // Start chat with the typed message as the first prompt
       setLoading(true);
       try {
         const conv = await base44.agents.createConversation({
           agent_name: AGENT_NAME,
-          metadata: { name: `Recomendaciones para ${user?.full_name || 'usuario'}` }
+          metadata: { name: `Chat de ${user?.full_name || 'usuario'}` }
         });
         setConversation(conv);
         const now = new Date();
@@ -130,6 +138,8 @@ export default function Recommendations() {
     setLoading(true);
     await base44.agents.addMessage(conversation, { role: 'user', content: text });
   };
+
+  const sendMessage = () => sendText(input.trim());
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -179,19 +189,26 @@ export default function Recommendations() {
           </div>
         ) : !chatStarted ? (
           /* Welcome screen */
-          <div className="flex flex-col items-center justify-center h-full text-center px-6 gap-5">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <Sparkles className="w-8 h-8 text-primary" />
+          <div className="flex flex-col h-full pt-6 pb-2 gap-5">
+            <div className="text-center px-4">
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                <Sparkles className="w-7 h-7 text-primary" />
+              </div>
+              <p className="text-lg font-semibold text-foreground">¿Qué buscas hoy{user?.full_name ? `, ${user.full_name.split(' ')[0]}` : ''}?</p>
+              <p className="text-sm text-muted-foreground mt-1">Escribe o elige una opción rápida</p>
             </div>
-            <div>
-              <p className="text-lg font-semibold text-foreground">¿Qué buscamos hoy{user?.full_name ? `, ${user.full_name.split(' ')[0]}` : ''}?</p>
-              <p className="text-sm text-muted-foreground mt-1">Puedo sugerirte productos según tus gustos o lo que me pidas.</p>
+            <div className="grid grid-cols-2 gap-2 px-4">
+              {INITIAL_SUGGESTIONS.map(s => (
+                <button
+                  key={s.label}
+                  onClick={() => sendText(s.query)}
+                  disabled={loading}
+                  className="text-left px-4 py-3 rounded-2xl border border-border bg-card hover:bg-primary/5 hover:border-primary/40 transition-colors text-sm font-medium text-foreground disabled:opacity-50"
+                >
+                  {s.label}
+                </button>
+              ))}
             </div>
-            <Button onClick={startChat} className="rounded-full px-6 gap-2" disabled={loading}>
-              {loading ? <span className="w-4 h-4 border-2 border-primary-foreground/40 border-t-primary-foreground rounded-full animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              Sugerirme productos
-            </Button>
-            <p className="text-xs text-muted-foreground">O escribe directamente lo que buscas abajo ↓</p>
           </div>
         ) : (
           <>
@@ -224,17 +241,20 @@ export default function Recommendations() {
 
       {/* Input */}
       <div className="px-4 py-3 border-t bg-card safe-area-bottom space-y-2">
-        <div className="flex gap-2 overflow-x-auto pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
-          {suggestions.map(s => (
-            <button
-              key={s}
-              onClick={() => { setInput(s); }}
-              className="shrink-0 text-xs px-3 py-1.5 rounded-full border border-border bg-secondary text-secondary-foreground hover:bg-primary/10 hover:border-primary/30 transition-colors whitespace-nowrap"
-            >
-              {s}
-            </button>
-          ))}
-        </div>
+        {chatStarted && (
+          <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
+            {followups.map(s => (
+              <button
+                key={s}
+                onClick={() => sendText(s)}
+                disabled={loading}
+                className="shrink-0 text-xs px-3 py-1.5 rounded-full border border-border bg-secondary text-secondary-foreground hover:bg-primary/10 hover:border-primary/30 transition-colors whitespace-nowrap disabled:opacity-50"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="flex gap-2">
           <Input
             value={input}
