@@ -1,19 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLocation, useNavigationType } from 'react-router-dom';
 import DevModeGuard from './components/DevModeGuard';
-import RecommendationsModal from './components/shop/RecommendationsModal';
-import { Sparkles } from 'lucide-react';
 
 const TAB_PAGES = ['Home', 'Browse', 'Orders', 'Account'];
-// Pages where we DON'T show the floating button (Browse has its own)
-const EXCLUDED_PAGES = ['Browse', 'Recommendations'];
 let prevTabIdx = 0;
 
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const navType = useNavigationType();
-  const [recOpen, setRecOpen] = useState(false);
 
   const tabIdx = TAB_PAGES.indexOf(currentPageName);
   const isTab = tabIdx >= 0;
@@ -25,8 +20,6 @@ export default function Layout({ children, currentPageName }) {
     dir = tabIdx >= prevTabIdx ? 1 : -1;
     prevTabIdx = tabIdx;
   }
-
-  const showFab = !EXCLUDED_PAGES.includes(currentPageName);
 
   return (
     <div style={{ overflowX: 'clip' }}>
@@ -49,17 +42,6 @@ export default function Layout({ children, currentPageName }) {
           </DevModeGuard>
         </motion.div>
       </AnimatePresence>
-
-      {showFab && (
-        <button
-          onClick={() => setRecOpen(true)}
-          className="fixed bottom-24 right-4 z-50 flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-full shadow-lg text-sm font-medium active:scale-95 transition-transform"
-        >
-          <Sparkles className="w-4 h-4" />
-        </button>
-      )}
-
-      <RecommendationsModal open={recOpen} onClose={() => setRecOpen(false)} />
     </div>
   );
 }
