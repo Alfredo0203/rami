@@ -294,11 +294,17 @@ export default function RecommendationsModal({ open, onClose }) {
           {/* Sheet */}
           <motion.div
             className="fixed left-0 right-0 z-[200] flex flex-col bg-background rounded-t-3xl shadow-2xl"
-            style={{ bottom: 'env(safe-area-inset-bottom, 0px)', maxHeight: '85dvh', height: '85dvh' }}
+            style={{ bottom: 0, maxHeight: '85dvh', height: '85dvh' }}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.3 }}
+            onDragEnd={(_, info) => {
+              if (info.offset.y > 80 || info.velocity.y > 500) onClose();
+            }}
           >
             {/* Handle + Header */}
             <div className="flex flex-col px-4 pt-3 pb-2 border-b bg-card rounded-t-3xl shrink-0">
@@ -338,7 +344,7 @@ export default function RecommendationsModal({ open, onClose }) {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3" onPointerDownCapture={e => e.stopPropagation()}>
               {initializing ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="w-7 h-7 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -399,7 +405,7 @@ export default function RecommendationsModal({ open, onClose }) {
             </div>
 
             {/* Input */}
-            <div className="px-4 pt-3 pb-6 border-t bg-card shrink-0 space-y-2" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom, 1.5rem))' }}>
+            <div className="px-4 pt-3 border-t bg-card shrink-0 space-y-2" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}>
               {chatStarted && (
                 <div className="flex gap-2 overflow-x-auto pb-0.5 hide-scrollbar">
                   {followups.map(s => (
