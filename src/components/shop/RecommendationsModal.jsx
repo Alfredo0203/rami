@@ -170,8 +170,12 @@ export default function RecommendationsModal({ open, onClose }) {
 
   useEffect(() => {
     if (!open) return;
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, open]);
+    // Small timeout so the DOM has painted the new message before scrolling
+    const t = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
+    return () => clearTimeout(t);
+  }, [messages, open, loading]);
 
   useEffect(() => {
     if (!open) return;
@@ -334,13 +338,14 @@ export default function RecommendationsModal({ open, onClose }) {
                   {loading && (
                     <div className="flex gap-2 items-start">
                       <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        <Sparkles className="w-3.5 h-3.5 text-primary" />
+                        <Sparkles className="w-3.5 h-3.5 text-primary animate-pulse" />
                       </div>
                       <div className="bg-card border rounded-2xl rounded-tl-none px-4 py-3">
-                        <div className="flex gap-1">
-                          <span className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                          <span className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                          <span className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-muted-foreground mr-1">Rami está pensando</span>
+                          <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                          <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                          <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                         </div>
                       </div>
                     </div>
@@ -351,7 +356,7 @@ export default function RecommendationsModal({ open, onClose }) {
             </div>
 
             {/* Input */}
-            <div className="px-4 py-3 border-t bg-card shrink-0 safe-area-bottom space-y-2">
+            <div className="px-4 pt-3 pb-5 border-t bg-card shrink-0 safe-area-bottom space-y-2">
               {chatStarted && (
                 <div className="flex gap-2 overflow-x-auto pb-0.5 hide-scrollbar">
                   {followups.map(s => (
