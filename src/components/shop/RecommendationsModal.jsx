@@ -250,7 +250,7 @@ export default function RecommendationsModal({ open, onClose }) {
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 z-50 bg-black/40"
+            className="fixed inset-0 z-[199] bg-black/40"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -259,7 +259,7 @@ export default function RecommendationsModal({ open, onClose }) {
 
           {/* Sheet */}
           <motion.div
-            className="fixed bottom-0 left-0 right-0 z-50 flex flex-col bg-background rounded-t-3xl shadow-2xl"
+            className="fixed bottom-0 left-0 right-0 z-[200] flex flex-col bg-background rounded-t-3xl shadow-2xl"
             style={{ maxHeight: '88vh', height: '88vh' }}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
