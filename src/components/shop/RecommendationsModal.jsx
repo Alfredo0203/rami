@@ -3,6 +3,8 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Sparkles, Clock, ExternalLink, ShoppingBag, ChevronDown, Trash2 } from 'lucide-react';
+
+const APP_LOGO_URL = 'https://drive.google.com/uc?export=view&id=1XvzxcscLVC00UVnvggpG1qTLTiyQ_6d0';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -123,8 +125,8 @@ function MessageBubble({ message, onNavigate }) {
   const parts = parseContent(message.content);
   return (
     <div className="flex gap-2 items-start">
-      <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-        <Sparkles className="w-3.5 h-3.5 text-primary" />
+      <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 overflow-hidden">
+        <img src={APP_LOGO_URL} alt="RAmi" className="w-full h-full object-cover" />
       </div>
       <div className="flex-1 max-w-[85%] space-y-2">
         {parts.map((part, i) => {
@@ -320,11 +322,11 @@ export default function RecommendationsModal({ open, onClose }) {
             <div className="flex flex-col px-4 pt-3 pb-2 border-b bg-card rounded-t-3xl shrink-0">
               <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mx-auto mb-3" />
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <Sparkles className="w-5 h-5 text-primary" />
+                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                  <img src={APP_LOGO_URL} alt="RAmi" className="w-full h-full object-cover" onError={e => { e.target.style.display='none'; e.target.parentNode.innerHTML='<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'20\' height=\'20\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' class=\'text-primary\'><path d=\'M12 2L2 7l10 5 10-5-10-5z\'/><path d=\'M2 17l10 5 10-5\'/><path d=\'M2 12l10 5 10-5\'/></svg>'; }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm leading-tight">Asistente de Compras</p>
+                  <p className="font-semibold text-sm leading-tight">Asistente de Compras <span className="text-primary">RAmi</span></p>
                   {lastConsulted ? (
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                       <Clock className="w-3 h-3 shrink-0" />
@@ -396,8 +398,8 @@ export default function RecommendationsModal({ open, onClose }) {
                   ))}
                   {loading && (
                     <div className="flex gap-2 items-start">
-                      <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        <Sparkles className="w-3.5 h-3.5 text-primary animate-pulse" />
+                      <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                        <img src={APP_LOGO_URL} alt="RAmi" className="w-full h-full object-cover" />
                       </div>
                       <div className="bg-card border rounded-2xl rounded-tl-none px-4 py-3">
                         <div className="flex items-center gap-1.5">
