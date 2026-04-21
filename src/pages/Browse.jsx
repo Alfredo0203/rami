@@ -7,6 +7,7 @@ import BottomNav from '../components/shop/BottomNav';
 import SearchHeaderWithHistory from '../components/shop/SearchHeaderWithHistory';
 import { SlidersHorizontal, X, Loader2, Star, Tag, Package, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import RecommendationsModal from '../components/shop/RecommendationsModal';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,7 @@ export default function Browse() {
   const [selectedColor, setSelectedColor] = useState('all');
   const [selectedVariantFilters, setSelectedVariantFilters] = useState({}); // { "Talla": "M", ... }
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [recOpen, setRecOpen] = useState(false);
 
   const { data: catalogData, isLoading } = useQuery({
     queryKey: ['public-catalog'],
@@ -435,12 +437,14 @@ export default function Browse() {
       </PullToRefresh>
 
       {/* Floating AI recommendations button */}
-      <Link
-        to="/Recommendations"
+      <button
+        onClick={() => setRecOpen(true)}
         className="fixed bottom-24 right-4 z-50 flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-full shadow-lg text-sm font-medium active:scale-95 transition-transform"
       >
         <Sparkles className="w-4 h-4" />
-      </Link>
+      </button>
+
+      <RecommendationsModal open={recOpen} onClose={() => setRecOpen(false)} />
 
       <BottomNav cartCount={cartCount} />
     </div>
