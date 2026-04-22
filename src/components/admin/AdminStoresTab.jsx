@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Store, Plus, Edit2, Trash2, Upload, X, Loader2 } from 'lucide-react';
@@ -284,8 +285,8 @@ export default function AdminStoresTab() {
         </Dialog>
       )}
 
-      {/* Store Preview Modal — z-[9999] ensures it's above Dialog and intercepts back button */}
-      {storePreviewUrl && (
+      {/* Store Preview Modal — rendered via portal to escape Dialog's focus trap */}
+      {storePreviewUrl && createPortal(
         <div
           className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4"
           onClick={() => setStorePreviewUrl(null)}
@@ -301,7 +302,8 @@ export default function AdminStoresTab() {
               <X className="w-4 h-4 text-white" />
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Store Delete Confirmation */}
