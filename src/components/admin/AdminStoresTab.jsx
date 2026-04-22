@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Store, Plus, Edit2, Trash2, Upload, X, Loader2 } from 'lucide-react';
+import { useBackButtonClose } from '@/hooks/useBackButtonClose';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -18,6 +19,9 @@ export default function AdminStoresTab() {
   const [editingStore, setEditingStore] = useState(null);
   const [deletingStoreId, setDeletingStoreId] = useState(null);
   const [storePreviewUrl, setStorePreviewUrl] = useState(null);
+
+  // Back button closes lightbox without closing the form behind it
+  useBackButtonClose(!!storePreviewUrl, () => setStorePreviewUrl(null));
   const [storeForm, setStoreForm] = useState({
     name: '',
     owner_email: '',
@@ -280,17 +284,19 @@ export default function AdminStoresTab() {
         </Dialog>
       )}
 
-      {/* Store Preview Modal */}
+      {/* Store Preview Modal — z-[9999] ensures it's above Dialog and intercepts back button */}
       {storePreviewUrl && (
         <div
-          className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4"
           onClick={() => setStorePreviewUrl(null)}
+          onTouchMove={e => e.preventDefault()}
+          style={{ touchAction: 'none' }}
         >
           <div className="relative max-w-sm w-full" onClick={e => e.stopPropagation()}>
             <img src={storePreviewUrl} alt="Vista previa" className="w-full rounded-2xl" />
             <button
               onClick={() => setStorePreviewUrl(null)}
-              className="absolute top-2 right-2 w-8 h-8 bg-black/60 rounded-full flex items-center justify-center"
+              className="absolute top-2 right-2 w-8 h-8 bg-black/60 rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
             >
               <X className="w-4 h-4 text-white" />
             </button>
