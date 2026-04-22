@@ -115,11 +115,15 @@ export default function SupportChatModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-end md:justify-center p-0 md:p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-end md:items-center justify-end md:justify-center p-0 md:p-4"
+      style={{ touchAction: 'none' }}
+    >
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/20"
         onClick={onClose}
+        onTouchMove={e => e.preventDefault()}
       />
 
       {/* Modal */}

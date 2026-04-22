@@ -362,6 +362,8 @@ export default function ProductDetail() {
         <div
           className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4"
           onClick={() => setLightboxOpen(false)}
+          onTouchMove={e => e.preventDefault()}
+          style={{ touchAction: 'none' }}
         >
           <div className="relative max-w-lg w-full" onClick={e => e.stopPropagation()}>
             <img src={images[safeImageIndex]} alt={product.name} className="w-full max-h-[85vh] object-contain rounded-2xl" />

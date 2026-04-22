@@ -312,6 +312,7 @@ export default function RecommendationsModal({ open, onClose }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
+            onTouchMove={e => e.preventDefault()}
           />
 
           {/* Sheet */}

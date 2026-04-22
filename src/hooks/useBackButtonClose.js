@@ -1,40 +1,55 @@
 import { useEffect } from 'react';
 
 /**
- * Hook that intercepts the browser/native back button to close a modal/overlay
- * instead of navigating away. Also locks body scroll when active.
+ * Hook that:
+ * 1. Locks background scroll (works on iOS Safari, Android Chrome, desktop)
+ * 2. Intercepts the browser back button to close the modal instead of navigating away
  *
- * @param {boolean} isOpen - Whether the modal is open
+ * @param {boolean} isOpen - Whether the modal/overlay is open
  * @param {Function} onClose - Callback to close the modal
  */
 export function useBackButtonClose(isOpen, onClose) {
-  // Lock body scroll
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
-  }, [isOpen]);
-
-  // Intercept back button
+  // ── Scroll lock ────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!isOpen) return;
 
-    // Push a dummy state so pressing back hits this state first
+    // Save current scroll position
+    const scrollY = window.scrollY;
+    const scrollX = window.scrollX;
+
+    // Apply position:fixed trick (required for iOS Safari momentum scroll)
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = `-${scrollX}px`;
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    return () => {
+      // Restore scroll
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      window.scrollTo(scrollX, scrollY);
+    };
+  }, [isOpen]);
+
+  // ── Back button interception ───────────────────────────────────────────────
+  useEffect(() => {
+    if (!isOpen) return;
+
     window.history.pushState({ modal: true }, '');
 
-    const handlePopState = (e) => {
+    const handlePopState = () => {
       onClose();
-      // Don't let the browser navigate further back
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => {
       window.removeEventListener('popstate', handlePopState);
-      // If the modal is closed programmatically (not by back button),
-      // we need to go back one step to remove the dummy state
       if (window.history.state?.modal) {
         window.history.back();
       }

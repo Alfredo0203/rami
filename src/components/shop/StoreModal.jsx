@@ -87,6 +87,7 @@ export default function StoreModal({ store, products, categories, orders = [], r
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[100] bg-background flex flex-col"
+        style={{ touchAction: 'none' }}
       >
         {/* Header */}
         <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 py-3">
