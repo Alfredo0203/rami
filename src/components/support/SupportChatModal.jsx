@@ -3,8 +3,10 @@ import { X, Send, MessageSquare, ChevronLeft } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useBackButtonClose } from '@/hooks/useBackButtonClose';
 
 export default function SupportChatModal({ isOpen, onClose }) {
+  useBackButtonClose(isOpen, onClose);
   const [user, setUser] = useState(null);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);

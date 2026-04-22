@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useBackButtonClose } from '@/hooks/useBackButtonClose';
 import { X, Package, ShoppingBag, Phone, Mail, Star, Info, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProductCard from './ProductCard';
@@ -7,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import ReviewDetailModal from './ReviewDetailModal';
 
 export default function StoreModal({ store, products, categories, orders = [], reviews = [], onClose }) {
+  useBackButtonClose(!!store, onClose);
   const [activeTab, setActiveTab] = useState('products');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [viewingReview, setViewingReview] = useState(null);

@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Sparkles, Clock, ExternalLink, ShoppingBag, ChevronDown, Trash2, Mic, MicOff } from 'lucide-react';
+import { useBackButtonClose } from '@/hooks/useBackButtonClose';
 
 const APP_LOGO_URL = 'https://lh3.googleusercontent.com/d/1XvzxcscLVC00UVnvggpG1qTLTiyQ_6d0';
 import { useNavigate } from 'react-router-dom';
@@ -172,15 +173,8 @@ export default function RecommendationsModal({ open, onClose }) {
    const [isListening, setIsListening] = useState(false);
    const recognitionRef = useRef(null);
 
-  // Lock body scroll when modal is open
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
-  }, [open]);
+  // Back button closes modal + lock body scroll
+  useBackButtonClose(open, onClose);
 
   useEffect(() => {
     if (!open) return;

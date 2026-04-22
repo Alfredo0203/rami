@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { ArrowLeft, Star, ShoppingCart, Heart, Minus, Plus, Check, Truck, Shield, RotateCcw, Loader2, AlertCircle, X, ZoomIn } from 'lucide-react';
+import { useBackButtonClose } from '@/hooks/useBackButtonClose';
 import ProductReviews from '@/components/shop/ProductReviews';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -30,6 +31,9 @@ export default function ProductDetail() {
   const [selectedAttrMap, setSelectedAttrMap] = useState({});
   const [viewingStore, setViewingStore] = useState(null);
   const touchStartX = useRef(null);
+
+  // Back button closes lightbox instead of navigating away
+  useBackButtonClose(lightboxOpen, () => setLightboxOpen(false));
 
   const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
   const handleTouchEnd = (e, images) => {
