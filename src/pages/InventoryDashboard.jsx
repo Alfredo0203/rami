@@ -26,7 +26,7 @@ export default function InventoryDashboard() {
 
   const { data: dashboard, isLoading } = useQuery({
     queryKey: ['inventory-dashboard'],
-    queryFn: () => base44.functions.invoke('getInventoryDashboard', {}),
+    queryFn: () => base44.functions.invoke('getInventoryDashboard', {}).then(r => r.data),
     enabled: !!user,
   });
 
