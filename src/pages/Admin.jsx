@@ -153,7 +153,7 @@ export default function Admin() {
         </Button>
         <Button
           onClick={() => navigate('/InventoryDashboard')}
-          className="flex-1 bg-chart-4 text-primary-foreground rounded-lg h-9 hover:bg-chart-4/90 text-xs"
+          className="flex-1 bg-primary text-primary-foreground rounded-lg h-9 hover:bg-primary/90 text-xs"
         >
           <Package className="w-3.5 h-3.5 mr-1" /> Inventario
         </Button>
@@ -263,10 +263,10 @@ export default function Admin() {
                   </button>
                   <button
                    onClick={() => setHistoryProduct(product)}
-                   className="p-1.5 bg-secondary rounded hover:bg-chart-4/10"
+                   className="p-1.5 bg-secondary rounded hover:bg-primary/10"
                    title="Histórico"
-                  >
-                   <TrendingUp className="w-3.5 h-3.5 text-chart-4" />
+                   >
+                   <TrendingUp className="w-3.5 h-3.5 text-primary" />
                   </button>
                   <button
                    onClick={() => setDeletingProductId(product.id)}
