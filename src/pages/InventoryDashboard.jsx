@@ -41,7 +41,7 @@ export default function InventoryDashboard() {
   const stats = [
     { 
       label: 'Valor Inventario', 
-      value: `$${dashboard?.summary.total_inventory_value.toFixed(2) || '0.00'}`, 
+      value: `$${(dashboard?.summary?.total_inventory_value || 0).toFixed(2)}`, 
       icon: DollarSign, 
       color: 'bg-success/10 text-success',
       subtext: `${dashboard?.summary.active_products || 0} productos activos`
