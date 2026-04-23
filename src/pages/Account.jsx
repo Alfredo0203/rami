@@ -105,7 +105,7 @@ export default function Account() {
   if (!user) {
     return (
       <div className="min-h-screen bg-background pb-20">
-        <div style={{ background: 'linear-gradient(135deg, hsl(14 100% 55%), hsl(340 82% 52%))', paddingTop: 'max(2rem, env(safe-area-inset-top, 0px))' }} className="px-4 pb-8 flex flex-col items-center text-center">
+        <div style={{ background: 'linear-gradient(135deg, hsl(210 85% 48%), hsl(210 85% 65%))', paddingTop: 'max(2rem, env(safe-area-inset-top, 0px))' }} className="px-4 pb-8 flex flex-col items-center text-center">
           <div className="w-20 h-20 bg-primary-foreground/20 backdrop-blur-sm rounded-full flex items-center justify-center mb-4">
             <User className="w-10 h-10 text-primary-foreground" />
           </div>
@@ -129,7 +129,7 @@ export default function Account() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="px-4 pb-6" style={{ background: 'linear-gradient(135deg, hsl(14 100% 55%), hsl(340 82% 52%))', paddingTop: 'max(2rem, env(safe-area-inset-top, 0px))' }}>
+      <div className="px-4 pb-6" style={{ background: 'linear-gradient(135deg, hsl(210 85% 48%), hsl(210 85% 65%))', paddingTop: 'max(2rem, env(safe-area-inset-top, 0px))' }}>
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-primary-foreground/20 backdrop-blur-sm rounded-full flex items-center justify-center">
             <User className="w-8 h-8 text-primary-foreground" />
