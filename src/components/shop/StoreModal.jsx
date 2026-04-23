@@ -76,12 +76,36 @@ export default function StoreModal({ store, products, categories, orders = [], r
       .slice(0, 5);
   }, [storeProducts, reviews]);
 
+  const [logoLightbox, setLogoLightbox] = useState(false);
+
   if (!store) return null;
 
   const storeLogo = store.logo_url || 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=200';
 
   return (
     <AnimatePresence>
+      {/* Logo Lightbox */}
+      {logoLightbox && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setLogoLightbox(false)}
+          onTouchMove={e => e.preventDefault()}
+          style={{ touchAction: 'none' }}
+        >
+          <div className="relative max-w-sm w-full" onClick={e => e.stopPropagation()}>
+            <img src={storeLogo} alt={store.name} className="w-full rounded-2xl max-h-[80vh] object-contain" />
+            <button
+              onClick={() => setLogoLightbox(false)}
+              className="absolute top-2 right-2 w-9 h-9 bg-black/60 rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        </motion.div>
+      )}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -96,7 +120,8 @@ export default function StoreModal({ store, products, categories, orders = [], r
               <img
                 src={storeLogo}
                 alt={store.name}
-                className="w-10 h-10 rounded-full object-cover"
+                className="w-10 h-10 rounded-full object-cover cursor-zoom-in"
+                onClick={() => setLogoLightbox(true)}
               />
               <div>
                 <h1 className="text-lg font-bold text-foreground">{store.name}</h1>
