@@ -175,7 +175,7 @@ export default function AdminStoresTab() {
       {/* Store Form Modal */}
       {showStoreForm && (
         <Dialog open={showStoreForm} onOpenChange={handleStoreClose}>
-          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" style={storePreviewUrl ? { pointerEvents: 'none', userSelect: 'none' } : {}}>
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingStore ? 'Editar Tienda' : 'Nueva Tienda'}</DialogTitle>
             </DialogHeader>
@@ -283,6 +283,12 @@ export default function AdminStoresTab() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* Invisible blocker that sits above the Dialog but below the lightbox */}
+      {storePreviewUrl && createPortal(
+        <div className="fixed inset-0 z-[9998]" />,
+        document.body
       )}
 
       {/* Store Preview Modal — rendered via portal to escape Dialog's focus trap */}
