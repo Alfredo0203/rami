@@ -175,7 +175,7 @@ export default function AdminStoresTab() {
       {/* Store Form Modal */}
       {showStoreForm && (
         <Dialog open={showStoreForm} onOpenChange={handleStoreClose}>
-          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" style={storePreviewUrl ? { pointerEvents: 'none', userSelect: 'none' } : {}}>
             <DialogHeader>
               <DialogTitle>{editingStore ? 'Editar Tienda' : 'Nueva Tienda'}</DialogTitle>
             </DialogHeader>
@@ -291,7 +291,8 @@ export default function AdminStoresTab() {
           className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4"
           onClick={() => setStorePreviewUrl(null)}
           onTouchMove={e => e.preventDefault()}
-          style={{ touchAction: 'none' }}
+          style={{ touchAction: 'none', isolation: 'isolate' }}
+          onKeyDown={e => { if (e.key === 'Escape') setStorePreviewUrl(null); }}
         >
           <div className="relative max-w-sm w-full" onClick={e => e.stopPropagation()}>
             <img src={storePreviewUrl} alt="Vista previa" className="w-full rounded-2xl" />
