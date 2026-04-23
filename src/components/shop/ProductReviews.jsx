@@ -345,9 +345,6 @@ export default function ProductReviews({ productId, isGuest }) {
                 transition={{ delay: i * 0.04 }}
                 className={`bg-card rounded-2xl p-4 border ${!review.is_approved ? 'border-muted-foreground/30 opacity-80' : 'border-border'}`}
               >
-                {!review.is_approved && (
-                  <p className="text-[10px] text-muted-foreground mb-2 italic">Solo tú puedes ver esta reseña · En revisión</p>
-                )}
                 <div className="flex items-start justify-between mb-1">
                   <div>
                     <p className="text-xs font-semibold text-foreground">{review.reviewer_name || 'Anónimo'}</p>
