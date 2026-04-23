@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Star, ThumbsUp, Camera, Loader2, X, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -212,7 +212,7 @@ export default function ProductReviews({ productId, isGuest }) {
   const [selectedImages, setSelectedImages] = useState(null);
   const [viewingReview, setViewingReview] = useState(null);
 
-  const { data: reviews = [], isLoading } = useQuery({
+  const { data: approvedReviews = [], isLoading } = useQuery({
     queryKey: ['reviews', productId],
     queryFn: () =>
       base44.entities.Review.filter({ product_id: productId, is_approved: true }, '-created_date'),
@@ -233,10 +233,7 @@ export default function ProductReviews({ productId, isGuest }) {
     enabled: !isGuest,
   });
 
-
-
-  // Check if current user already left a review for this product
-  // Use `created_by` (built-in field set by the platform) for reliable ownership check
+  // Check if current user already left a review for this product (regardless of approval)
   const { data: userReview } = useQuery({
     queryKey: ['user-review', productId],
     queryFn: async () => {
@@ -250,8 +247,16 @@ export default function ProductReviews({ productId, isGuest }) {
     enabled: !isGuest,
   });
 
-  const avgRating = reviews.length > 0
-    ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length
+  // Merge: approved reviews + user's own hidden review (visible only to them)
+  const reviews = React.useMemo(() => {
+    if (!userReview || userReview.is_approved) return approvedReviews;
+    // User's review is hidden — add it at the top so only they see it
+    const withoutDupe = approvedReviews.filter(r => r.id !== userReview.id);
+    return [userReview, ...withoutDupe];
+  }, [approvedReviews, userReview]);
+
+  const avgRating = approvedReviews.length > 0
+    ? approvedReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / approvedReviews.length
     : 0;
 
   const ratingCounts = [5, 4, 3, 2, 1].map(star => ({
@@ -338,8 +343,11 @@ export default function ProductReviews({ productId, isGuest }) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
-                className="bg-card rounded-2xl p-4 border border-border"
+                className={`bg-card rounded-2xl p-4 border ${!review.is_approved ? 'border-muted-foreground/30 opacity-80' : 'border-border'}`}
               >
+                {!review.is_approved && (
+                  <p className="text-[10px] text-muted-foreground mb-2 italic">Solo tú puedes ver esta reseña · En revisión</p>
+                )}
                 <div className="flex items-start justify-between mb-1">
                   <div>
                     <p className="text-xs font-semibold text-foreground">{review.reviewer_name || 'Anónimo'}</p>
