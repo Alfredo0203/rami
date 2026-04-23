@@ -79,7 +79,7 @@ export default function PromoBanner() {
       animate={{ opacity: 1, scale: 1 }}
       onClick={handleClick}
       className={`mx-4 my-3 rounded-2xl overflow-hidden relative${link ? ' cursor-pointer' : ''}`}
-      style={{ background: 'linear-gradient(135deg, hsl(14 100% 55%), hsl(340 82% 52%))' }}
+      style={{ background: 'linear-gradient(135deg, #2B65F0, #1C89D4, #00AD91)' }}
     >
       {/* Background decoration */}
       <div className="absolute inset-0 opacity-10">

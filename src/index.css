@@ -11,29 +11,30 @@
   --card-foreground: 0 0% 8%;
   --popover: 0 0% 100%;
   --popover-foreground: 0 0% 8%;
-  --primary: 14 100% 55%;
+  --primary: 220 86% 55%;
   --primary-foreground: 0 0% 100%;
   --secondary: 0 0% 94%;
   --secondary-foreground: 0 0% 20%;
   --muted: 0 0% 94%;
   --muted-foreground: 0 0% 45%;
-  --accent: 340 82% 52%;
+  --accent: 171 100% 34%;
   --accent-foreground: 0 0% 100%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
   --border: 0 0% 90%;
   --input: 0 0% 90%;
-  --ring: 14 100% 55%;
+  --ring: 220 86% 55%;
   --radius: 0.75rem;
-  --chart-1: 14 100% 55%;
-  --chart-2: 340 82% 52%;
-  --chart-3: 45 100% 51%;
-  --chart-4: 160 60% 45%;
-  --chart-5: 220 70% 50%;
+  --chart-1: 220 86% 55%;
+  --chart-2: 203 76% 47%;
+  --chart-3: 171 100% 34%;
+  --chart-4: 45 100% 51%;
+  --chart-5: 160 60% 45%;
 
   --sale: 0 84% 55%;
   --success: 142 70% 45%;
   --warning: 38 92% 50%;
+  --mid: 203 76% 47%;
 }
 
 .dark {
@@ -43,28 +44,29 @@
   --card-foreground: 0 0% 95%;
   --popover: 0 0% 9%;
   --popover-foreground: 0 0% 95%;
-  --primary: 14 100% 55%;
+  --primary: 220 86% 55%;
   --primary-foreground: 0 0% 100%;
   --secondary: 0 0% 15%;
   --secondary-foreground: 0 0% 90%;
   --muted: 0 0% 15%;
   --muted-foreground: 0 0% 60%;
-  --accent: 340 82% 52%;
+  --accent: 171 100% 34%;
   --accent-foreground: 0 0% 100%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
   --border: 0 0% 18%;
   --input: 0 0% 18%;
-  --ring: 14 100% 55%;
-  --chart-1: 14 100% 55%;
-  --chart-2: 340 82% 52%;
-  --chart-3: 45 100% 51%;
-  --chart-4: 160 60% 45%;
-  --chart-5: 220 70% 50%;
+  --ring: 220 86% 55%;
+  --chart-1: 220 86% 55%;
+  --chart-2: 203 76% 47%;
+  --chart-3: 171 100% 34%;
+  --chart-4: 45 100% 51%;
+  --chart-5: 160 60% 45%;
 
   --sale: 0 84% 55%;
   --success: 142 70% 45%;
   --warning: 38 92% 50%;
+  --mid: 203 76% 47%;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -75,22 +77,23 @@
     --card-foreground: 0 0% 95%;
     --popover: 0 0% 9%;
     --popover-foreground: 0 0% 95%;
-    --primary: 14 100% 55%;
+    --primary: 220 86% 55%;
     --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 15%;
     --secondary-foreground: 0 0% 90%;
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 60%;
-    --accent: 340 82% 52%;
+    --accent: 171 100% 34%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --border: 0 0% 18%;
     --input: 0 0% 18%;
-    --ring: 14 100% 55%;
+    --ring: 220 86% 55%;
     --sale: 0 84% 55%;
     --success: 142 70% 45%;
     --warning: 38 92% 50%;
+    --mid: 203 76% 47%;
   }
 }
 

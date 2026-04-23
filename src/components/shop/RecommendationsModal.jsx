@@ -98,7 +98,7 @@ function ProductCard({ product, onNavigate }) {
           {hasDiscount && (
             <>
               <span className="text-xs text-muted-foreground line-through">${product.original_price?.toFixed(2)}</span>
-              <span className="text-xs font-semibold text-green-600 bg-green-50 dark:bg-green-900/20 px-1.5 py-0.5 rounded-full">-{discount}%</span>
+              <span className="text-xs font-semibold text-success bg-success/10 px-1.5 py-0.5 rounded-full">-{discount}%</span>
             </>
           )}
         </div>
@@ -456,13 +456,13 @@ export default function RecommendationsModal({ open, onClose }) {
                 <Button
                   onClick={isListening ? stopListening : startListening}
                   size="icon"
-                  className={`shrink-0 relative ${isListening ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' : ''}`}
+                  className={`shrink-0 relative ${isListening ? 'bg-destructive hover:bg-destructive/90 text-destructive-foreground animate-pulse' : ''}`}
                   variant={isListening ? undefined : 'outline'}
                   title={isListening ? 'Detener grabación' : 'Grabar'}
                 >
                   <Mic className={`w-4 h-4 ${isListening ? 'animate-bounce' : ''}`} />
                   {isListening && (
-                    <span className="absolute inset-0 rounded-md border-2 border-red-400 animate-pulse" />
+                    <span className="absolute inset-0 rounded-md border-2 border-destructive/60 animate-pulse" />
                   )}
                 </Button>
                 <Button onClick={() => sendText(input.trim())} disabled={!input.trim() || loading || initializing || isListening} size="icon" className="shrink-0">

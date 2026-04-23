@@ -21,6 +21,7 @@ export default {
         sale: "hsl(var(--sale))",
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",
+        mid: "hsl(var(--mid))",
         chart: {
           1: "hsl(var(--chart-1))",
           2: "hsl(var(--chart-2))",
