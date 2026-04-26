@@ -257,7 +257,12 @@ Deno.serve(async (req) => {
 
     // ── 6. Limpiar carrito ────────────────────────────────────────────
     for (const item of cartItems) {
-      await base44.entities.CartItem.delete(item.id);
+      if (!item.id) continue;
+      try {
+        await base44.asServiceRole.entities.CartItem.delete(item.id);
+      } catch (_) {
+        // Si ya fue borrado, ignorar el error
+      }
     }
 
     // ── 7. Enviar email de confirmación ─────────────────
