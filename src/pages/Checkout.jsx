@@ -186,11 +186,6 @@ export default function Checkout() {
 
       // Si pago con tarjeta → redirigir a Stripe
       if (paymentMethod === 'credit_card') {
-        // Verificar que no estamos en un iframe (preview de Base44)
-        if (window.self !== window.top) {
-          throw new Error('El pago con tarjeta solo funciona desde la app publicada. Usa el enlace público de tu app.');
-        }
-
         const stripeRes = await base44.functions.invoke('createStripeCheckout', {
           cartItems: cleanedCartItems,
           shippingAddress,
