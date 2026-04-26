@@ -198,8 +198,13 @@ export default function Checkout() {
 
         if (stripeRes.data?.error) throw new Error(stripeRes.data.error);
         if (stripeRes.data?.url) {
-          window.location.href = stripeRes.data.url;
-          return order; // no llega aquí, pero typescript requiere return
+          // Si estamos en un iframe (preview), abrir en top level para evitar el bloqueo de Stripe
+          if (window.self !== window.top) {
+            window.top.location.href = stripeRes.data.url;
+          } else {
+            window.location.href = stripeRes.data.url;
+          }
+          return order;
         }
       }
 
