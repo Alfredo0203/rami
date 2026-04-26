@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -11,6 +11,7 @@ import InvoicePDF from '@/components/shop/InvoicePDF';
 export default function OrderConfirmation() {
   const urlParams = new URLSearchParams(window.location.search);
   const orderId = urlParams.get('id');
+  const paymentParam = urlParams.get('payment');
   const navigate = useNavigate();
 
   const { data: order, isLoading } = useQuery({
@@ -19,6 +20,16 @@ export default function OrderConfirmation() {
     select: (data) => data[0],
     enabled: !!orderId,
   });
+
+  // Si Stripe redirigió con payment=success, marcar la orden como pagada
+  React.useEffect(() => {
+    if (paymentParam === 'success' && orderId && order && order.payment_status !== 'paid') {
+      base44.entities.Order.update(orderId, {
+        payment_status: 'paid',
+        status: 'processing',
+      }).catch(console.error);
+    }
+  }, [paymentParam, orderId, order]);
 
   if (isLoading) {
     return (

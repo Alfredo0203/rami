@@ -160,7 +160,6 @@ export default function Checkout() {
         country: address.country || 'El Salvador',
       };
 
-      // Clean cart items - only send required fields to avoid validation errors
       const cleanedCartItems = cartItems.map(item => ({
         id: item.id,
         product_id: item.product_id,
@@ -172,6 +171,7 @@ export default function Checkout() {
         product_price: item.product_price,
       }));
 
+      // Crear la orden primero
       const res = await base44.functions.invoke('placeOrder', {
         cartItems: cleanedCartItems,
         shippingAddress,
@@ -180,9 +180,36 @@ export default function Checkout() {
       });
 
       if (res.data?.error) throw new Error(res.data.details?.join('\n') || res.data.error);
-      return res.data.order;
+      const order = res.data.order;
+
+      // Si pago con tarjeta → redirigir a Stripe
+      if (paymentMethod === 'credit_card') {
+        // Verificar que no estamos en un iframe (preview de Base44)
+        if (window.self !== window.top) {
+          throw new Error('El pago con tarjeta solo funciona desde la app publicada. Usa el enlace público de tu app.');
+        }
+
+        const stripeRes = await base44.functions.invoke('createStripeCheckout', {
+          cartItems: cleanedCartItems,
+          shippingAddress,
+          couponCode: appliedCoupon?.code,
+          discount,
+          shipping,
+          orderId: order.id,
+          customerEmail: user?.email,
+        });
+
+        if (stripeRes.data?.error) throw new Error(stripeRes.data.error);
+        if (stripeRes.data?.url) {
+          window.location.href = stripeRes.data.url;
+          return order; // no llega aquí, pero typescript requiere return
+        }
+      }
+
+      return order;
     },
     onSuccess: (order) => {
+      // Solo llega aquí si no hubo redirección a Stripe (ej: cash_on_delivery)
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
@@ -396,6 +423,11 @@ export default function Checkout() {
             💵 Pagarás <span className="font-semibold text-foreground">${total.toFixed(2)}</span> al recibir tu pedido
           </p>
         )}
+        {paymentMethod === 'credit_card' && (
+          <p className="text-xs text-muted-foreground text-center mb-2">
+            🔒 Pago seguro procesado por <span className="font-semibold text-foreground">Stripe</span>
+          </p>
+        )}
         <Button
            onClick={() => placeOrderMutation.mutate()}
            disabled={placeOrderMutation.isPending || !selectedAddressId || !paymentMethod}
@@ -403,6 +435,8 @@ export default function Checkout() {
          >
            {placeOrderMutation.isPending ? (
              <Loader2 className="w-5 h-5 animate-spin" />
+           ) : paymentMethod === 'credit_card' ? (
+             '💳 Pagar con Tarjeta'
            ) : (
              'Finalizar Compra'
            )}
