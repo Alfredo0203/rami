@@ -172,11 +172,13 @@ export default function Checkout() {
       }));
 
       // Crear la orden primero
+      // Si pago con tarjeta, no limpiar el carrito hasta confirmar pago
       const res = await base44.functions.invoke('placeOrder', {
         cartItems: cleanedCartItems,
         shippingAddress,
         paymentMethod,
         couponCode: appliedCoupon?.code,
+        skipCartClear: paymentMethod === 'credit_card',
       });
 
       if (res.data?.error) throw new Error(res.data.details?.join('\n') || res.data.error);

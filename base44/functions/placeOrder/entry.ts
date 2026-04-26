@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 });
 
     const body = await req.json();
-    const { cartItems, shippingAddress, paymentMethod, couponCode } = body;
+    const { cartItems, shippingAddress, paymentMethod, couponCode, skipCartClear } = body;
 
     if (!cartItems?.length) return Response.json({ error: 'El carrito está vacío' }, { status: 400 });
     if (!shippingAddress) return Response.json({ error: 'Dirección de envío requerida' }, { status: 400 });
@@ -256,12 +256,16 @@ Deno.serve(async (req) => {
     }
 
     // ── 6. Limpiar carrito ────────────────────────────────────────────
-    for (const item of cartItems) {
-      if (!item.id) continue;
-      try {
-        await base44.asServiceRole.entities.CartItem.delete(item.id);
-      } catch (_) {
-        // Si ya fue borrado, ignorar el error
+    // Si skipCartClear=true (pago con tarjeta), no borrar el carrito aún.
+    // Se limpiará en OrderConfirmation cuando Stripe confirme el pago.
+    if (!skipCartClear) {
+      for (const item of cartItems) {
+        if (!item.id) continue;
+        try {
+          await base44.asServiceRole.entities.CartItem.delete(item.id);
+        } catch (_) {
+          // Si ya fue borrado, ignorar
+        }
       }
     }
 
