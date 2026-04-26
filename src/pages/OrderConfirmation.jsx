@@ -16,8 +16,7 @@ export default function OrderConfirmation() {
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', orderId],
-    queryFn: () => base44.entities.Order.filter({ id: orderId }),
-    select: (data) => data[0],
+    queryFn: () => base44.entities.Order.get(orderId),
     enabled: !!orderId,
   });
 
