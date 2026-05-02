@@ -16,7 +16,6 @@ const SECTIONS = [
           <ul className="list-disc pl-5 space-y-1">
             <li>Nombre completo, correo electrónico y contraseña (al crear cuenta)</li>
             <li>Dirección de envío y número de teléfono</li>
-            <li>Número de DUI (solo en casos específicos para validación de identidad en entregas de mayor valor o situaciones excepcionales)</li>
             <li>Historial de pedidos y productos comprados</li>
             <li>Reseñas y calificaciones de productos</li>
             <li>Datos de pago (procesados directamente por Stripe Inc.; nosotros no almacenamos datos de tarjetas)</li>
