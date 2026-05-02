@@ -437,6 +437,7 @@ export default function Checkout() {
         <WompiWidget
           urlPago="https://s.wompi.sv/1339589VDv"
           onClose={() => setShowWompiWidget(false)}
+          total={total.toFixed(2)}
         />
       )}
 
