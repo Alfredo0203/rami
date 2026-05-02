@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import AddressForm from '@/components/addresses/AddressForm';
 import WompiWidget from '@/components/shop/WompiWidget';
+import StripePaymentModal from '@/components/shop/StripePaymentModal';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -24,6 +25,10 @@ export default function Checkout() {
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [couponError, setCouponError] = useState('');
   const [showWompiWidget, setShowWompiWidget] = useState(false);
+  const [stripeClientSecret, setStripeClientSecret] = useState(null);
+  const [stripePublishableKey, setStripePublishableKey] = useState(null);
+  const [showStripeModal, setShowStripeModal] = useState(false);
+  const [pendingOrderId, setPendingOrderId] = useState(null);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -199,41 +204,59 @@ export default function Checkout() {
       if (res.data?.error) throw new Error(res.data.details?.join('\n') || res.data.error);
       const order = res.data.order;
 
-      // Si pago con tarjeta → redirigir a Stripe
+      // Si pago con tarjeta → abrir modal embebido de Stripe
       if (paymentMethod === 'credit_card') {
-        const stripeRes = await base44.functions.invoke('createStripeCheckout', {
-          cartItems: cleanedCartItems,
-          shippingAddress,
-          couponCode: appliedCoupon?.code,
-          discount,
-          shipping,
+        // Obtener publishable key si no la tenemos
+        let pubKey = stripePublishableKey;
+        if (!pubKey) {
+          const keyRes = await base44.functions.invoke('getStripePublishableKey', {});
+          pubKey = keyRes.data?.publishableKey;
+          setStripePublishableKey(pubKey);
+        }
+
+        const intentRes = await base44.functions.invoke('createStripePaymentIntent', {
+          amount: total,
           orderId: order.id,
           customerEmail: user?.email,
+          couponCode: appliedCoupon?.code,
         });
 
-        if (stripeRes.data?.error) throw new Error(stripeRes.data.error);
-        if (stripeRes.data?.url) {
-          if (window.self !== window.top) {
-            window.top.location.href = stripeRes.data.url;
-          } else {
-            window.location.href = stripeRes.data.url;
-          }
-          return order;
-        }
+        if (intentRes.data?.error) throw new Error(intentRes.data.error);
+
+        setPendingOrderId(order.id);
+        setStripeClientSecret(intentRes.data.clientSecret);
+        setShowStripeModal(true);
+        return order;
       }
 
       return order;
     },
     onSuccess: (order) => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
-      navigate(createPageUrl('OrderConfirmation') + `?id=${order.id}`);
+      // Para credit_card el modal maneja la navegación
+      if (paymentMethod !== 'credit_card') {
+        queryClient.invalidateQueries({ queryKey: ['cart'] });
+        queryClient.invalidateQueries({ queryKey: ['orders'] });
+        queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
+        navigate(createPageUrl('OrderConfirmation') + `?id=${order.id}`);
+      }
     },
     onError: (err) => {
       toast.error(err.message || 'Error al realizar el pedido');
     },
   });
+
+  const handleStripeSuccess = async (paymentIntentId) => {
+    // Actualizar la orden con el transaction ID y estado pagado
+    await base44.entities.Order.update(pendingOrderId, {
+      payment_status: 'paid',
+      payment_transaction_id: paymentIntentId,
+    });
+    setShowStripeModal(false);
+    queryClient.invalidateQueries({ queryKey: ['cart'] });
+    queryClient.invalidateQueries({ queryKey: ['orders'] });
+    queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
+    navigate(createPageUrl('OrderConfirmation') + `?id=${pendingOrderId}&payment=success`);
+  };
 
   if (cartItems.length === 0) {
     return (
@@ -431,6 +454,17 @@ export default function Checkout() {
           </div>
         </div>
       </div>
+
+      {/* Stripe Payment Modal */}
+      {showStripeModal && stripeClientSecret && (
+        <StripePaymentModal
+          clientSecret={stripeClientSecret}
+          publishableKey={stripePublishableKey}
+          total={total.toFixed(2)}
+          onSuccess={handleStripeSuccess}
+          onClose={() => setShowStripeModal(false)}
+        />
+      )}
 
       {/* Wompi Widget Modal */}
       {showWompiWidget && (
