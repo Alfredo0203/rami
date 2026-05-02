@@ -113,7 +113,6 @@ export default function StripePaymentModal({ clientSecret, publishableKey, total
             options={{
               clientSecret,
               appearance,
-              paymentMethodTypes: ['card'],
             }}
           >
             <CheckoutForm onSuccess={onSuccess} onCancel={onClose} total={total} />
