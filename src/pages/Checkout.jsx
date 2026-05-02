@@ -455,7 +455,7 @@ export default function Checkout() {
         )}
         {paymentMethod === 'wompi' && (
           <p className="text-xs text-muted-foreground text-center mb-2">
-            🔒 Serás redirigido al portal de pago de <span className="font-semibold text-foreground">Wompi</span>
+            🔒 Pago seguro procesado por <span className="font-semibold text-foreground">Wompi</span>
           </p>
         )}
         <Button
