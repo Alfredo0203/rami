@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { ArrowLeft, MapPin, CreditCard, Banknote, Loader2, Plus, Ticket } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Banknote, Loader2, Plus, Ticket, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
@@ -178,11 +178,22 @@ export default function Checkout() {
         shippingAddress,
         paymentMethod,
         couponCode: appliedCoupon?.code,
-        skipCartClear: paymentMethod === 'credit_card',
+        skipCartClear: paymentMethod === 'credit_card' || paymentMethod === 'wompi',
       });
 
       if (res.data?.error) throw new Error(res.data.details?.join('\n') || res.data.error);
       const order = res.data.order;
+
+      // Si pago con Wompi → redirigir al Web Checkout de Wompi
+      if (paymentMethod === 'wompi') {
+        const wompiUrl = 'https://s.wompi.sv/1339589VDv';
+        if (window.self !== window.top) {
+          window.top.location.href = wompiUrl;
+        } else {
+          window.location.href = wompiUrl;
+        }
+        return order;
+      }
 
       // Si pago con tarjeta → redirigir a Stripe
       if (paymentMethod === 'credit_card') {
@@ -320,6 +331,7 @@ export default function Checkout() {
           <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-2">
             {[
               { value: 'credit_card', icon: CreditCard, label: 'Tarjeta de Crédito / Débito' },
+              { value: 'wompi', icon: Shield, label: 'Wompi', description: 'Pago seguro en línea con Wompi' },
               { value: 'cash_on_delivery', icon: Banknote, label: 'Contra Entrega', description: 'Pagas cuando recibes tu pedido' },
             ].filter(m => allowedPaymentMethods.includes(m.value)).map(method => {
               const Icon = method.icon;
@@ -430,6 +442,11 @@ export default function Checkout() {
             🔒 Pago seguro procesado por <span className="font-semibold text-foreground">Stripe</span>
           </p>
         )}
+        {paymentMethod === 'wompi' && (
+          <p className="text-xs text-muted-foreground text-center mb-2">
+            🔒 Serás redirigido al portal de pago de <span className="font-semibold text-foreground">Wompi</span>
+          </p>
+        )}
         <Button
            onClick={() => placeOrderMutation.mutate()}
            disabled={placeOrderMutation.isPending || !selectedAddressId || !paymentMethod}
@@ -439,6 +456,8 @@ export default function Checkout() {
              <Loader2 className="w-5 h-5 animate-spin" />
            ) : paymentMethod === 'credit_card' ? (
              '💳 Pagar con Tarjeta'
+           ) : paymentMethod === 'wompi' ? (
+             '🛡️ Pagar con Wompi'
            ) : (
              'Finalizar Compra'
            )}

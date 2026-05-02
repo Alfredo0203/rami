@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard, Megaphone, MessageCircle } from 'lucide-react';
+import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard, Megaphone, MessageCircle, Shield } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -23,7 +23,8 @@ const PAGES_CONFIG = [
 ];
 
 const PAYMENT_METHODS = [
-  { value: 'credit_card', label: 'Pago con Tarjeta', description: 'Tarjeta de crédito / débito vía pasarela de pago', icon: CreditCard },
+  { value: 'credit_card', label: 'Pago con Tarjeta', description: 'Tarjeta de crédito / débito vía Stripe', icon: CreditCard },
+  { value: 'wompi', label: 'Wompi', description: 'Pago seguro en línea con Wompi El Salvador', icon: Shield },
   { value: 'cash_on_delivery', label: 'Contra Entrega', description: 'El cliente paga cuando recibe el pedido', icon: Banknote },
 ];
 
