@@ -1,14 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { X, Loader2, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { base44 } from '@/api/base44Client';
 
-// stripePromise se inicializa dinámicamente con la key recibida como prop
-
-// Formulario interno que usa los hooks de Stripe
-function CheckoutForm({ onSuccess, onCancel, total, clientSecret }) {
+function CheckoutForm({ onSuccess, onCancel, total }) {
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
@@ -21,12 +17,17 @@ function CheckoutForm({ onSuccess, onCancel, total, clientSecret }) {
     setProcessing(true);
     setError('');
 
-    const cardElement = elements.getElement(CardElement);
+    const { error: submitError } = await elements.submit();
+    if (submitError) {
+      setError(submitError.message);
+      setProcessing(false);
+      return;
+    }
 
-    const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(
-      clientSecret,
-      { payment_method: { card: cardElement } }
-    );
+    const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      redirect: 'if_required',
+    });
 
     if (confirmError) {
       setError(confirmError.message);
@@ -38,22 +39,14 @@ function CheckoutForm({ onSuccess, onCancel, total, clientSecret }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="border border-gray-200 rounded-xl p-4 bg-white">
-        <CardElement
-          options={{
-            style: {
-              base: {
-                fontSize: '16px',
-                color: '#1a1a1a',
-                fontFamily: 'Inter, system-ui, sans-serif',
-                '::placeholder': { color: '#a0a0a0' },
-              },
-              invalid: { color: '#e53e3e' },
-            },
-            hidePostalCode: true,
-          }}
-        />
-      </div>
+      <PaymentElement
+        options={{
+          layout: 'tabs',
+          defaultValues: { billingDetails: {} },
+          wallets: { applePay: 'never', googlePay: 'never' },
+          fields: { billingDetails: { address: { country: 'never' } } },
+        }}
+      />
       {error && (
         <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{error}</p>
       )}
@@ -86,7 +79,6 @@ function CheckoutForm({ onSuccess, onCancel, total, clientSecret }) {
   );
 }
 
-// Modal principal
 export default function StripePaymentModal({ clientSecret, publishableKey, total, onSuccess, onClose }) {
   if (!clientSecret || !publishableKey) return null;
 
@@ -104,7 +96,6 @@ export default function StripePaymentModal({ clientSecret, publishableKey, total
   return (
     <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4">
       <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[92vh] flex flex-col">
-        {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 bg-[#635BFF] rounded-full flex items-center justify-center">
@@ -112,18 +103,20 @@ export default function StripePaymentModal({ clientSecret, publishableKey, total
             </div>
             <span className="font-semibold text-gray-800 text-sm">Pago con Tarjeta</span>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-          >
+          <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-100 transition-colors">
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
-
-        {/* Elements */}
         <div className="overflow-y-auto flex-1 p-4">
-          <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
-            <CheckoutForm onSuccess={onSuccess} onCancel={onClose} total={total} clientSecret={clientSecret} />
+          <Elements
+            stripe={stripePromise}
+            options={{
+              clientSecret,
+              appearance,
+              paymentMethodTypes: ['card'],
+            }}
+          >
+            <CheckoutForm onSuccess={onSuccess} onCancel={onClose} total={total} />
           </Elements>
         </div>
       </div>
