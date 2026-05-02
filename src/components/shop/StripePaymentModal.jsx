@@ -1,8 +1,20 @@
 import React, { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { X, Loader2, Lock } from 'lucide-react';
+import { X, Loader2, Lock, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+
+// Ocultar el botón "Usar Link" que Stripe inyecta automáticamente
+const HIDE_LINK_STYLE = `
+  .__PrivateStripeElement iframe { }
+  [data-testid="link-button"],
+  .Link-button,
+  .LinkButton,
+  .p-LinkAutofillPrompt,
+  .p-LinkButton {
+    display: none !important;
+  }
+`;
 
 const CARD_ELEMENT_OPTIONS = {
   style: {
@@ -96,9 +108,10 @@ function CheckoutForm({ onSuccess, onCancel, total, clientSecret }) {
         </Button>
       </div>
 
-      <p className="text-xs text-center text-gray-400 flex items-center justify-center gap-1">
-        <Lock className="w-3 h-3" /> Pago seguro procesado por Stripe
-      </p>
+      <div className="flex items-center justify-center gap-1.5 text-xs text-gray-400">
+        <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
+        <span>Pago seguro con cifrado SSL · Estándar PCI DSS</span>
+      </div>
     </form>
   );
 }
@@ -120,10 +133,11 @@ export default function StripePaymentModal({ clientSecret, publishableKey, total
   return (
     <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4">
       <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[92vh] flex flex-col">
+        <style>{HIDE_LINK_STYLE}</style>
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-[#635BFF] rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-bold">S</span>
+            <div className="w-7 h-7 bg-primary rounded-full flex items-center justify-center">
+              <Lock className="w-3.5 h-3.5 text-white" />
             </div>
             <span className="font-semibold text-gray-800 text-sm">Pago con Tarjeta</span>
           </div>
