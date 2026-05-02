@@ -18,19 +18,12 @@ const EMPTY_FORM = {
   street: '',
   house_number: '',
   reference: '',
-  dui: '',
   country: 'El Salvador',
 };
 
 // Helpers
 function formatPhone(raw) {
   return raw.replace(/\D/g, '').slice(0, 8);
-}
-
-function formatDUI(raw) {
-  const digits = raw.replace(/\D/g, '').slice(0, 9);
-  if (digits.length > 8) return `${digits.slice(0, 8)}-${digits[8]}`;
-  return digits;
 }
 
 function validate(form) {
@@ -53,10 +46,6 @@ function validate(form) {
     e.street = 'La calle / pasaje / avenida es requerida';
   if (!form.house_number.trim())
     e.house_number = 'El número de casa es requerido';
-  if (!form.dui.trim())
-    e.dui = 'El DUI es requerido';
-  else if (!/^\d{8}-\d$/.test(form.dui.trim()))
-    e.dui = 'Formato inválido. Ej: 12345678-9';
   return e;
 }
 
@@ -217,18 +206,6 @@ export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
           value={form.reference}
           onChange={e => set('reference', e.target.value)}
           placeholder="Ej: Frente al parque, contiguo a farmacia"
-          className="h-9 text-sm"
-        />
-      </Field>
-
-      {/* DUI */}
-      <Field label="Número de DUI" error={errors.dui}>
-        <Input
-          value={form.dui}
-          onChange={e => set('dui', formatDUI(e.target.value))}
-          placeholder="12345678-9"
-          maxLength={10}
-          inputMode="numeric"
           className="h-9 text-sm"
         />
       </Field>

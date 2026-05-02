@@ -1,0 +1,62 @@
+{
+  "name": "Address",
+  "type": "object",
+  "properties": {
+    "label": {
+      "type": "string",
+      "description": "Etiqueta (Casa, Trabajo, etc.)"
+    },
+    "first_name": {
+      "type": "string",
+      "description": "Nombre"
+    },
+    "last_name": {
+      "type": "string",
+      "description": "Apellido"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Tel\u00e9fono con prefijo +503"
+    },
+    "departamento": {
+      "type": "string"
+    },
+    "municipio": {
+      "type": "string"
+    },
+    "colonia": {
+      "type": "string",
+      "description": "Colonia / Residencial / Barrio"
+    },
+    "street": {
+      "type": "string",
+      "description": "Calle / Pasaje / Avenida"
+    },
+    "house_number": {
+      "type": "string",
+      "description": "N\u00famero de casa"
+    },
+    "reference": {
+      "type": "string",
+      "description": "Punto de referencia (opcional)"
+    },
+    "country": {
+      "type": "string",
+      "default": "El Salvador"
+    },
+    "is_default": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "first_name",
+    "last_name",
+    "phone",
+    "departamento",
+    "municipio",
+    "colonia",
+    "street",
+    "house_number"
+  ]
+}
