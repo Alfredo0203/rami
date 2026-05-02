@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { X, Loader2, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
@@ -8,7 +8,7 @@ import { base44 } from '@/api/base44Client';
 // stripePromise se inicializa dinámicamente con la key recibida como prop
 
 // Formulario interno que usa los hooks de Stripe
-function CheckoutForm({ onSuccess, onCancel, total }) {
+function CheckoutForm({ onSuccess, onCancel, total, clientSecret }) {
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
@@ -21,17 +21,12 @@ function CheckoutForm({ onSuccess, onCancel, total }) {
     setProcessing(true);
     setError('');
 
-    const { error: submitError } = await elements.submit();
-    if (submitError) {
-      setError(submitError.message);
-      setProcessing(false);
-      return;
-    }
+    const cardElement = elements.getElement(CardElement);
 
-    const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      redirect: 'if_required',
-    });
+    const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(
+      clientSecret,
+      { payment_method: { card: cardElement } }
+    );
 
     if (confirmError) {
       setError(confirmError.message);
@@ -43,12 +38,22 @@ function CheckoutForm({ onSuccess, onCancel, total }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <PaymentElement
-        options={{
-          layout: 'tabs',
-          paymentMethodOrder: ['card'],
-        }}
-      />
+      <div className="border border-gray-200 rounded-xl p-4 bg-white">
+        <CardElement
+          options={{
+            style: {
+              base: {
+                fontSize: '16px',
+                color: '#1a1a1a',
+                fontFamily: 'Inter, system-ui, sans-serif',
+                '::placeholder': { color: '#a0a0a0' },
+              },
+              invalid: { color: '#e53e3e' },
+            },
+            hidePostalCode: true,
+          }}
+        />
+      </div>
       {error && (
         <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{error}</p>
       )}
@@ -118,7 +123,7 @@ export default function StripePaymentModal({ clientSecret, publishableKey, total
         {/* Elements */}
         <div className="overflow-y-auto flex-1 p-4">
           <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
-            <CheckoutForm onSuccess={onSuccess} onCancel={onClose} total={total} />
+            <CheckoutForm onSuccess={onSuccess} onCancel={onClose} total={total} clientSecret={clientSecret} />
           </Elements>
         </div>
       </div>
