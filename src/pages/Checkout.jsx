@@ -147,50 +147,57 @@ export default function Checkout() {
     setCouponError('');
   };
 
+  const buildOrderPayload = () => {
+    const address = addresses.find(a => a.id === selectedAddressId);
+    if (!address) throw new Error('Selecciona una dirección de envío');
+
+    const shippingAddress = {
+      full_name: address.first_name ? `${address.first_name} ${address.last_name}` : (address.full_name || ''),
+      phone: address.phone,
+      street: `${address.street}${address.house_number ? ' #' + address.house_number : ''}`,
+      city: address.municipio || address.city || '',
+      state: address.departamento || address.state || '',
+      zip_code: address.zip_code || '',
+      country: address.country || 'El Salvador',
+    };
+
+    const cleanedCartItems = cartItems.map(item => ({
+      id: item.id,
+      product_id: item.product_id,
+      variant_id: item.variant_id || undefined,
+      quantity: item.quantity,
+      product_name: item.product_name,
+      variant_name: item.variant_name || undefined,
+      product_image: item.product_image,
+      product_price: item.product_price,
+    }));
+
+    return { shippingAddress, cleanedCartItems };
+  };
+
+  // Para Wompi: abrir el widget ANTES de crear la orden
+  const handleWompiClick = () => {
+    if (!selectedAddressId) {
+      toast.error('Selecciona una dirección de envío');
+      return;
+    }
+    setShowWompiWidget(true);
+  };
+
   const placeOrderMutation = useMutation({
     mutationFn: async () => {
-      const address = addresses.find(a => a.id === selectedAddressId);
-      if (!address) throw new Error('Selecciona una dirección de envío');
+      const { shippingAddress, cleanedCartItems } = buildOrderPayload();
 
-      const shippingAddress = {
-        full_name: address.first_name ? `${address.first_name} ${address.last_name}` : (address.full_name || ''),
-        phone: address.phone,
-        street: `${address.street}${address.house_number ? ' #' + address.house_number : ''}`,
-        city: address.municipio || address.city || '',
-        state: address.departamento || address.state || '',
-        zip_code: address.zip_code || '',
-        country: address.country || 'El Salvador',
-      };
-
-      const cleanedCartItems = cartItems.map(item => ({
-        id: item.id,
-        product_id: item.product_id,
-        variant_id: item.variant_id || undefined,
-        quantity: item.quantity,
-        product_name: item.product_name,
-        variant_name: item.variant_name || undefined,
-        product_image: item.product_image,
-        product_price: item.product_price,
-      }));
-
-      // Crear la orden primero
-      // Si pago con tarjeta, no limpiar el carrito hasta confirmar pago
       const res = await base44.functions.invoke('placeOrder', {
         cartItems: cleanedCartItems,
         shippingAddress,
         paymentMethod,
         couponCode: appliedCoupon?.code,
-        skipCartClear: paymentMethod === 'credit_card' || paymentMethod === 'wompi',
+        skipCartClear: paymentMethod === 'credit_card',
       });
 
       if (res.data?.error) throw new Error(res.data.details?.join('\n') || res.data.error);
       const order = res.data.order;
-
-      // Si pago con Wompi → mostrar widget embebido dentro de la app
-      if (paymentMethod === 'wompi') {
-        setShowWompiWidget(true);
-        return order;
-      }
 
       // Si pago con tarjeta → redirigir a Stripe
       if (paymentMethod === 'credit_card') {
@@ -206,7 +213,6 @@ export default function Checkout() {
 
         if (stripeRes.data?.error) throw new Error(stripeRes.data.error);
         if (stripeRes.data?.url) {
-          // Si estamos en un iframe (preview), abrir en top level para evitar el bloqueo de Stripe
           if (window.self !== window.top) {
             window.top.location.href = stripeRes.data.url;
           } else {
@@ -219,7 +225,6 @@ export default function Checkout() {
       return order;
     },
     onSuccess: (order) => {
-      // Solo llega aquí si no hubo redirección a Stripe (ej: cash_on_delivery)
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
@@ -453,7 +458,7 @@ export default function Checkout() {
           </p>
         )}
         <Button
-           onClick={() => placeOrderMutation.mutate()}
+           onClick={() => paymentMethod === 'wompi' ? handleWompiClick() : placeOrderMutation.mutate()}
            disabled={placeOrderMutation.isPending || !selectedAddressId || !paymentMethod}
            className="w-full bg-primary text-primary-foreground font-bold h-12 rounded-full text-base max-w-lg mx-auto block"
          >
