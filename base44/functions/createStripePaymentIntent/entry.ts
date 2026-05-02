@@ -25,12 +25,7 @@ Deno.serve(async (req) => {
       },
     });
 
-    // Actualizar para deshabilitar Link explícitamente
-    await stripe.paymentIntents.update(paymentIntent.id, {
-      payment_method_options: {
-        link: { persistent_token: null },
-      },
-    });
+
 
     return Response.json({ clientSecret: paymentIntent.client_secret });
   } catch (error) {

@@ -484,7 +484,7 @@ export default function Checkout() {
         )}
         {paymentMethod === 'credit_card' && (
           <p className="text-xs text-muted-foreground text-center mb-2">
-            🔒 Pago seguro procesado por <span className="font-semibold text-foreground">Stripe</span>
+            🔒 Pago seguro · Cifrado SSL · Estándar PCI DSS
           </p>
         )}
         {paymentMethod === 'wompi' && (
