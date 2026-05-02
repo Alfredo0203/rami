@@ -130,9 +130,19 @@ function CheckoutForm({ onSuccess, onCancel, total, clientSecret }) {
         </Button>
       </div>
 
-      <div className="flex items-center justify-center gap-1.5 text-xs text-gray-400">
-        <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
-        <span>Pago seguro con cifrado SSL · Estándar PCI DSS</span>
+      {/* Trust badges */}
+      <div className="mt-4 bg-green-50 border border-green-100 rounded-xl p-3 space-y-2">
+        {[
+          'Pago seguro con cifrado SSL de 256 bits',
+          'Los datos de tu tarjeta nunca se almacenan en nuestros servidores',
+          'Tus datos personales están protegidos y jamás serán compartidos',
+          'Cumplimos con el estándar de seguridad PCI DSS',
+        ].map((text, i) => (
+          <div key={i} className="flex items-start gap-2">
+            <ShieldCheck className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+            <span className="text-xs text-green-700">{text}</span>
+          </div>
+        ))}
       </div>
     </form>
   );
@@ -159,7 +169,7 @@ export default function StripePaymentModal({ clientSecret, publishableKey, total
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4">
-      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[92vh] flex flex-col">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[95vh] flex flex-col">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 bg-primary rounded-full flex items-center justify-center">

@@ -198,7 +198,7 @@ export default function Checkout() {
         shippingAddress,
         paymentMethod,
         couponCode: appliedCoupon?.code,
-        skipCartClear: paymentMethod === 'credit_card',
+        skipCartClear: paymentMethod !== 'cash_on_delivery',
       });
 
       if (res.data?.error) throw new Error(res.data.details?.join('\n') || res.data.error);
@@ -246,10 +246,9 @@ export default function Checkout() {
   });
 
   const handleStripeSuccess = async (paymentIntentId) => {
-    // Actualizar la orden con el transaction ID y estado pagado
-    await base44.entities.Order.update(pendingOrderId, {
-      payment_status: 'paid',
-      payment_transaction_id: paymentIntentId,
+    await base44.functions.invoke('confirmOrder', {
+      orderId: pendingOrderId,
+      paymentTransactionId: paymentIntentId,
     });
     setShowStripeModal(false);
     queryClient.invalidateQueries({ queryKey: ['cart'] });
