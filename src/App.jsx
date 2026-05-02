@@ -11,6 +11,7 @@ import { base44 } from '@/api/base44Client';
 import { LanguageProvider } from '@/components/i18n/LanguageProvider';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import AdminSalesCharts from './pages/AdminSalesCharts';
+import Policies from './pages/Policies';
 import InventoryDashboard from './pages/InventoryDashboard';
 import SellerDashboard from './pages/SellerDashboard';
 import Recommendations from './pages/Recommendations';
@@ -74,6 +75,7 @@ const AuthenticatedApp = () => {
       <Route path="/InventoryDashboard" element={<InventoryDashboard />} />
       <Route path="/SellerDashboard" element={<SellerDashboard />} />
       <Route path="/Recommendations" element={<LayoutWrapper currentPageName="Recommendations"><Recommendations /></LayoutWrapper>} />
+      <Route path="/Policies" element={<Policies />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
