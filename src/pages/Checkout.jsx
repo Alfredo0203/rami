@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import AddressForm from '@/components/addresses/AddressForm';
+import WompiWidget from '@/components/shop/WompiWidget';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ export default function Checkout() {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [couponError, setCouponError] = useState('');
+  const [showWompiWidget, setShowWompiWidget] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -184,14 +186,9 @@ export default function Checkout() {
       if (res.data?.error) throw new Error(res.data.details?.join('\n') || res.data.error);
       const order = res.data.order;
 
-      // Si pago con Wompi → redirigir al Web Checkout de Wompi
+      // Si pago con Wompi → mostrar widget embebido dentro de la app
       if (paymentMethod === 'wompi') {
-        const wompiUrl = 'https://s.wompi.sv/1339589VDv';
-        if (window.self !== window.top) {
-          window.top.location.href = wompiUrl;
-        } else {
-          window.location.href = wompiUrl;
-        }
+        setShowWompiWidget(true);
         return order;
       }
 
@@ -429,6 +426,14 @@ export default function Checkout() {
           </div>
         </div>
       </div>
+
+      {/* Wompi Widget Modal */}
+      {showWompiWidget && (
+        <WompiWidget
+          urlPago="https://s.wompi.sv/1339589VDv"
+          onClose={() => setShowWompiWidget(false)}
+        />
+      )}
 
       {/* Place Order */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border px-4 py-3 safe-area-bottom">
