@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import BottomNav from '../components/shop/BottomNav';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { User, Package, MapPin, Heart, LogOut, ChevronRight, Shield, Loader2, Trash2, AlertTriangle, LogIn, MessageCircle } from 'lucide-react';
+import { User, Package, MapPin, Heart, LogOut, ChevronRight, Shield, Loader2, Trash2, AlertTriangle, LogIn, MessageCircle, FileText } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -64,6 +64,7 @@ export default function Account() {
     { icon: MapPin, label: t('my_addresses'), page: 'Addresses' },
     { icon: Heart, label: 'Mis favoritos', page: 'Wishlist' },
     { icon: MessageCircle, label: 'Contáctanos', action: 'support' },
+    { icon: FileText, label: 'Políticas legales', page: 'Policies' },
   ];
 
   if (user?.role === 'admin' || user?.role === 'super_admin') {
@@ -121,6 +122,14 @@ export default function Account() {
             Iniciar sesión / Crear cuenta
           </Button>
           <p className="text-center text-xs text-muted-foreground">Puedes seguir explorando productos sin iniciar sesión.</p>
+          <button
+            onClick={() => navigate('/Policies')}
+            className="w-full flex items-center gap-3 p-4 bg-card rounded-xl shadow-sm hover:bg-secondary/50 transition-colors mt-2"
+          >
+            <FileText className="w-5 h-5 text-primary" />
+            <span className="text-sm font-medium text-foreground flex-1 text-left">Políticas legales</span>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
         </div>
         <BottomNav cartCount={0} />
       </div>
