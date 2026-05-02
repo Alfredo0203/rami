@@ -133,7 +133,7 @@ function CheckoutForm({ onSuccess, onCancel, total, clientSecret }) {
       {/* Trust badges */}
       <div className="mt-4 bg-green-50 border border-green-100 rounded-xl p-3 space-y-2">
         {[
-          'Pago seguro con cifrado SSL de 256 bits',
+          'Pago seguro con cifrado SSL',
           'Los datos de tu tarjeta nunca se almacenan en nuestros servidores',
           'Tus datos personales están protegidos y jamás serán compartidos',
           'Cumplimos con el estándar de seguridad PCI DSS',
