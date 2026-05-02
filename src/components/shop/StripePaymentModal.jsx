@@ -35,6 +35,7 @@ const CardBrandIcons = () => (
 );
 
 const CARD_ELEMENT_OPTIONS = {
+  disableLink: true,
   style: {
     base: {
       fontSize: '16px',
