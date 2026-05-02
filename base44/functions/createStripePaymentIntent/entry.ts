@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
     }
 
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // en centavos
+      amount: Math.round(amount * 100),
       currency: 'usd',
       payment_method_types: ['card'],
       receipt_email: customerEmail || undefined,
@@ -22,6 +22,13 @@ Deno.serve(async (req) => {
         base44_app_id: Deno.env.get('BASE44_APP_ID'),
         order_id: orderId || '',
         coupon_code: couponCode || '',
+      },
+    });
+
+    // Actualizar para deshabilitar Link explícitamente
+    await stripe.paymentIntents.update(paymentIntent.id, {
+      payment_method_options: {
+        link: { persistent_token: null },
       },
     });
 

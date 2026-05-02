@@ -4,17 +4,35 @@ import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStri
 import { X, Loader2, Lock, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-// Ocultar el botón "Usar Link" que Stripe inyecta automáticamente
-const HIDE_LINK_STYLE = `
-  .__PrivateStripeElement iframe { }
-  [data-testid="link-button"],
-  .Link-button,
-  .LinkButton,
-  .p-LinkAutofillPrompt,
-  .p-LinkButton {
-    display: none !important;
-  }
-`;
+// Íconos SVG de marcas de tarjeta
+const CardBrandIcons = () => (
+  <div className="flex items-center gap-2 flex-wrap">
+    {/* Visa */}
+    <svg viewBox="0 0 48 30" className="h-6 w-auto" xmlns="http://www.w3.org/2000/svg">
+      <rect width="48" height="30" rx="4" fill="#1A1F71"/>
+      <text x="7" y="22" fontFamily="Arial" fontWeight="bold" fontSize="14" fill="white" letterSpacing="1">VISA</text>
+    </svg>
+    {/* Mastercard */}
+    <svg viewBox="0 0 48 30" className="h-6 w-auto" xmlns="http://www.w3.org/2000/svg">
+      <rect width="48" height="30" rx="4" fill="#252525"/>
+      <circle cx="18" cy="15" r="9" fill="#EB001B"/>
+      <circle cx="30" cy="15" r="9" fill="#F79E1B"/>
+      <path d="M24 8.3a9 9 0 0 1 0 13.4A9 9 0 0 1 24 8.3z" fill="#FF5F00"/>
+    </svg>
+    {/* Amex */}
+    <svg viewBox="0 0 48 30" className="h-6 w-auto" xmlns="http://www.w3.org/2000/svg">
+      <rect width="48" height="30" rx="4" fill="#2557D6"/>
+      <text x="4" y="20" fontFamily="Arial" fontWeight="bold" fontSize="9" fill="white">AMERICAN</text>
+      <text x="4" y="28" fontFamily="Arial" fontWeight="bold" fontSize="9" fill="white">EXPRESS</text>
+    </svg>
+    {/* Discover */}
+    <svg viewBox="0 0 48 30" className="h-6 w-auto" xmlns="http://www.w3.org/2000/svg">
+      <rect width="48" height="30" rx="4" fill="#F5F5F5" stroke="#e5e7eb" strokeWidth="0.5"/>
+      <circle cx="32" cy="15" r="10" fill="#F76F20"/>
+      <text x="5" y="19" fontFamily="Arial" fontWeight="bold" fontSize="7" fill="#231F20">DISCOVER</text>
+    </svg>
+  </div>
+);
 
 const CARD_ELEMENT_OPTIONS = {
   style: {
@@ -57,6 +75,9 @@ function CheckoutForm({ onSuccess, onCancel, total, clientSecret }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Marcas aceptadas */}
+      <CardBrandIcons />
+
       {/* Número de tarjeta */}
       <div className="space-y-1">
         <label className="text-xs font-medium text-gray-600">Número de tarjeta</label>
@@ -130,10 +151,14 @@ export default function StripePaymentModal({ clientSecret, publishableKey, total
     },
   };
 
+  const elementsOptions = {
+    clientSecret,
+    appearance,
+  };
+
   return (
     <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4">
       <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[92vh] flex flex-col">
-        <style>{HIDE_LINK_STYLE}</style>
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 bg-primary rounded-full flex items-center justify-center">
@@ -146,7 +171,7 @@ export default function StripePaymentModal({ clientSecret, publishableKey, total
           </button>
         </div>
         <div className="overflow-y-auto flex-1 p-4">
-          <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
+          <Elements stripe={stripePromise} options={elementsOptions}>
             <CheckoutForm onSuccess={onSuccess} onCancel={onClose} total={total} clientSecret={clientSecret} />
           </Elements>
         </div>
