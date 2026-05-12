@@ -39,7 +39,7 @@ export default function Home() {
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart', currentUser?.email],
     queryFn: () => base44.entities.CartItem.filter({ created_by: currentUser.email }),
-    enabled: !!currentUser?.email && userCheckDone,
+    enabled: !!currentUser && userCheckDone,
   });
 
   const filteredProducts = useMemo(() => {
