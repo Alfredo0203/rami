@@ -4,19 +4,11 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    const [products, categories, variants, reviews] = await Promise.all([
-      base44.asServiceRole.entities.Product.filter({ is_active: true }, 'sort_order', 100),
+    const [products, categories, variants] = await Promise.all([
+      base44.asServiceRole.entities.Product.filter({ is_active: true }, 'sort_order'),
       base44.asServiceRole.entities.Category.list('sort_order'),
-      base44.asServiceRole.entities.ProductVariant.filter({ is_active: true }, null, 300),
-      base44.asServiceRole.entities.Review.filter({ is_approved: true }, null, 300),
+      base44.asServiceRole.entities.ProductVariant.filter({ is_active: true }),
     ]);
-
-    // Calcular rating real desde reseñas aprobadas
-    const reviewsByProduct = {};
-    for (const r of reviews) {
-      if (!reviewsByProduct[r.product_id]) reviewsByProduct[r.product_id] = [];
-      reviewsByProduct[r.product_id].push(r);
-    }
 
     // Calcular stock efectivo para cada producto:
     // - Si tiene variantes → suma el stock de todas sus variantes activas
@@ -49,14 +41,7 @@ Deno.serve(async (req) => {
         variantAttributesFlat[key] = Array.from(set);
       }
 
-      // Calcular rating y review_count desde reseñas aprobadas reales
-      const productReviews = reviewsByProduct[p.id] || [];
-      const review_count = productReviews.length;
-      const rating = review_count > 0
-        ? productReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / review_count
-        : 0;
-
-      return { ...p, effective_stock: effectiveStock, variant_attributes: variantAttributesFlat, rating, review_count };
+      return { ...p, effective_stock: effectiveStock, variant_attributes: variantAttributesFlat };
     });
 
     return Response.json({ products: enrichedProducts, categories, variants });
