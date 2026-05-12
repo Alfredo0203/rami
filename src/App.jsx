@@ -35,6 +35,9 @@ const AuthenticatedApp = () => {
       .catch((err) => {
         if (err?.message?.includes('not registered')) {
           setAuthError({ type: 'user_not_registered' });
+        } else {
+          // Guest: clear cart cache so no leftover data from previous session
+          queryClientInstance.removeQueries({ queryKey: ['cart'] });
         }
         setChecking(false);
       });

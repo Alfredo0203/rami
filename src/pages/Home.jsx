@@ -33,9 +33,8 @@ export default function Home() {
   const categories = catalogData?.categories ?? [];
 
   const { data: cartItems = [] } = useQuery({
-    queryKey: ['cart', currentUser?.email],
+    queryKey: ['cart', currentUser?.email ?? 'guest'],
     queryFn: () => !currentUser?.email ? [] : base44.entities.CartItem.filter({ created_by: currentUser.email }).catch(() => []),
-    enabled: !!currentUser?.email,
     retry: false,
   });
 
