@@ -5,10 +5,10 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
 
     const [products, categories, variants, reviews] = await Promise.all([
-      base44.asServiceRole.entities.Product.list(),
+      base44.asServiceRole.entities.Product.list('sort_order', 200),
       base44.asServiceRole.entities.Category.list('sort_order'),
-      base44.asServiceRole.entities.ProductVariant.filter({ is_active: true }),
-      base44.asServiceRole.entities.Review.filter({ is_approved: true }),
+      base44.asServiceRole.entities.ProductVariant.filter({ is_active: true }, null, 500),
+      base44.asServiceRole.entities.Review.filter({ is_approved: true }, null, 500),
     ]);
 
     // Calcular rating real desde reseñas aprobadas
