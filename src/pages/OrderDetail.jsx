@@ -70,7 +70,7 @@ export default function OrderDetail() {
   const isCancelled = order.status === 'cancelled';
 
   // Lógica de cancelación según método de pago
-  const isOnlinePayment = ['credit_card', 'paypal'].includes(order.payment_method);
+  const isOnlinePayment = order.payment_method === 'credit_card';
   const orderAgeHours = order.created_date
     ? (Date.now() - new Date(order.created_date).getTime()) / (1000 * 60 * 60)
     : 0;
