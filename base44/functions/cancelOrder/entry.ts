@@ -76,45 +76,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Restaurar stock si fue descontado
-    const stockWasDeducted =
-      order.payment_method === 'cash_on_delivery' ||
-      order.payment_status === 'paid';
-
-    if (stockWasDeducted) {
-      for (const item of order.items || []) {
-        try {
-          if (item.variant_id) {
-            const variant = await base44.asServiceRole.entities.ProductVariant.get(item.variant_id);
-            if (variant) {
-              await base44.asServiceRole.entities.ProductVariant.update(item.variant_id, {
-                stock: (variant.stock ?? 0) + (item.quantity ?? 1),
-              });
-            }
-          } else {
-            const product = await base44.asServiceRole.entities.Product.get(item.product_id);
-            if (product) {
-              await base44.asServiceRole.entities.Product.update(item.product_id, {
-                stock: (product.stock ?? 0) + (item.quantity ?? 1),
-                sold_count: Math.max(0, (product.sold_count || 0) - (item.quantity ?? 1)),
-              });
-            }
-          }
-          await base44.asServiceRole.entities.InventoryLog.create({
-            product_id: item.product_id,
-            variant_id: item.variant_id || undefined,
-            quantity: item.quantity ?? 1,
-            cost_per_unit: 0,
-            total_cost: 0,
-            notes: `Cancelación por cliente - Orden ${order.order_number}`,
-            movement_type: 'return',
-            order_id: orderId,
-          });
-        } catch (e) {
-          console.error('Error restaurando stock para item:', item.product_id, e);
-        }
-      }
-    }
+    // La restauración de stock la maneja la automatización onOrderCancelled
+    // para evitar doble restauración.
 
     // Actualizar orden
     const updateData = {

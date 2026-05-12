@@ -20,22 +20,51 @@ Deno.serve(async (req) => {
     const couponCode = data.coupon_code;
     const customerEmail = data.customer_email;
 
-    // Restaurar stock de productos
-    for (const item of items) {
-      if (item.variant_id) {
-        const variant = await base44.asServiceRole.entities.ProductVariant.get(item.variant_id);
-        if (variant) {
-          await base44.asServiceRole.entities.ProductVariant.update(item.variant_id, {
-            stock: (variant.stock ?? 0) + (item.quantity ?? 1),
+    // Solo restaurar stock si fue efectivamente descontado:
+    // - Contraentrega: siempre se descuenta en placeOrder
+    // - Pago online: solo si payment_status === 'paid'
+    const stockWasDeducted =
+      data.payment_method === 'cash_on_delivery' ||
+      data.payment_status === 'paid';
+
+    if (stockWasDeducted) {
+      for (const item of items) {
+        try {
+          if (item.variant_id) {
+            const variant = await base44.asServiceRole.entities.ProductVariant.get(item.variant_id);
+            if (variant) {
+              await base44.asServiceRole.entities.ProductVariant.update(item.variant_id, {
+                stock: (variant.stock ?? 0) + (item.quantity ?? 1),
+              });
+              // También restaurar sold_count del producto padre
+              const parentProduct = await base44.asServiceRole.entities.Product.get(item.product_id);
+              if (parentProduct) {
+                await base44.asServiceRole.entities.Product.update(item.product_id, {
+                  sold_count: Math.max(0, (parentProduct.sold_count || 0) - (item.quantity ?? 1)),
+                });
+              }
+            }
+          } else if (item.product_id) {
+            const product = await base44.asServiceRole.entities.Product.get(item.product_id);
+            if (product) {
+              await base44.asServiceRole.entities.Product.update(item.product_id, {
+                stock: (product.stock ?? 0) + (item.quantity ?? 1),
+                sold_count: Math.max(0, (product.sold_count || 0) - (item.quantity ?? 1)),
+              });
+            }
+          }
+          await base44.asServiceRole.entities.InventoryLog.create({
+            product_id: item.product_id,
+            variant_id: item.variant_id || undefined,
+            quantity: item.quantity ?? 1,
+            cost_per_unit: 0,
+            total_cost: 0,
+            notes: `Cancelación - Orden ${data.order_number}`,
+            movement_type: 'return',
+            order_id: data.id,
           });
-        }
-      } else if (item.product_id) {
-        const product = await base44.asServiceRole.entities.Product.get(item.product_id);
-        if (product) {
-          await base44.asServiceRole.entities.Product.update(item.product_id, {
-            stock: (product.stock ?? 0) + (item.quantity ?? 1),
-            sold_count: Math.max(0, (product.sold_count || 0) - (item.quantity ?? 1)),
-          });
+        } catch (e) {
+          console.error('Error restaurando stock para item:', item.product_id, e);
         }
       }
     }
