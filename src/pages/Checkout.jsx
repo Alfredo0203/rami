@@ -41,8 +41,9 @@ export default function Checkout() {
   }, []);
 
   const { data: cartItems = [] } = useQuery({
-    queryKey: ['cart'],
-    queryFn: () => base44.entities.CartItem.list(),
+    queryKey: ['cart', user?.email],
+    queryFn: () => !user?.email ? [] : base44.entities.CartItem.filter({ created_by: user.email }),
+    enabled: !!user?.email,
   });
 
   const { data: addresses = [], isLoading: loadingAddresses } = useQuery({

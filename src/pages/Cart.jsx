@@ -7,14 +7,17 @@ import CartItemCard from '../components/shop/CartItemCard';
 import { ArrowLeft, ShoppingBag, Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AnimatePresence } from 'framer-motion';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 
 export default function Cart() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user, isGuest } = useCurrentUser();
 
   const { data: cartItems = [], isLoading } = useQuery({
-    queryKey: ['cart'],
-    queryFn: () => base44.entities.CartItem.list(),
+    queryKey: ['cart', user?.email],
+    queryFn: () => isGuest || !user?.email ? [] : base44.entities.CartItem.filter({ created_by: user.email }),
+    enabled: !isGuest && !!user?.email,
   });
 
   const updateQtyMutation = useMutation({
@@ -52,7 +55,7 @@ export default function Cart() {
   const { data: catalogData } = useQuery({
     queryKey: ['public-catalog'],
     queryFn: () => base44.functions.invoke('getPublicCatalog', {}).then(r => r.data),
-    enabled: cartItems.length > 0,
+    enabled: cartItems.length > 0 && !isGuest,
   });
 
   // Cargar variantes activas de productos en carrito que tienen variant_id

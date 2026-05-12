@@ -53,8 +53,9 @@ export default function ProductDetail() {
   });
 
   const { data: cartItems = [] } = useQuery({
-    queryKey: ['cart'],
-    queryFn: () => base44.entities.CartItem.list().catch(() => []),
+    queryKey: ['cart', user?.email],
+    queryFn: () => isGuest || !user?.email ? [] : base44.entities.CartItem.filter({ created_by: user.email }).catch(() => []),
+    enabled: !isGuest && !!user?.email,
   });
 
   const { data: wishlistItems = [] } = useQuery({
