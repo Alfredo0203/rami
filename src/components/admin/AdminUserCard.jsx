@@ -181,7 +181,7 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [], st
           {!isSelf && isOwner && !isSuperAdmin && (
             <div className="flex flex-wrap gap-2 pt-1 border-t border-border">
               <p className="w-full text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Rol</p>
-              {['user', 'admin', 'seller'].map(role => (
+              {['user', 'admin'].map(role => (
                 <Button
                   key={role}
                   size="sm"
