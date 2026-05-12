@@ -125,7 +125,7 @@ const SECTIONS = [
 
           <p className="font-medium text-foreground">Pago en efectivo (contra entrega):</p>
           <ul className="list-disc pl-5 space-y-1 mt-1">
-            <li>Puedes cancelar libremente mientras el pedido esté en estado <em>Pendiente</em> o <em>En proceso</em></li>
+            <li>Puedes cancelar mientras el pedido esté en estado <em>Pendiente</em> o <em>En proceso</em></li>
             <li>Una vez enviado, no se permite la cancelación directa</li>
             <li>En casos de rechazos reiterados, podremos limitar el uso de este método de pago</li>
           </ul>
