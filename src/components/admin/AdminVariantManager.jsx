@@ -41,10 +41,23 @@ export default function AdminVariantManager({ product }) {
     enabled: open,
   });
 
+  // Recalcula el stock total del producto sumando todas sus variantes activas
+  const syncProductStock = async (updatedVariantId, updatedStock, isDelete = false) => {
+    const allVariants = await base44.entities.ProductVariant.filter({ product_id: product.id });
+    const total = allVariants.reduce((sum, v) => {
+      if (isDelete && v.id === updatedVariantId) return sum;
+      const stock = (updatedVariantId && v.id === updatedVariantId) ? updatedStock : (v.stock ?? 0);
+      return sum + (v.is_active !== false ? stock : 0);
+    }, 0);
+    await base44.entities.Product.update(product.id, { stock: total });
+    queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+  };
+
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.ProductVariant.create(data),
-    onSuccess: () => {
+    onSuccess: async (created) => {
       queryClient.invalidateQueries({ queryKey: ['variants', product.id] });
+      await syncProductStock(created.id, created.stock ?? 0);
       toast.success('Variante creada');
       setAdding(false);
       setForm(EMPTY_FORM);
@@ -53,8 +66,10 @@ export default function AdminVariantManager({ product }) {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.ProductVariant.update(id, data),
-    onSuccess: () => {
+    onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['variants', product.id] });
+      const newStock = parseInt(variables.data.stock) || 0;
+      await syncProductStock(variables.id, newStock);
       toast.success('Variante actualizada');
       setEditing(null);
       setForm(EMPTY_FORM);
@@ -63,15 +78,19 @@ export default function AdminVariantManager({ product }) {
 
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.ProductVariant.delete(id),
-    onSuccess: () => {
+    onSuccess: async (_, deletedId) => {
       queryClient.invalidateQueries({ queryKey: ['variants', product.id] });
+      await syncProductStock(deletedId, 0, true);
       toast.success('Variante eliminada');
     },
   });
 
   const toggleMutation = useMutation({
     mutationFn: ({ id, is_active }) => base44.entities.ProductVariant.update(id, { is_active }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['variants', product.id] }),
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ['variants', product.id] });
+      await syncProductStock(null, 0); // recalcula todo
+    },
   });
 
   const handleImageUpload = async (e) => {
@@ -284,8 +303,9 @@ export default function AdminVariantManager({ product }) {
                               'valor'
                             }
                             className="h-8 px-2 text-xs border border-border rounded-lg flex-1 bg-card"
-                            onKeyPress={(e) => {
+                            onKeyDown={(e) => {
                               if (e.key === 'Enter') {
+                                e.preventDefault();
                                 const val = e.currentTarget.value;
                                 addAttrValue(groupIdx, val);
                                 e.currentTarget.value = '';

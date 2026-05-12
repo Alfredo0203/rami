@@ -123,7 +123,9 @@ export default function AdminProductForm({ product, categories, onClose }) {
               </SelectContent>
             </Select>
           </div>
-          <div><Label className="text-xs">Inventario</Label><Input type="number" value={form.stock} onChange={e => setForm({...form, stock: e.target.value})} className="h-9 text-sm" /></div>
+          {!form.has_variants && (
+            <div><Label className="text-xs">Inventario (unidades)</Label><Input type="number" min="0" value={form.stock} onChange={e => setForm({...form, stock: e.target.value})} className="h-9 text-sm" /></div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -183,6 +185,12 @@ export default function AdminProductForm({ product, categories, onClose }) {
           <Switch checked={form.has_variants} onCheckedChange={v => setForm({...form, has_variants: v})} />
           <Label className="text-xs">Tiene variantes (color, talla, etc.)</Label>
         </div>
+
+        {form.has_variants && !isEditing && (
+          <p className="text-xs text-muted-foreground bg-secondary rounded-lg px-3 py-2">
+            💡 Guarda el producto primero y luego podrás agregar las variantes con su stock individual.
+          </p>
+        )}
 
         {isEditing && product?.id && (
           <AdminVariantManager product={{ ...product, has_variants: form.has_variants }} />
