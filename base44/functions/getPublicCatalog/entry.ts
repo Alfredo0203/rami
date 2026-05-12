@@ -44,11 +44,11 @@ Deno.serve(async (req) => {
       return { ...p, effective_stock: effectiveStock, variant_attributes: variantAttributesFlat };
     });
 
-    // Ordenar: Featured → Más vendidos → Resto aleatorio
+    // Ordenar: Featured → Más vendidos → Resto (sin ordenar, se randomiza en cliente)
     const featured = enrichedProducts.filter(p => p.is_featured).sort((a, b) => b.sold_count - a.sold_count);
     const notFeatured = enrichedProducts.filter(p => !p.is_featured);
     const topSellers = notFeatured.filter(p => p.sold_count > 0).sort((a, b) => b.sold_count - a.sold_count);
-    const rest = notFeatured.filter(p => !p.sold_count || p.sold_count === 0).sort(() => Math.random() - 0.5);
+    const rest = notFeatured.filter(p => !p.sold_count || p.sold_count === 0);
     
     const orderedProducts = [...featured, ...topSellers, ...rest];
 
