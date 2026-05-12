@@ -32,6 +32,31 @@ export default function ProductDetail() {
   const [viewingStore, setViewingStore] = useState(null);
   const touchStartX = useRef(null);
 
+  // Safe back: go back in history if there's a previous page, otherwise go Home
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  };
+
+  // Intercept physical back button when arriving from a shared link (no in-app history)
+  useEffect(() => {
+    // Push a state so we can detect if the user presses back before any navigation
+    const entryLength = window.history.length;
+
+    const handlePopState = () => {
+      // If history length suggests they came directly (shared link), redirect to Home
+      if (entryLength <= 1) {
+        navigate('/', { replace: true });
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [navigate]);
+
   // Back button closes lightbox instead of navigating away
   useBackButtonClose(lightboxOpen, () => setLightboxOpen(false));
 
@@ -380,7 +405,7 @@ export default function ProductDetail() {
 
       {/* Top bar */}
       <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg flex items-center justify-between px-4 safe-area-top">
-        <button onClick={() => navigate(-1)} className="p-2 bg-secondary rounded-full">
+        <button onClick={handleBack} className="p-2 bg-secondary rounded-full">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div className="flex gap-2">
