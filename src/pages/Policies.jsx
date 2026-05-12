@@ -194,7 +194,7 @@ const SECTIONS = [
 
         <div>
           <h3 className="font-semibold text-foreground mb-1">Devoluciones</h3>
-          <p>Puedes solicitar una devolución dentro de <strong>7 días calendario</strong> desde la entrega. El producto debe estar:</p>
+          <p>Puedes solicitar una devolución dentro de <strong>30 días calendario</strong> desde la entrega. El producto debe estar:</p>
           <ul className="list-disc pl-5 space-y-1 mt-1">
             <li>Sin uso</li>
             <li>En su empaque original</li>
