@@ -33,9 +33,9 @@ export default function Home() {
   const categories = catalogData?.categories ?? [];
 
   const { data: cartItems = [] } = useQuery({
-    queryKey: ['cart', currentUser?.email ?? 'guest'],
-    queryFn: () => !currentUser?.email ? [] : base44.entities.CartItem.filter({ created_by: currentUser.email }).catch(() => []),
-    retry: false,
+    queryKey: ['cart', currentUser?.email],
+    queryFn: () => !currentUser?.email ? [] : base44.entities.CartItem.filter({ created_by: currentUser.email }),
+    enabled: !!currentUser?.email,
   });
 
   const filteredProducts = useMemo(() => {
