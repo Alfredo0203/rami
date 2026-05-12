@@ -58,12 +58,8 @@ export default function Home() {
       );
     }
     
-    // Randomizar solo el "resto" (productos sin ventas) para que cambien cada carga
-    const featured = filtered.filter(p => p.is_featured).sort((a, b) => b.sold_count - a.sold_count);
-    const topSellers = filtered.filter(p => !p.is_featured && p.sold_count > 0).sort((a, b) => b.sold_count - a.sold_count);
-    const rest = filtered.filter(p => !p.is_featured && (!p.sold_count || p.sold_count === 0)).sort(() => Math.random() - 0.5);
-    
-    return [...featured, ...topSellers, ...rest];
+    // Randomizar todos los productos en cada carga
+    return [...filtered].sort(() => Math.random() - 0.5);
   }, [products, selectedCategory, searchQuery]);
 
   // Reset displayedCount when filters change
