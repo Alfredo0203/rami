@@ -68,12 +68,30 @@ export default function OrderDetail() {
 
   const currentStepIdx = stepOrder.indexOf(order.status);
   const isCancelled = order.status === 'cancelled';
-  const canCancel = ['pending', 'processing'].includes(order.status);
+
+  // Lógica de cancelación según método de pago
+  const isOnlinePayment = ['credit_card', 'paypal'].includes(order.payment_method);
+  const orderAgeHours = order.created_date
+    ? (Date.now() - new Date(order.created_date).getTime()) / (1000 * 60 * 60)
+    : 0;
+  const within24h = orderAgeHours <= 24;
+  const hoursLeft = Math.max(0, 24 - orderAgeHours);
+
+  const canCancel = ['pending', 'processing'].includes(order.status) &&
+    (!isOnlinePayment || within24h);
+
+  const cancelBlockedByTime = isOnlinePayment && !within24h &&
+    ['pending', 'processing'].includes(order.status);
 
   const handleCancel = async () => {
     setCancelling(true);
-    await base44.entities.Order.update(orderId, { status: 'cancelled' });
-    queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+    try {
+      const res = await base44.functions.invoke('cancelOrder', { orderId });
+      if (res.data?.error) throw new Error(res.data.error);
+      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+    } catch (e) {
+      alert(e.message || 'Error al cancelar el pedido');
+    }
     setCancelling(false);
   };
 
@@ -140,7 +158,14 @@ export default function OrderDetail() {
               <AlertDialogHeader>
                 <AlertDialogTitle>¿Cancelar este pedido?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Esta acción no se puede deshacer. El pedido será marcado como cancelado y el stock será restaurado.
+                  {isOnlinePayment && order.payment_status === 'paid'
+                    ? 'Se procesará un reembolso automático a tu tarjeta. Puede tardar 5-10 días hábiles en reflejarse.'
+                    : 'Esta acción no se puede deshacer. El pedido será marcado como cancelado y el stock será restaurado.'}
+                  {isOnlinePayment && within24h && (
+                    <span className="block mt-1 text-warning font-medium">
+                      Tiempo restante para cancelar: {Math.floor(hoursLeft)}h {Math.round((hoursLeft % 1) * 60)}min
+                    </span>
+                  )}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -154,6 +179,12 @@ export default function OrderDetail() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+        )}
+        {cancelBlockedByTime && (
+          <div className="w-full flex items-center gap-2 py-3 px-4 border border-border rounded-xl text-sm text-muted-foreground bg-secondary">
+            <XCircle className="w-4 h-4 shrink-0" />
+            <span>El plazo de 24h para cancelar con tarjeta ha expirado. Contacta soporte.</span>
+          </div>
         )}
       </div>
 
