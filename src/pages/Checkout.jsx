@@ -357,7 +357,7 @@ export default function Checkout() {
             {[
               { value: 'credit_card', icon: CreditCard, label: 'Tarjeta de Crédito / Débito' },
               { value: 'wompi', icon: Shield, label: 'Wompi', description: 'Pago seguro en línea con Wompi' },
-              { value: 'cash_on_delivery', icon: Banknote, label: 'Contra Entrega', description: 'Pagas cuando recibes tu pedido' },
+              { value: 'cash_on_delivery', icon: Banknote, label: 'Efectivo', description: 'Pagas en efectivo al recibir tu pedido' },
             ].filter(m => allowedPaymentMethods.includes(m.value)).map(method => {
               const Icon = method.icon;
               return (
@@ -479,7 +479,7 @@ export default function Checkout() {
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border px-4 py-3 safe-area-bottom">
         {paymentMethod === 'cash_on_delivery' && (
           <p className="text-xs text-muted-foreground text-center mb-2">
-            💵 Pagarás <span className="font-semibold text-foreground">${total.toFixed(2)}</span> al recibir tu pedido
+            💵 Pagarás <span className="font-semibold text-foreground">${total.toFixed(2)}</span> en efectivo al recibir tu pedido
           </p>
         )}
         {paymentMethod === 'credit_card' && (

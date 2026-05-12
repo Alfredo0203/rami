@@ -263,7 +263,7 @@ export default function OrderDetail() {
           </div>
           <p className="text-sm text-foreground">
             {order.payment_method === 'credit_card' && 'Tarjeta de Crédito'}
-            {order.payment_method === 'cash_on_delivery' && 'Pago contra entrega'}
+            {order.payment_method === 'cash_on_delivery' && 'Efectivo'}
             {order.payment_method === 'paypal' && 'PayPal'}
             {order.payment_method === 'apple_pay' && 'Apple Pay'}
           </p>
