@@ -9,6 +9,15 @@ export default function ProductCard({ product, index = 0 }) {
     ? Math.round((1 - product.price / product.original_price) * 100)
     : 0;
 
+  // Check if product was created in the last 7 days
+  const isNew = (() => {
+    if (!product.created_date) return false;
+    const createdDate = new Date(product.created_date);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    return createdDate >= sevenDaysAgo;
+  })();
+
   const mainImage = product.images?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
 
   return (
@@ -28,7 +37,12 @@ export default function ProductCard({ product, index = 0 }) {
               alt={product.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
-            {discount > 0 && (
+            {isNew && (
+              <span className="absolute top-2 left-2 bg-accent text-accent-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
+                Nuevo
+              </span>
+            )}
+            {discount > 0 && !isNew && (
               <span className="absolute top-2 left-2 bg-sale text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
                 -{discount}%
               </span>
