@@ -46,7 +46,7 @@ export default function Account() {
     queryClient.setQueryData(['currentUser'], null);
     queryClient.invalidateQueries({ queryKey: ['cart'] });
     // Logout without redirect — user stays as guest
-    base44.auth.logout(window.location.origin + '/Home');
+    base44.auth.logout(window.location.origin + '/');
     toast('Cerraste tu sesión. Podés seguir explorando como invitado.', {
       duration: 4000,
     });

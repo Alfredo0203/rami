@@ -18,7 +18,7 @@ export default function BottomNav({ cartCount = 0 }) {
   }, []);
 
   const navItems = [
-    { icon: Home, label: t('nav_home'), page: 'Home' },
+    { icon: Home, label: t('nav_home'), page: 'Home', path: '/' },
     { icon: Search, label: t('nav_browse'), page: 'Browse' },
     { icon: ShoppingBag, label: t('nav_orders'), page: 'Orders' },
     ...(isSeller ? [{ icon: Store, label: 'Mi Tienda', path: '/SellerDashboard' }] : []),
