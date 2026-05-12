@@ -123,7 +123,7 @@ const SECTIONS = [
         <div>
           <h3 className="font-semibold text-foreground mb-1">4. Cancelación de pedidos</h3>
 
-          <p className="font-medium text-foreground">Pago en efectivo (contra entrega):</p>
+          <p className="font-medium text-foreground">Pago en efectivo:</p>
           <ul className="list-disc pl-5 space-y-1 mt-1">
             <li>Puedes cancelar mientras el pedido esté en estado <em>Pendiente</em> o <em>En proceso</em></li>
             <li>Una vez enviado, no se permite la cancelación directa</li>
