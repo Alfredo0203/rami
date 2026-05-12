@@ -25,7 +25,7 @@ const PAGES_CONFIG = [
 const PAYMENT_METHODS = [
   { value: 'credit_card', label: 'Pago con Tarjeta', description: 'Tarjeta de crédito / débito vía Stripe', icon: CreditCard },
   { value: 'wompi', label: 'Wompi', description: 'Pago seguro en línea con Wompi El Salvador', icon: Shield },
-  { value: 'cash_on_delivery', label: 'Contra Entrega', description: 'El cliente paga cuando recibe el pedido', icon: Banknote },
+  { value: 'cash_on_delivery', label: 'Efectivo', description: 'El cliente paga cuando recibe el pedido', icon: Banknote },
 ];
 
 export default function AdminSettingsTab({ currentUser }) {
