@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { User, ShieldCheck, ShieldOff, Ban, CheckCircle2, Trash2, ChevronDown, ChevronUp, Package } from 'lucide-react';
+import { User, ShieldCheck, ShieldOff, Ban, CheckCircle2, Trash2, ChevronDown, ChevronUp, Package, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -18,16 +18,18 @@ const STATUS_STYLES = {
 const ROLE_STYLES = {
   user: 'bg-secondary text-secondary-foreground',
   admin: 'bg-primary/10 text-primary',
-  super_admin: 'bg-accent/10 text-accent',
+  seller: 'bg-accent/10 text-accent',
+  super_admin: 'bg-purple-100 text-purple-700',
 };
 
 const ROLE_LABELS = {
   user: 'Cliente',
   admin: 'Admin',
+  seller: 'Vendedor',
   super_admin: 'Propietario',
 };
 
-export default function AdminUserCard({ targetUser, currentUser, orders = [] }) {
+export default function AdminUserCard({ targetUser, currentUser, orders = [], stores = [] }) {
   const queryClient = useQueryClient();
   const [expanded, setExpanded] = useState(false);
   const [reason, setReason] = useState('');
@@ -49,6 +51,7 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
   });
 
   const userOrders = orders.filter(o => o.customer_email === targetUser.email);
+  const sellerStore = targetUser.role === 'seller' ? stores.find(s => s.owner_email === targetUser.email) : null;
   const totalSpent = userOrders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + (o.total || 0), 0);
 
   return (
@@ -68,6 +71,11 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
               {targetUser.status || 'active'}
             </span>
             {isSelf && <span className="text-[10px] text-muted-foreground">(tú)</span>}
+            {sellerStore && (
+              <span className="text-[10px] bg-secondary text-muted-foreground px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                <Store className="w-2.5 h-2.5" /> {sellerStore.name}
+              </span>
+            )}
           </div>
         </div>
         <button onClick={() => setExpanded(e => !e)} className="p-1.5 bg-secondary rounded-lg">
@@ -173,7 +181,7 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [] }) 
           {!isSelf && isOwner && !isSuperAdmin && (
             <div className="flex flex-wrap gap-2 pt-1 border-t border-border">
               <p className="w-full text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Rol</p>
-              {['user', 'admin'].map(role => (
+              {['user', 'admin', 'seller'].map(role => (
                 <Button
                   key={role}
                   size="sm"

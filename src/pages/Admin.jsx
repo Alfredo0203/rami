@@ -370,7 +370,7 @@ export default function Admin() {
             </div>
           ) : (
             allUsers.map(u => (
-              <AdminUserCard key={u.id} targetUser={u} currentUser={user} orders={orders} />
+              <AdminUserCard key={u.id} targetUser={u} currentUser={user} orders={orders} stores={stores} />
             ))
           )}
         </TabsContent>

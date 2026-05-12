@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Store, Plus, Edit2, Trash2, Upload, X, Loader2 } from 'lucide-react';
+import { Store, Plus, Edit2, Trash2, Upload, X, Loader2, UserPlus, UserMinus } from 'lucide-react';
 import { useBackButtonClose } from '@/hooks/useBackButtonClose';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,8 @@ export default function AdminStoresTab() {
   const [editingStore, setEditingStore] = useState(null);
   const [deletingStoreId, setDeletingStoreId] = useState(null);
   const [storePreviewUrl, setStorePreviewUrl] = useState(null);
+  const [assigningStore, setAssigningStore] = useState(null); // store para asignar seller
+  const [selectedSellerEmail, setSelectedSellerEmail] = useState('');
 
   // Back button closes lightbox without closing the form behind it
   useBackButtonClose(!!storePreviewUrl, () => setStorePreviewUrl(null));
@@ -63,6 +65,40 @@ export default function AdminStoresTab() {
       queryClient.invalidateQueries({ queryKey: ['admin-stores'] });
       toast.success('Tienda eliminada');
       setDeletingStoreId(null);
+    },
+  });
+
+  // Buscar el seller actual de una tienda
+  const getSellerForStore = (store) => users.find(u => u.email === store.owner_email && u.role === 'seller');
+
+  const assignSellerMutation = useMutation({
+    mutationFn: async ({ store, userEmail }) => {
+      const user = users.find(u => u.email === userEmail);
+      if (!user) throw new Error('Usuario no encontrado');
+      // Cambiar rol a seller
+      await base44.entities.User.update(user.id, { role: 'seller' });
+      // Actualizar owner_email de la tienda
+      await base44.entities.Store.update(store.id, { owner_email: userEmail });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-stores'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-users-stores'] });
+      toast.success('Vendedor asignado correctamente');
+      setAssigningStore(null);
+      setSelectedSellerEmail('');
+    },
+  });
+
+  const removeSellerMutation = useMutation({
+    mutationFn: async ({ store }) => {
+      const seller = getSellerForStore(store);
+      if (seller) {
+        await base44.entities.User.update(seller.id, { role: 'user' });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users-stores'] });
+      toast.success('Vendedor desvinculado');
     },
   });
 
@@ -156,8 +192,20 @@ export default function AdminStoresTab() {
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground truncate">{store.owner_email}</p>
+                {(() => { const seller = getSellerForStore(store); return seller ? (
+                  <span className="text-[10px] bg-accent/10 text-accent px-1.5 py-0.5 rounded-full font-medium">
+                    Vendedor: {seller.full_name || seller.email}
+                  </span>
+                ) : null; })()}
               </div>
               <div className="flex gap-1">
+                <button
+                  onClick={() => { setAssigningStore(store); setSelectedSellerEmail(''); }}
+                  className="p-1.5 bg-secondary rounded hover:bg-primary/10"
+                  title="Asignar vendedor"
+                >
+                  <UserPlus className="w-3.5 h-3.5 text-primary" />
+                </button>
                 <button onClick={() => handleStoreOpen(store)} className="p-1.5 bg-secondary rounded hover:bg-muted">
                   <Edit2 className="w-3.5 h-3.5 text-foreground" />
                 </button>
@@ -311,6 +359,65 @@ export default function AdminStoresTab() {
           </div>
         </div>,
         document.body
+      )}
+
+      {/* Assign Seller Modal */}
+      {assigningStore && (
+        <Dialog open={!!assigningStore} onOpenChange={() => { setAssigningStore(null); setSelectedSellerEmail(''); }}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Asignar Vendedor — {assigningStore.name}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              {(() => {
+                const currentSeller = getSellerForStore(assigningStore);
+                return currentSeller ? (
+                  <div className="flex items-center justify-between bg-accent/10 rounded-lg p-2.5">
+                    <div>
+                      <p className="text-xs font-medium text-foreground">{currentSeller.full_name || currentSeller.email}</p>
+                      <p className="text-[10px] text-muted-foreground">{currentSeller.email}</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs border-destructive text-destructive"
+                      onClick={() => removeSellerMutation.mutate({ store: assigningStore })}
+                      disabled={removeSellerMutation.isPending}
+                    >
+                      <UserMinus className="w-3 h-3 mr-1" /> Desvincular
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Sin vendedor asignado.</p>
+                );
+              })()}
+              <div>
+                <Label className="text-xs">Seleccionar nuevo vendedor</Label>
+                <Select value={selectedSellerEmail} onValueChange={setSelectedSellerEmail}>
+                  <SelectTrigger className="h-9 text-sm mt-1">
+                    <SelectValue placeholder="Elegir usuario..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.filter(u => u.role !== 'super_admin' && u.role !== 'admin').map(u => (
+                      <SelectItem key={u.id} value={u.email}>
+                        {u.full_name || u.email} {u.role === 'seller' ? '(ya es vendedor)' : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setAssigningStore(null); setSelectedSellerEmail(''); }}>Cancelar</Button>
+              <Button
+                onClick={() => assignSellerMutation.mutate({ store: assigningStore, userEmail: selectedSellerEmail })}
+                disabled={!selectedSellerEmail || assignSellerMutation.isPending}
+              >
+                {assignSellerMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Asignar'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* Store Delete Confirmation */}
