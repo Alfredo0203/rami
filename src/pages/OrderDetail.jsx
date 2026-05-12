@@ -86,7 +86,7 @@ export default function OrderDetail() {
   const handleCancel = async () => {
     setCancelling(true);
     try {
-      const res = await base44.functions.invoke('cancelOrder', { orderId, customerEmail: order.customer_email });
+      const res = await base44.functions.invoke('cancelOrder', { orderId });
       if (res.data?.error) throw new Error(res.data.error);
       queryClient.invalidateQueries({ queryKey: ['order', orderId] });
     } catch (e) {
@@ -302,7 +302,7 @@ export default function OrderDetail() {
 
         {/* Status history */}
          <div className="bg-card rounded-xl p-4 shadow-sm">
-           <OrderStatusTimeline orderId={orderId} customerEmail={order.customer_email} />
+           <OrderStatusTimeline orderId={orderId} />
          </div>
       </div>
     </div>

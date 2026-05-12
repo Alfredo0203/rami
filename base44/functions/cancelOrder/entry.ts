@@ -12,8 +12,12 @@ import Stripe from 'npm:stripe@14';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { orderId, customerEmail } = await req.json();
-    
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ error: 'No autenticado' }, { status: 401 });
+    }
+
+    const { orderId } = await req.json();
     if (!orderId) {
       return Response.json({ error: 'orderId es requerido' }, { status: 400 });
     }
@@ -23,19 +27,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Orden no encontrada' }, { status: 404 });
     }
 
-    // Validar acceso: admin o dueño del pedido
-    let user = null;
-    try {
-      user = await base44.auth.me();
-    } catch {
-      // Usuario no autenticado - validar con email del cliente
-      if (!customerEmail || customerEmail !== order.customer_email) {
-        return Response.json({ error: 'No autorizado' }, { status: 403 });
-      }
-    }
-
-    // Si está autenticado, verificar que pertenece al usuario
-    if (user && order.customer_email !== user.email && user.role !== 'admin') {
+    // Verificar que el pedido pertenece al usuario
+    if (order.customer_email !== user.email) {
       return Response.json({ error: 'No autorizado' }, { status: 403 });
     }
 
