@@ -55,10 +55,22 @@ export default function DevModeGuard({ children }) {
           return;
         }
 
-        // Sellers have limited access
+        // Sellers: access their own dashboard + basic shop pages
         if (isSeller) {
-          const isSellerAllowed = SELLER_ALLOWED_PATHS.some(p => location.pathname.startsWith(p));
-          setBlocked(!isSellerAllowed);
+          const isSellerAllowed = SELLER_ALLOWED_PATHS.some(p =>
+            location.pathname === p || location.pathname.startsWith(p + '/')
+          );
+          if (!isSellerAllowed) {
+            setBlocked(true);
+            return;
+          }
+          setBlocked(false);
+          return;
+        }
+
+        // Regular admins bypass most restrictions (except disabled pages above)
+        if (isAnyAdmin) {
+          setBlocked(false);
           return;
         }
 
