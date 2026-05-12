@@ -49,6 +49,11 @@ Deno.serve(async (req) => {
           const variant = await base44.asServiceRole.entities.ProductVariant.get(item.variant_id);
           const newStock = Math.max(0, (variant.stock ?? 0) - item.quantity);
           await base44.asServiceRole.entities.ProductVariant.update(item.variant_id, { stock: newStock });
+          // Actualizar sold_count del producto padre
+          const parentProduct = await base44.asServiceRole.entities.Product.get(item.product_id);
+          await base44.asServiceRole.entities.Product.update(item.product_id, {
+            sold_count: (parentProduct.sold_count || 0) + item.quantity,
+          });
           await base44.asServiceRole.entities.InventoryLog.create({
             product_id: item.product_id,
             variant_id: item.variant_id,
