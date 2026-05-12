@@ -632,7 +632,7 @@ export default function ProductDetail() {
             </button>
           </div>
           <Button
-            onClick={() => isGuest ? base44.auth.redirectToLogin(window.location.href) : addToCartMutation.mutate()}
+            onClick={() => isGuest ? base44.auth.redirectToLogin(window.location.origin + '/') : addToCartMutation.mutate()}
             disabled={addToCartMutation.isPending || (!isGuest && !inStock) || needsVariantSelection}
             className="flex-1 bg-primary text-primary-foreground font-bold h-12 rounded-full text-base"
           >
