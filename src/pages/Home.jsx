@@ -7,9 +7,10 @@ import CategoryBar from '../components/shop/CategoryBar';
 import PromoBanner from '../components/shop/PromoBanner';
 import ProductCard from '../components/shop/ProductCard';
 import BottomNav from '../components/shop/BottomNav';
+import InfiniteScroll from '../components/shop/InfiniteScroll';
 import { useBackExitConfirm } from '../components/useBackExitConfirm';
 import { useTranslation } from '../components/i18n/useTranslation';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { useScrollRestoration } from '../components/useScrollRestoration';
 
 export default function Home() {
@@ -19,6 +20,8 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [userCheckDone, setUserCheckDone] = useState(false);
+  const [displayedCount, setDisplayedCount] = useState(12);
+  const ITEMS_PER_LOAD = 8;
   useBackExitConfirm();
 
   useEffect(() => {
@@ -57,12 +60,25 @@ export default function Home() {
     return filtered;
   }, [products, selectedCategory, searchQuery]);
 
+  // Reset displayedCount when filters change
+  useEffect(() => {
+    setDisplayedCount(12);
+  }, [searchQuery, selectedCategory]);
+
+  const displayedProducts = filteredProducts.slice(0, displayedCount);
+  const hasMore = displayedCount < filteredProducts.length;
+
   const queryClient = useQueryClient();
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
 
   const handleRefresh = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: ['products'] });
+    await queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
+    setDisplayedCount(12);
   }, [queryClient]);
+
+  const handleLoadMore = useCallback(() => {
+    setDisplayedCount(prev => prev + ITEMS_PER_LOAD);
+  }, []);
 
   const userStatus = currentUser?.status || 'active';
 
@@ -114,18 +130,20 @@ export default function Home() {
 
           {loadingProducts ? (
             <div className="flex justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <div className="w-8 h-8 border-4 border-slate-200 border-t-primary rounded-full animate-spin"></div>
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-muted-foreground text-sm">{t('no_products')}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2.5">
-              {filteredProducts.map((product, i) => (
-                <ProductCard key={product.id} product={product} index={i} />
-              ))}
-            </div>
+            <InfiniteScroll
+              items={displayedProducts}
+              renderItem={(product, i) => <ProductCard product={product} index={i} />}
+              onLoadMore={handleLoadMore}
+              isLoading={false}
+              hasMore={hasMore}
+            />
           )}
         </div>
       </PullToRefresh>
