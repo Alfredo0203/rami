@@ -18,10 +18,14 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [userCheckDone, setUserCheckDone] = useState(false);
   useBackExitConfirm();
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    base44.auth.me()
+      .then(setCurrentUser)
+      .catch(() => setCurrentUser(null))
+      .finally(() => setUserCheckDone(true));
   }, []);
 
   const { data: catalogData, isLoading: loadingProducts } = useQuery({
@@ -34,8 +38,8 @@ export default function Home() {
 
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart', currentUser?.email],
-    queryFn: () => !currentUser?.email ? [] : base44.entities.CartItem.filter({ created_by: currentUser.email }),
-    enabled: !!currentUser?.email,
+    queryFn: () => base44.entities.CartItem.filter({ created_by: currentUser.email }),
+    enabled: !!currentUser?.email && userCheckDone,
   });
 
   const filteredProducts = useMemo(() => {
