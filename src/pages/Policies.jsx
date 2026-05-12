@@ -134,7 +134,7 @@ const SECTIONS = [
           <ul className="list-disc pl-5 space-y-1 mt-1">
             <li>Puedes cancelar dentro de las <strong>primeras 24 horas</strong> desde tu compra, mientras el pedido esté en estado <em>Pendiente</em> o <em>En proceso</em></li>
             <li>El reembolso se procesa automáticamente a tu tarjeta y puede tardar <strong>5 a 10 días hábiles</strong> según tu banco</li>
-            <li>Pasadas las 24 horas, no se permite cancelar desde la app; contacta a soporte</li>
+            <li>Pasadas las 24 horas, no se permite cancelar automáticamente desde la app. Puedes contactar a soporte, pero la cancelación está sujeta a aprobación según el estado de la orden</li>
           </ul>
 
           <p className="font-medium text-foreground mt-3">Después del envío (cualquier método):</p>
