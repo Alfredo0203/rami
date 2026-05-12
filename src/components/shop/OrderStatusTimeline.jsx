@@ -11,17 +11,18 @@ const statusConfig = {
   cancelled: { label: 'Cancelado', icon: Clock, color: 'bg-red-100 text-red-700' },
 };
 
-export default function OrderStatusTimeline({ orderId }) {
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function OrderStatusTimeline({ orderId, customerEmail }) {
+   const [history, setHistory] = useState([]);
+   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const response = await base44.functions.invoke('getOrderStatusHistory', {
-          orderId,
-        });
-        setHistory(response.data.history || []);
+   useEffect(() => {
+     const fetchHistory = async () => {
+       try {
+         const response = await base44.functions.invoke('getOrderStatusHistory', {
+           orderId,
+           customerEmail,
+         });
+         setHistory(response.data.history || []);
       } catch (error) {
         console.error('Error fetching status history:', error);
         setHistory([]);

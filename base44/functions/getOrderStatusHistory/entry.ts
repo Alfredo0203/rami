@@ -3,20 +3,14 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    
-    if (!user) {
-      return Response.json({ error: 'No autorizado' }, { status: 401 });
-    }
-
     const body = await req.json();
-    const { orderId } = body;
+    const { orderId, customerEmail } = body;
 
     if (!orderId) {
       return Response.json({ error: 'orderId requerido' }, { status: 400 });
     }
 
-    // Verificar que la orden exista (cualquier usuario autenticado puede ver su historial)
+    // Verificar que la orden exista
     const orders = await base44.asServiceRole.entities.Order.filter({ id: orderId });
     const order = orders[0];
 
@@ -24,12 +18,24 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Orden no encontrada' }, { status: 404 });
     }
 
-    // Permitir si es admin o si el email del cliente coincide
-    const isAdmin = user.role === 'admin';
-    const isOwner = order.customer_email === user.email;
-    
-    if (!isAdmin && !isOwner) {
-      return Response.json({ error: 'No tienes permiso para ver este historial' }, { status: 403 });
+    // Validar acceso: admin o dueño del pedido
+    let user = null;
+    try {
+      user = await base44.auth.me();
+    } catch {
+      // Usuario no autenticado - validar con email del cliente
+      if (!customerEmail || customerEmail !== order.customer_email) {
+        return Response.json({ error: 'No autorizado' }, { status: 403 });
+      }
+    }
+
+    // Si está autenticado, verificar permisos
+    if (user) {
+      const isAdmin = user.role === 'admin';
+      const isOwner = order.customer_email === user.email;
+      if (!isAdmin && !isOwner) {
+        return Response.json({ error: 'No tienes permiso' }, { status: 403 });
+      }
     }
 
     // Obtener el historial
