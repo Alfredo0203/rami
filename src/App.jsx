@@ -12,6 +12,7 @@ import { LanguageProvider } from '@/components/i18n/LanguageProvider';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import AdminSalesCharts from './pages/AdminSalesCharts';
 import Policies from './pages/Policies';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import InventoryDashboard from './pages/InventoryDashboard';
 import SellerDashboard from './pages/SellerDashboard';
 import Recommendations from './pages/Recommendations';
@@ -76,6 +77,7 @@ const AuthenticatedApp = () => {
       <Route path="/SellerDashboard" element={<SellerDashboard />} />
       <Route path="/Recommendations" element={<LayoutWrapper currentPageName="Recommendations"><Recommendations /></LayoutWrapper>} />
       <Route path="/Policies" element={<Policies />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
