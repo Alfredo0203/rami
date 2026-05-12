@@ -44,7 +44,15 @@ Deno.serve(async (req) => {
       return { ...p, effective_stock: effectiveStock, variant_attributes: variantAttributesFlat };
     });
 
-    return Response.json({ products: enrichedProducts, categories, variants });
+    // Ordenar: Featured → Más vendidos → Resto aleatorio
+    const featured = enrichedProducts.filter(p => p.is_featured).sort((a, b) => b.sold_count - a.sold_count);
+    const notFeatured = enrichedProducts.filter(p => !p.is_featured);
+    const topSellers = notFeatured.filter(p => p.sold_count > 0).sort((a, b) => b.sold_count - a.sold_count);
+    const rest = notFeatured.filter(p => !p.sold_count || p.sold_count === 0).sort(() => Math.random() - 0.5);
+    
+    const orderedProducts = [...featured, ...topSellers, ...rest];
+
+    return Response.json({ products: orderedProducts, categories, variants });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
