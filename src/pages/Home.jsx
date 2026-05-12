@@ -47,9 +47,14 @@ export default function Home() {
 
   const filteredProducts = useMemo(() => {
     let filtered = products.filter(p => p.is_active !== false);
-    if (selectedCategory) {
+    
+    // Filter by featured if selected
+    if (selectedCategory === 'featured') {
+      filtered = filtered.filter(p => p.is_featured);
+    } else if (selectedCategory) {
       filtered = filtered.filter(p => p.category_id === selectedCategory);
     }
+    
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(p =>

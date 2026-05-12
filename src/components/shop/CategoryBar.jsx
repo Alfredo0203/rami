@@ -20,15 +20,30 @@ export default function CategoryBar({ categories, selectedId, onSelect }) {
       <button
         onClick={() => onSelect(null)}
         className={`flex flex-col items-center gap-1 min-w-[56px] transition-all ${
-          !selectedId ? 'opacity-100' : 'opacity-50'
+          !selectedId && selectedId !== 'featured' ? 'opacity-100' : 'opacity-50'
         }`}
       >
         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
-          !selectedId ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' : 'bg-secondary text-secondary-foreground'
+          !selectedId && selectedId !== 'featured' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' : 'bg-secondary text-secondary-foreground'
         }`}>
           <Sparkles className="w-5 h-5" />
         </div>
         <span className="text-[10px] font-medium text-foreground">All</span>
+      </button>
+
+      {/* "Destacados" button */}
+      <button
+        onClick={() => onSelect('featured')}
+        className={`flex flex-col items-center gap-1 min-w-[56px] transition-all ${
+          selectedId === 'featured' ? 'opacity-100' : 'opacity-50'
+        }`}
+      >
+        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+          selectedId === 'featured' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' : 'bg-secondary text-secondary-foreground'
+        }`}>
+          <Star className="w-5 h-5" />
+        </div>
+        <span className="text-[10px] font-medium text-foreground">Destacados</span>
       </button>
 
       {filteredCategories.map((cat, i) => {
