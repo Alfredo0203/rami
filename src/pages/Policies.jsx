@@ -107,7 +107,7 @@ const SECTIONS = [
           <p className="mt-2 font-medium text-foreground">Confirmación de pedidos:</p>
           <ul className="list-disc pl-5 space-y-1 mt-1">
             <li>Pagos con tarjeta: el pedido se confirma tras el pago exitoso</li>
-            <li>Pago contra entrega: el pedido se confirma al momento de realizar la orden, sujeto a disponibilidad de stock y zona de entrega</li>
+            <li>Pago en efectivo: el pedido se confirma al momento de realizar la orden, sujeto a disponibilidad de stock y zona de entrega</li>
           </ul>
         </div>
 
@@ -116,27 +116,31 @@ const SECTIONS = [
           <p>Aceptamos:</p>
           <ul className="list-disc pl-5 space-y-1 mt-1">
             <li>Tarjeta de crédito/débito (procesado por Stripe)</li>
-            <li>Pago contra entrega (según disponibilidad de zona)</li>
+            <li>Pago en efectivo al recibir (según disponibilidad de zona)</li>
           </ul>
         </div>
 
         <div>
           <h3 className="font-semibold text-foreground mb-1">4. Cancelación de pedidos</h3>
-          <p className="font-medium text-foreground">Antes del envío:</p>
+
+          <p className="font-medium text-foreground">Pago en efectivo (contra entrega):</p>
           <ul className="list-disc pl-5 space-y-1 mt-1">
-            <li>El cliente puede cancelar el pedido sin penalización</li>
-            <li>Si el pago fue con tarjeta, se realizará un reembolso completo</li>
+            <li>Puedes cancelar libremente mientras el pedido esté en estado <em>Pendiente</em> o <em>En proceso</em></li>
+            <li>Una vez enviado, no se permite la cancelación directa</li>
+            <li>En casos de rechazos reiterados, podremos limitar el uso de este método de pago</li>
           </ul>
-          <p className="font-medium text-foreground mt-2">Después del envío:</p>
+
+          <p className="font-medium text-foreground mt-3">Pago con tarjeta de crédito/débito:</p>
+          <ul className="list-disc pl-5 space-y-1 mt-1">
+            <li>Puedes cancelar dentro de las <strong>primeras 24 horas</strong> desde tu compra, mientras el pedido esté en estado <em>Pendiente</em> o <em>En proceso</em></li>
+            <li>El reembolso se procesa automáticamente a tu tarjeta y puede tardar <strong>5 a 10 días hábiles</strong> según tu banco</li>
+            <li>Pasadas las 24 horas, no se permite cancelar desde la app; contacta a soporte</li>
+          </ul>
+
+          <p className="font-medium text-foreground mt-3">Después del envío (cualquier método):</p>
           <ul className="list-disc pl-5 space-y-1 mt-1">
             <li>No se permite cancelación directa</li>
-            <li>El cliente podrá gestionar una devolución según la política de devoluciones</li>
-          </ul>
-          <p className="font-medium text-foreground mt-2">Pago contra entrega:</p>
-          <ul className="list-disc pl-5 space-y-1 mt-1">
-            <li>Puede cancelarse antes del envío</li>
-            <li>Una vez enviado, se espera que el cliente reciba el pedido</li>
-            <li>En caso de rechazos reiterados, podremos limitar el uso de este método de pago</li>
+            <li>Puedes gestionar una devolución según nuestra política de devoluciones</li>
           </ul>
         </div>
 
@@ -231,7 +235,7 @@ const SECTIONS = [
           <h3 className="font-semibold text-foreground mb-1">Reembolsos</h3>
           <ul className="list-disc pl-5 space-y-1">
             <li>Pagos con tarjeta → 5 a 10 días hábiles (según el banco)</li>
-            <li>Pago contra entrega → reembolso mediante transferencia bancaria</li>
+            <li>Pago en efectivo → reembolso mediante transferencia bancaria o acuerdo con soporte</li>
           </ul>
         </div>
 
