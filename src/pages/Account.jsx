@@ -28,6 +28,7 @@ export default function Account() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
+  const [userStatus, setUserStatus] = useState('active');
   const [loading, setLoading] = useState(true);
   const [deleteEmail, setDeleteEmail] = useState('');
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -36,7 +37,10 @@ export default function Account() {
 
   useEffect(() => {
     base44.auth.me()
-      .then(setUser)
+      .then(u => {
+        setUser(u);
+        setUserStatus(u?.status || 'active');
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -83,8 +87,10 @@ export default function Account() {
         status_reason: 'Self-requested account deactivation',
         status_changed_at: new Date().toISOString(),
       });
-      toast.success('Cuenta desactivada. Tus datos se conservan para auditoría.');
-      setTimeout(() => base44.auth.logout(), 1500);
+      setUserStatus('deactivated');
+      setDeleteOpen(false);
+      setDeleteEmail('');
+      toast.success('Cuenta desactivada. Revisa tu correo para reactivarla.');
     } catch {
       toast.error('Error al desactivar la cuenta');
       setDeleting(false);
@@ -101,7 +107,6 @@ export default function Account() {
   };
 
   const isRegularUser = user?.role === 'user';
-  const userStatus = user?.status || 'active';
 
   if (loading) {
     return (
