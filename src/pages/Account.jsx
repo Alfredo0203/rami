@@ -36,13 +36,25 @@ export default function Account() {
   const [supportChatOpen, setSupportChatOpen] = useState(false);
 
   useEffect(() => {
-    base44.auth.me()
-      .then(u => {
+    const loadUser = async () => {
+      try {
+        const u = await base44.auth.me();
         setUser(u);
         setUserStatus(u?.status || 'active');
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+        console.log('Account loaded - Status:', u?.status);
+      } catch (err) {
+        console.error('Error loading account:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUser();
+
+    // También recargar cuando la ventana se enfoque
+    const handleFocus = () => loadUser();
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   const handleLogout = () => {
