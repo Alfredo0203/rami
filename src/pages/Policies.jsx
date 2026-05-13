@@ -70,12 +70,12 @@ const SECTIONS = [
 
         <div>
           <h3 className="font-semibold text-foreground mb-1">Tus derechos</h3>
-          <p>Puedes solicitar acceso, corrección o eliminación de tus datos escribiendo a: <a href="mailto:alfredotorres.niu@gmail.com" className="text-primary underline">alfredotorres.niu@gmail.com</a></p>
-        </div>
+           <p>Puedes solicitar acceso, corrección o eliminación de tus datos escribiendo a: <a href="mailto:somosrami@gmail.com" className="text-primary underline">somosrami@gmail.com</a></p>
+          </div>
 
-        <div>
-          <h3 className="font-semibold text-foreground mb-1">Contacto</h3>
-          <a href="mailto:alfredotorres.niu@gmail.com" className="text-primary underline">alfredotorres.niu@gmail.com</a>
+          <div>
+           <h3 className="font-semibold text-foreground mb-1">Contacto</h3>
+           <a href="mailto:somosrami@gmail.com" className="text-primary underline">somosrami@gmail.com</a>
         </div>
       </div>
     ),
@@ -179,13 +179,13 @@ const SECTIONS = [
 
         <div>
           <h3 className="font-semibold text-foreground mb-1">Contacto</h3>
-          <a href="mailto:alfredotorres.niu@gmail.com" className="text-primary underline">alfredotorres.niu@gmail.com</a>
+          <a href="mailto:somosrami@gmail.com" className="text-primary underline">somosrami@gmail.com</a>
         </div>
-      </div>
-    ),
-  },
-  {
-    id: 'returns',
+        </div>
+        ),
+        },
+        {
+        id: 'returns',
     title: 'Política de Devoluciones y Reembolsos',
     content: (
       <div className="space-y-4 text-sm text-foreground/80 leading-relaxed">
