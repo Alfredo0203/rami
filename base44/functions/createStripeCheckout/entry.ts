@@ -8,11 +8,19 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'), {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 });
+
     const body = await req.json();
     const { cartItems, shippingAddress, couponCode, discount, shipping, orderId, customerEmail } = body;
 
     if (!cartItems?.length) {
       return Response.json({ error: 'El carrito está vacío' }, { status: 400 });
+    }
+
+    // Validar que el email coincida con el del usuario autenticado
+    if (customerEmail && customerEmail !== user.email) {
+      return Response.json({ error: 'El email no coincide con tu cuenta' }, { status: 403 });
     }
 
     // Build line items from cart
