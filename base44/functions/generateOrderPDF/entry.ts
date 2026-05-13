@@ -70,6 +70,11 @@ Deno.serve(async (req) => {
       if (y + h > pageHeight - 18) { doc.addPage(); y = 18; }
     }
 
+    function getStatusLabel(s) {
+      const map = { pending: 'Pendiente', processing: 'En proceso', shipped: 'Enviado', delivered: 'Entregado', cancelled: 'Cancelado' };
+      return map[s] || (s ? String(s).charAt(0).toUpperCase() + String(s).slice(1) : 'N/A');
+    }
+
     function getPaymentLabel(m) {
       if (m === 'credit_card') return 'Tarjeta de Crédito';
       if (m === 'cash_on_delivery') return 'Pago contra entrega';
@@ -129,7 +134,7 @@ Deno.serve(async (req) => {
     const facRight = pageWidth - marginX;
     t(`Factura #${order.order_number || 'N/A'}`, facRight, y, { size: 10, style: 'bold', align: 'right' });
     t(`Fecha: ${new Date(order.created_date).toLocaleDateString('es-SV')}`, facRight, y + 6, { size: 10, align: 'right' });
-    t(`Estado: ${cap(order.status || 'pending')}`, facRight, y + 12, { size: 10, align: 'right' });
+    t(`Estado: ${getStatusLabel(order.status || 'pending')}`, facRight, y + 12, { size: 10, align: 'right' });
 
     y += 26;
 
@@ -281,7 +286,7 @@ Deno.serve(async (req) => {
         t(`terminando en **** **** **** ${last4}`, marginX + 5, y + 24, { size: 10 });
       }
     } else if (order.tracking_number) {
-      t(`Tracking: ${order.tracking_number}`, marginX + 5, y + 24, { size: 10 });
+      t(`Rastreo: ${order.tracking_number}`, marginX + 5, y + 24, { size: 10 });
     }
 
     y += paymentH + 8;
