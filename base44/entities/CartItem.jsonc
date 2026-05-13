@@ -35,5 +35,19 @@
   "required": [
     "product_id",
     "quantity"
-  ]
+  ],
+  "rls": {
+    "create": {
+      "data.created_by": "{{user.email}}"
+    },
+    "read": {
+      "data.created_by": "{{user.email}}"
+    },
+    "update": {
+      "data.created_by": "{{user.email}}"
+    },
+    "delete": {
+      "data.created_by": "{{user.email}}"
+    }
+  }
 }
