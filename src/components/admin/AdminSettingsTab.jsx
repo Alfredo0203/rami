@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard, Megaphone, MessageCircle, Shield, Image } from 'lucide-react';
+import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard, Megaphone, MessageCircle, Shield, Image, Upload } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -290,11 +290,35 @@ export default function AdminSettingsTab({ currentUser }) {
            <Image className="w-4 h-4 text-primary" />
            <p className="text-sm font-semibold text-foreground">Logo de la Tienda</p>
          </div>
-         <p className="text-xs text-muted-foreground mb-3">URL de la imagen del logo (se usa en facturas PDF y emails).</p>
+         <p className="text-xs text-muted-foreground mb-3">Sube una imagen PNG o JPG. Se usará en facturas PDF y emails.</p>
          {logoUrl && (
-           <img src={logoUrl} alt="Logo" className="h-12 object-contain mb-3 rounded border border-border p-1" />
+           <img src={logoUrl} alt="Logo" className="h-12 object-contain mb-3 rounded border border-border p-1 bg-white" />
          )}
          <div className="space-y-2">
+           <label className="flex items-center justify-center gap-2 w-full h-10 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary transition-colors bg-secondary/30">
+             <Upload className="w-4 h-4 text-muted-foreground" />
+             <span className="text-sm text-muted-foreground">Subir imagen</span>
+             <input
+               type="file"
+               accept="image/*"
+               className="hidden"
+               onChange={async (e) => {
+                 const file = e.target.files?.[0];
+                 if (!file) return;
+                 setSaving(true);
+                 try {
+                   const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                   setLogoUrl(file_url);
+                   await saveSettings({ logo_url: file_url });
+                 } catch {
+                   toast.error('Error al subir la imagen');
+                 } finally {
+                   setSaving(false);
+                 }
+               }}
+             />
+           </label>
+           <p className="text-xs text-muted-foreground text-center">— o pega una URL directa —</p>
            <Input
              value={logoUrl}
              onChange={e => setLogoUrl(e.target.value)}
