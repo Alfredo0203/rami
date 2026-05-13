@@ -79,11 +79,40 @@ Deno.serve(async (req) => {
     }
 
     // ─── ENCABEZADO ────────────────────────────────────────────────────────────
-    // Logo RAmi en texto grande azul
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(36);
-    doc.setTextColor(...colors.primary);
-    doc.text('RAmi', marginX, y + 8);
+    // Cargar logo real desde appSettings
+    async function loadImageAsDataUrl(url) {
+      if (!url) return null;
+      try {
+        const response = await fetch(url);
+        if (!response.ok) return null;
+        const contentType = response.headers.get('content-type') || 'image/png';
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+        return `data:${contentType};base64,${btoa(binary)}`;
+      } catch (e) { return null; }
+    }
+
+    const logoDataUrl = await loadImageAsDataUrl(appSettings.logo_url);
+
+    if (logoDataUrl) {
+      try {
+        // Insertar logo con altura fija 18mm, ancho proporcional aprox 50mm
+        doc.addImage(logoDataUrl, 'PNG', marginX, y - 4, 50, 18);
+      } catch (e) {
+        // fallback texto si falla la imagen
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(36);
+        doc.setTextColor(...colors.primary);
+        doc.text('RAmi', marginX, y + 8);
+      }
+    } else {
+      // Fallback: texto RAmi en azul
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(36);
+      doc.setTextColor(...colors.primary);
+      doc.text('RAmi', marginX, y + 8);
+    }
 
     // Info factura alineada a la derecha
     const facRight = pageWidth - marginX;
