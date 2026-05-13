@@ -4,11 +4,24 @@ import crypto from 'node:crypto';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    let user;
+    try {
+      user = await base44.auth.me();
+    } catch (authErr) {
+      console.error('Auth error:', authErr?.message);
+      return Response.json({ error: 'Unauthorized', details: authErr?.message }, { status: 401 });
+    }
+    
+    console.log('requestAccountReactivation - user:', { id: user?.id, email: user?.email, status: user?.status });
+    
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    if (user.status !== 'deactivated') {
-      return Response.json({ error: 'Account is not deactivated' }, { status: 400 });
+    // Fetch full user data to ensure we have status field
+    const fullUser = await base44.asServiceRole.entities.User.get(user.id);
+    console.log('Full user data:', { id: fullUser?.id, status: fullUser?.status });
+    
+    if (fullUser?.status !== 'deactivated') {
+      return Response.json({ error: 'Account is not deactivated', currentStatus: fullUser?.status }, { status: 400 });
     }
 
     // Generate reactivation token (expires in 24 hours)
@@ -16,7 +29,7 @@ Deno.serve(async (req) => {
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
     // Update user with reactivation token
-    await base44.asServiceRole.entities.User.update(user.id, {
+    await base44.asServiceRole.entities.User.update(fullUser.id, {
       reactivation_token: token,
       reactivation_token_expires: expiresAt,
     });
@@ -24,9 +37,9 @@ Deno.serve(async (req) => {
     // Send email with reactivation link
     const reactivationUrl = `${req.headers.get('origin')}/reactivate?token=${token}`;
     await base44.integrations.Core.SendEmail({
-      to: user.email,
+      to: fullUser.email,
       subject: 'Reactivar tu cuenta en RAmi',
-      body: `Hola ${user.full_name || 'estimado cliente'},
+      body: `Hola ${fullUser.full_name || 'estimado cliente'},
 
 Recibimos tu solicitud para reactivar tu cuenta. Haz clic en el siguiente enlace para reactivarla:
 

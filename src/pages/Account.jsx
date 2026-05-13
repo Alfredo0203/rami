@@ -94,18 +94,21 @@ export default function Account() {
     }
     setDeleting(true);
     try {
-      await base44.entities.User.update(user.id, {
+      console.log('Updating user status to deactivated...');
+      const result = await base44.entities.User.update(user.id, {
         status: 'deactivated',
         status_reason: 'Self-requested account deactivation',
         status_changed_at: new Date().toISOString(),
       });
+      console.log('Update result:', result);
       setUser({ ...user, status: 'deactivated' });
       setUserStatus('deactivated');
       setDeleteOpen(false);
       setDeleteEmail('');
       toast.success('Cuenta desactivada. Revisa tu correo para reactivarla.');
-    } catch {
-      toast.error('Error al desactivar la cuenta');
+    } catch (err) {
+      console.error('Error desactivating account:', err);
+      toast.error('Error al desactivar la cuenta: ' + err?.message);
       setDeleting(false);
     }
   };
