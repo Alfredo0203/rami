@@ -183,7 +183,7 @@ Deno.serve(async (req) => {
     t('Descripción',     colDesc,   headerY, { size: 9, style: 'bold' });
     t('Cant.',           colCant,   headerY, { size: 9, style: 'bold', align: 'center' });
     t('Precio Unit.',    colPrecio, headerY, { size: 9, style: 'bold', align: 'center' });
-    t('Dto. producto',   colDesc2,  headerY, { size: 9, style: 'bold', align: 'center' });
+    t('Descuento',       colDesc2,  headerY, { size: 9, style: 'bold', align: 'center' });
     t('Total',           colTotal,  headerY, { size: 9, style: 'bold', align: 'right' });
 
     drawLine(marginX + 3, headerY + 2, pageWidth - marginX - 3, headerY + 2);
