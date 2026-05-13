@@ -33,6 +33,9 @@ export default function Admin() {
   const [sortBy, setSortBy] = useState('recent'); // 'recent', 'name', 'stock', 'sold'
   const [selectedStoreFilter, setSelectedStoreFilter] = useState('all'); // Por defecto todas las tiendas
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [orderStatusFilter, setOrderStatusFilter] = useState('all');
+  const [orderSearch, setOrderSearch] = useState('');
+  const [orderSort, setOrderSort] = useState('newest');
   const [showSummary, setShowSummary] = useState(false);
 
   useEffect(() => {
@@ -353,9 +356,45 @@ export default function Admin() {
         </TabsContent>
 
         <TabsContent value="orders" className="space-y-3 mt-3">
-          {/* Filtro de tienda */}
+          {/* Filtros de pedidos */}
           <div className="space-y-2">
-            <label className="text-xs font-medium text-foreground block">Filtrar por tienda:</label>
+            {/* Búsqueda */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Buscar por cliente o N° pedido..."
+                value={orderSearch}
+                onChange={(e) => setOrderSearch(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+            {/* Estado y ordenamiento */}
+            <div className="flex gap-2">
+              <select
+                value={orderStatusFilter}
+                onChange={(e) => setOrderStatusFilter(e.target.value)}
+                className="flex-1 px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="all">Todos los estados</option>
+                <option value="pending">⏳ Pendientes</option>
+                <option value="processing">🔄 En proceso</option>
+                <option value="shipped">🚚 Enviados</option>
+                <option value="delivered">✅ Entregados</option>
+                <option value="cancelled">❌ Cancelados</option>
+              </select>
+              <select
+                value={orderSort}
+                onChange={(e) => setOrderSort(e.target.value)}
+                className="flex-1 px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="newest">Más recientes</option>
+                <option value="oldest">Más antiguos</option>
+                <option value="total_desc">Mayor monto</option>
+                <option value="total_asc">Menor monto</option>
+              </select>
+            </div>
+            {/* Tienda */}
             <select
               value={selectedStoreFilter}
               onChange={(e) => setSelectedStoreFilter(e.target.value)}
@@ -377,22 +416,52 @@ export default function Admin() {
             </div>
           ) : (
             (() => {
-              const filteredOrders = selectedStoreFilter === 'all' 
-                ? orders
-                : orders.filter(order => {
-                    return order.items?.some(item => {
-                      const product = products.find(p => p.id === item.product_id);
-                      const storeId = product?.store_id || 'main';
-                      return storeId === selectedStoreFilter;
-                    });
-                  });
+              let filteredOrders = orders;
+
+              // Filtro por tienda
+              if (selectedStoreFilter !== 'all') {
+                filteredOrders = filteredOrders.filter(order =>
+                  order.items?.some(item => {
+                    const product = products.find(p => p.id === item.product_id);
+                    const storeId = product?.store_id || 'main';
+                    return storeId === selectedStoreFilter;
+                  })
+                );
+              }
+
+              // Filtro por estado
+              if (orderStatusFilter !== 'all') {
+                filteredOrders = filteredOrders.filter(o => o.status === orderStatusFilter);
+              }
+
+              // Búsqueda por cliente o número
+              if (orderSearch.trim()) {
+                const q = orderSearch.toLowerCase();
+                filteredOrders = filteredOrders.filter(o =>
+                  o.order_number?.toLowerCase().includes(q) ||
+                  o.customer_name?.toLowerCase().includes(q) ||
+                  o.customer_email?.toLowerCase().includes(q)
+                );
+              }
+
+              // Ordenamiento
+              if (orderSort === 'newest') filteredOrders = [...filteredOrders].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+              if (orderSort === 'oldest') filteredOrders = [...filteredOrders].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+              if (orderSort === 'total_desc') filteredOrders = [...filteredOrders].sort((a, b) => b.total - a.total);
+              if (orderSort === 'total_asc') filteredOrders = [...filteredOrders].sort((a, b) => a.total - b.total);
 
               return filteredOrders.length === 0 ? (
                 <div className="text-center py-10">
-                  <p className="text-muted-foreground text-sm">No hay pedidos para esta tienda</p>
+                  <p className="text-muted-foreground text-sm">No hay pedidos que coincidan</p>
                 </div>
               ) : (
-                filteredOrders.map(order => <AdminOrderCard key={order.id} order={order} />)
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-semibold text-foreground">{filteredOrders.length}</span> pedido{filteredOrders.length !== 1 ? 's' : ''}
+                    {filteredOrders.length !== orders.length && ` de ${orders.length}`}
+                  </p>
+                  {filteredOrders.map(order => <AdminOrderCard key={order.id} order={order} />)}
+                </div>
               );
             })()
           )}
