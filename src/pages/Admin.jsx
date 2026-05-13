@@ -132,10 +132,13 @@ export default function Admin() {
       <div className="px-4 pt-3 pb-1">
         <button
           onClick={() => setShowSummary(v => !v)}
-          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          className="w-full flex items-center justify-between bg-card border border-border rounded-xl px-3 py-2 shadow-sm"
         >
-          {showSummary ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          {showSummary ? 'Ocultar resumen' : 'Ver resumen'}
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-primary" />
+            <span className="text-xs font-semibold text-foreground">Estadísticas y accesos rápidos</span>
+          </div>
+          {showSummary ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
         </button>
       </div>
 
