@@ -154,9 +154,6 @@ Deno.serve(async (req) => {
 
     // ─── DETALLE DEL PEDIDO ─────────────────────────────────────────────────────
     const items = Array.isArray(order.items) ? order.items : [];
-
-    // Calcular descuento por ítem (prorratear el descuento total)
-    const subtotalCalc = items.reduce((s, it) => s + (Number(it.price || 0) * Number(it.quantity || 1)), 0);
     const totalDiscount = Number(order.discount_amount || 0);
 
     // Cabecera de tabla
@@ -168,7 +165,7 @@ Deno.serve(async (req) => {
 
     // Medir altura total de la card
     let detailCardH = 18; // header row
-    const itemLinesArr = items.map(item => {
+    items.forEach(item => {
       const name = `${item.product_name || 'Producto'}${item.variant_name ? ` - ${item.variant_name}` : ''}`;
       const lines = doc.splitTextToSize(name, colCant - colDesc - 4);
       const rowH = Math.max(10, lines.length * 5 + 4);
@@ -185,8 +182,8 @@ Deno.serve(async (req) => {
     const headerY = y + 16;
     t('Descripción',     colDesc,   headerY, { size: 9, style: 'bold' });
     t('Cant.',           colCant,   headerY, { size: 9, style: 'bold', align: 'center' });
-    t('Precio Unitario', colPrecio, headerY, { size: 9, style: 'bold', align: 'center' });
-    t('Descuento',       colDesc2,  headerY, { size: 9, style: 'bold', align: 'center' });
+    t('Precio Unit.',    colPrecio, headerY, { size: 9, style: 'bold', align: 'center' });
+    t('Dto. producto',   colDesc2,  headerY, { size: 9, style: 'bold', align: 'center' });
     t('Total',           colTotal,  headerY, { size: 9, style: 'bold', align: 'right' });
 
     drawLine(marginX + 3, headerY + 2, pageWidth - marginX - 3, headerY + 2);
@@ -196,24 +193,25 @@ Deno.serve(async (req) => {
       const item = items[i];
       const qty = Number(item.quantity || 1);
       const unitPrice = Number(item.price || 0);
-      const lineSubtotal = unitPrice * qty;
+      const lineTotal = unitPrice * qty;
 
-      // Calcular descuento proporcional %
-      let discountPct = 0;
-      if (subtotalCalc > 0 && totalDiscount > 0) {
-        discountPct = Math.round((totalDiscount / subtotalCalc) * 100);
+      // Descuento por ítem: solo si tenía original_price mayor al precio actual
+      const origPrice = Number(item.original_price || 0);
+      let itemDiscountLabel = '-';
+      if (origPrice > unitPrice && unitPrice > 0) {
+        const pct = Math.round(((origPrice - unitPrice) / origPrice) * 100);
+        itemDiscountLabel = `${pct}%`;
       }
-      const lineTotal = lineSubtotal - (lineSubtotal * discountPct / 100);
 
       const name = `${item.product_name || 'Producto'}${item.variant_name ? ` - ${item.variant_name}` : ''}`;
       const nameLines = doc.splitTextToSize(name, colCant - colDesc - 4);
       const rowH = Math.max(10, nameLines.length * 5 + 4);
 
-      t(name,                  colDesc,   rowY + 4, { size: 9.5, maxWidth: colCant - colDesc - 4 });
-      t(String(qty),           colCant,   rowY + 4, { size: 9.5, align: 'center' });
-      t(fmt(unitPrice),        colPrecio, rowY + 4, { size: 9.5, align: 'center' });
-      t(`${discountPct}%`,     colDesc2,  rowY + 4, { size: 9.5, align: 'center' });
-      t(fmt(lineTotal),        colTotal,  rowY + 4, { size: 9.5, align: 'right' });
+      t(name,               colDesc,   rowY + 4, { size: 9.5, maxWidth: colCant - colDesc - 4 });
+      t(String(qty),        colCant,   rowY + 4, { size: 9.5, align: 'center' });
+      t(fmt(unitPrice),     colPrecio, rowY + 4, { size: 9.5, align: 'center' });
+      t(itemDiscountLabel,  colDesc2,  rowY + 4, { size: 9.5, align: 'center', color: itemDiscountLabel !== '-' ? [39, 174, 96] : colors.muted });
+      t(fmt(lineTotal),     colTotal,  rowY + 4, { size: 9.5, align: 'right' });
 
       rowY += rowH;
     }
