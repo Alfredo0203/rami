@@ -169,12 +169,16 @@ export default function Browse() {
       filtered = filtered.filter(p => (p.rating || 0) >= minRating);
     }
 
-    // Apply sorting if specified
+    // Apply sorting if specified, else random order
     if (sortBy === 'newest') filtered = [...filtered].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     else if (sortBy === 'price_low') filtered = [...filtered].sort((a, b) => a.price - b.price);
     else if (sortBy === 'price_high') filtered = [...filtered].sort((a, b) => b.price - a.price);
     else if (sortBy === 'rating') filtered = [...filtered].sort((a, b) => (b.rating || 0) - (a.rating || 0));
     else if (sortBy === 'popular') filtered = [...filtered].sort((a, b) => (b.sold_count || 0) - (a.sold_count || 0));
+    else {
+      // Random order when no sorting selected
+      filtered = [...filtered].sort(() => Math.random() - 0.5);
+    }
 
     return filtered;
   }, [products, searchQuery, selectedCategory, priceRange, sortBy, onlyOnSale, onlyInStock, minRating, selectedBrand, selectedColor, selectedVariantFilters]);
