@@ -186,36 +186,37 @@ export default function Account() {
 
       <div className="px-4 -mt-3 space-y-3">
         {userStatus !== 'active' && (
-          <div className={`flex items-start gap-2 rounded-xl p-3 ${STATUS_STYLES[userStatus]}`}>
-            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold capitalize">
-                {t(userStatus === 'suspended' ? 'account_suspended' : 'account_deactivated')}
-              </p>
-              {userStatus === 'suspended' ? (
-                <>
-                  <p className="text-xs opacity-80 mt-1">Tu cuenta ha sido suspendida por el equipo de administración.</p>
-                  {user?.status_reason && (
-                    <p className="text-xs opacity-80 mt-1"><strong>Razón:</strong> {user.status_reason}</p>
-                  )}
-                  <p className="text-xs opacity-80">Por favor contacta a soporte para más información.</p>
-                </>
-              ) : (
-                <>
-                  {user?.status_reason && (
+          <>
+            <div className={`flex items-start gap-2 rounded-xl p-3 ${STATUS_STYLES[userStatus]}`}>
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold capitalize">
+                  {t(userStatus === 'suspended' ? 'account_suspended' : 'account_deactivated')}
+                </p>
+                {userStatus === 'suspended' ? (
+                  <>
+                    <p className="text-xs opacity-80 mt-1">Tu cuenta ha sido suspendida por el equipo de administración.</p>
+                    {user?.status_reason && (
+                      <p className="text-xs opacity-80 mt-1"><strong>Razón:</strong> {user.status_reason}</p>
+                    )}
+                    <p className="text-xs opacity-80">Por favor contacta a soporte para más información.</p>
+                  </>
+                ) : (
+                  user?.status_reason && (
                     <p className="text-xs opacity-80 mt-1">{user.status_reason}</p>
-                  )}
-                  <Button
-                    size="sm"
-                    onClick={handleRequestReactivation}
-                    className="mt-3 text-xs h-8 w-full sm:w-auto bg-destructive hover:bg-destructive/90 text-white font-medium"
-                  >
-                    Solicitar reactivación
-                  </Button>
-                </>
-              )}
+                  )
+                )}
+              </div>
             </div>
-          </div>
+            {userStatus === 'deactivated' && (
+              <Button
+                onClick={handleRequestReactivation}
+                className="w-full bg-destructive hover:bg-destructive/90 text-white font-medium py-2 rounded-xl"
+              >
+                Solicitar reactivación
+              </Button>
+            )}
+          </>
         )}
 
         <div className="bg-card rounded-xl shadow-sm overflow-hidden">
