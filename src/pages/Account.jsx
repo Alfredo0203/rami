@@ -170,8 +170,15 @@ export default function Account() {
               <p className="text-sm font-semibold capitalize">
                 {t(userStatus === 'suspended' ? 'account_suspended' : 'account_deactivated')}
               </p>
-              {user?.status_reason && (
-                <p className="text-xs opacity-80">{user.status_reason}</p>
+              {userStatus === 'suspended' ? (
+                <>
+                  <p className="text-xs opacity-80 mt-1">Tu cuenta ha sido suspendida por el equipo de administración.</p>
+                  <p className="text-xs opacity-80">Por favor contacta a soporte para más información.</p>
+                </>
+              ) : (
+                user?.status_reason && (
+                  <p className="text-xs opacity-80">{user.status_reason}</p>
+                )
               )}
               {userStatus === 'deactivated' && (
                 <Button
