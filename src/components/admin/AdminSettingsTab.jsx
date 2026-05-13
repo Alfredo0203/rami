@@ -75,6 +75,7 @@ export default function AdminSettingsTab({ currentUser }) {
   };
 
   const [bannerForm, setBannerForm] = useState(null);
+  const [bannerHours, setBannerHours] = useState('');
 
   // Initialize bannerForm when settings load
   useEffect(() => {
@@ -84,7 +85,8 @@ export default function AdminSettingsTab({ currentUser }) {
         promo_banner_title:    settings.promo_banner_title    ?? 'Up to 70% OFF',
         promo_banner_subtitle: settings.promo_banner_subtitle ?? 'Created by Alfred & Raquel',
         promo_banner_link:     settings.promo_banner_link     ?? '',
-        promo_banner_enabled:  settings.promo_banner_enabled  ?? true,
+        promo_banner_enabled:  settings.promo_banner_enabled  ?? false,
+        promo_banner_expires_at: settings.promo_banner_expires_at ?? null,
       });
     }
     if (settings && whatsappPhone === '') {
@@ -95,7 +97,20 @@ export default function AdminSettingsTab({ currentUser }) {
     }
   }, [settings]);
 
-  const saveBanner = () => saveSettings(bannerForm);
+  const saveBanner = () => {
+    const patch = { ...bannerForm };
+    if (patch.promo_banner_enabled && bannerHours) {
+      const hours = parseFloat(bannerHours);
+      if (!isNaN(hours) && hours > 0) {
+        const expiresAt = new Date(Date.now() + hours * 3600 * 1000).toISOString();
+        patch.promo_banner_expires_at = expiresAt;
+      }
+    }
+    if (!patch.promo_banner_enabled) {
+      patch.promo_banner_expires_at = null;
+    }
+    saveSettings(patch);
+  };
 
   const toggleDevMode = (value) => saveSettings({ development_mode: value });
 
@@ -203,14 +218,43 @@ export default function AdminSettingsTab({ currentUser }) {
               <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
             ) : (
               <Switch
-                checked={bannerForm?.promo_banner_enabled ?? true}
-                onCheckedChange={(v) => setBannerForm(f => ({ ...f, promo_banner_enabled: v }))}
+                checked={bannerForm?.promo_banner_enabled ?? false}
+                onCheckedChange={(v) => {
+                  setBannerForm(f => ({ ...f, promo_banner_enabled: v }));
+                  if (!v) setBannerHours('');
+                }}
               />
             )}
           </div>
         </div>
+        {/* Expiry info when currently active */}
+        {bannerForm?.promo_banner_enabled && bannerForm?.promo_banner_expires_at && (
+          <div className="mt-2 px-3 py-2 bg-primary/10 rounded-lg text-xs text-primary font-medium">
+            ⏱ Expira el {new Date(bannerForm.promo_banner_expires_at).toLocaleString('es-SV', { dateStyle: 'short', timeStyle: 'short' })}
+          </div>
+        )}
+
+        {/* Duration input — only shown when enabling */}
+        {bannerForm?.promo_banner_enabled && (
+          <div className="mt-3">
+            <p className="text-xs text-muted-foreground mb-1">Duración en horas (ej: 1.5, 3, 24)</p>
+            <Input
+              type="number"
+              min="0.1"
+              step="0.5"
+              value={bannerHours}
+              onChange={e => setBannerHours(e.target.value)}
+              placeholder="Ej: 2.5"
+              className="h-8 text-sm"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Si dejas vacío, se usará la hora de expiración ya guardada.
+            </p>
+          </div>
+        )}
+
         {bannerForm && (
-          <div className="space-y-3">
+          <div className="space-y-3 mt-3">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Etiqueta superior (ej: Flash Sale)</p>
               <Input

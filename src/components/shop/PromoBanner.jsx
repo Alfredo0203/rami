@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Flame, ArrowRight } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,14 +10,12 @@ const DEFAULTS = {
   promo_banner_title: 'Up to 70% OFF',
   promo_banner_subtitle: 'Created by Alfred & Raquel',
   promo_banner_link: '',
-  promo_banner_enabled: true,
+  promo_banner_enabled: false,
 };
 
-function getSecondsUntilMidnight() {
-  const now = new Date();
-  const midnight = new Date();
-  midnight.setHours(24, 0, 0, 0);
-  return Math.max(Math.floor((midnight - now) / 1000), 0);
+function getSecondsUntil(isoDate) {
+  if (!isoDate) return 0;
+  return Math.max(Math.floor((new Date(isoDate) - Date.now()) / 1000), 0);
 }
 
 function CountdownUnit({ value, label }) {
@@ -35,24 +33,13 @@ function CountdownUnit({ value, label }) {
 
 export default function PromoBanner() {
   const navigate = useNavigate();
-  const [seconds, setSeconds] = useState(getSecondsUntilMidnight);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      const secs = getSecondsUntilMidnight();
-      setSeconds(secs === 0 ? 86400 : secs); // reinicia a 24h al llegar a 0
-    }, 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
+  const queryClient = useQueryClient();
 
   const { data: settings } = useQuery({
     queryKey: ['appSettings'],
     queryFn: () => base44.entities.AppSettings.filter({ key: 'global' }).then(r => r[0] || {}),
     staleTime: 60_000,
+    refetchInterval: 30_000,
   });
 
   const cfg = settings || {};
@@ -61,8 +48,46 @@ export default function PromoBanner() {
   const subtitle = cfg.promo_banner_subtitle ?? DEFAULTS.promo_banner_subtitle;
   const link     = cfg.promo_banner_link     ?? DEFAULTS.promo_banner_link;
   const enabled  = cfg.promo_banner_enabled  ?? DEFAULTS.promo_banner_enabled;
+  const expiresAt = cfg.promo_banner_expires_at ?? null;
+
+  const [seconds, setSeconds] = useState(() => getSecondsUntil(expiresAt));
+
+  // Reset countdown when expiresAt changes
+  useEffect(() => {
+    setSeconds(getSecondsUntil(expiresAt));
+  }, [expiresAt]);
+
+  useEffect(() => {
+    if (!enabled || !expiresAt) return;
+
+    const id = setInterval(async () => {
+      const secs = getSecondsUntil(expiresAt);
+      setSeconds(secs);
+
+      // Auto-disable when expired
+      if (secs === 0 && settings?.id) {
+        clearInterval(id);
+        try {
+          await base44.entities.AppSettings.update(settings.id, {
+            ...settings,
+            promo_banner_enabled: false,
+            promo_banner_expires_at: null,
+          });
+          queryClient.invalidateQueries({ queryKey: ['appSettings'] });
+        } catch (e) {
+          console.error('Failed to auto-disable banner', e);
+        }
+      }
+    }, 1000);
+
+    return () => clearInterval(id);
+  }, [enabled, expiresAt, settings?.id]);
 
   if (!enabled) return null;
+
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
 
   const handleClick = () => {
     if (!link) return;
@@ -98,20 +123,27 @@ export default function PromoBanner() {
         </div>
 
         {/* Right: countdown + arrow */}
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="flex items-center gap-0.5">
-            <CountdownUnit value={h} label="hrs" />
-            <span className="text-primary-foreground/70 font-bold text-xs mb-3">:</span>
-            <CountdownUnit value={m} label="min" />
-            <span className="text-primary-foreground/70 font-bold text-xs mb-3">:</span>
-            <CountdownUnit value={s} label="seg" />
-          </div>
-          {link && (
-            <div className="bg-primary-foreground/20 backdrop-blur-sm rounded-full p-2 ml-1">
-              <ArrowRight className="w-4 h-4 text-primary-foreground" />
+        {expiresAt && (
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-0.5">
+              <CountdownUnit value={h} label="hrs" />
+              <span className="text-primary-foreground/70 font-bold text-xs mb-3">:</span>
+              <CountdownUnit value={m} label="min" />
+              <span className="text-primary-foreground/70 font-bold text-xs mb-3">:</span>
+              <CountdownUnit value={s} label="seg" />
             </div>
-          )}
-        </div>
+            {link && (
+              <div className="bg-primary-foreground/20 backdrop-blur-sm rounded-full p-2 ml-1">
+                <ArrowRight className="w-4 h-4 text-primary-foreground" />
+              </div>
+            )}
+          </div>
+        )}
+        {!expiresAt && link && (
+          <div className="bg-primary-foreground/20 backdrop-blur-sm rounded-full p-2 shrink-0">
+            <ArrowRight className="w-4 h-4 text-primary-foreground" />
+          </div>
+        )}
       </div>
     </motion.div>
   );

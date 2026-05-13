@@ -57,6 +57,11 @@
       "default": true,
       "description": "Whether to show the promo banner on the home page"
     },
+    "promo_banner_expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO datetime when the promo banner auto-expires and turns off"
+    },
     "whatsapp_phone": {
       "type": "string",
       "default": "+50370000000",
