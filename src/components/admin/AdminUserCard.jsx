@@ -65,10 +65,10 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [], st
           <p className="text-xs text-muted-foreground truncate">{targetUser.email}</p>
           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
             <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${ROLE_STYLES[targetUser.role] || ROLE_STYLES.user}`}>
-              {ROLE_LABELS[targetUser.role] || 'Customer'}
+              {ROLE_LABELS[targetUser.role] || 'Cliente'}
             </span>
             <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${STATUS_STYLES[targetUser.status || 'active']}`}>
-              {targetUser.status || 'active'}
+              {targetUser.status === 'active' || !targetUser.status ? 'Activo' : targetUser.status === 'suspended' ? 'Suspendido' : 'Desactivado'}
             </span>
             {isSelf && <span className="text-[10px] text-muted-foreground">(tú)</span>}
             {sellerStore && (

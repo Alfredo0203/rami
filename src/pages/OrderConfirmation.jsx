@@ -67,7 +67,7 @@ export default function OrderConfirmation() {
         <p className="text-muted-foreground text-sm mb-1">Gracias por tu compra</p>
         {order && (
           <p className="text-xs text-muted-foreground">
-            Order #{order.order_number}
+            Pedido #{order.order_number}
           </p>
         )}
       </motion.div>

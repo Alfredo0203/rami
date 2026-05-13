@@ -195,8 +195,8 @@ export default function OrderDetail() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-bold text-foreground">Seguimiento del Pedido</h2>
               <span className="flex items-center gap-1.5 text-[10px] text-success font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse inline-block" />
-                Live
+              <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse inline-block" />
+              En vivo
               </span>
             </div>
             <div className="flex items-center justify-between relative">
@@ -224,7 +224,7 @@ export default function OrderDetail() {
             </div>
             {order.tracking_number && (
               <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-border">
-                Tracking: <span className="text-foreground font-medium">{order.tracking_number}</span>
+                Rastreo: <span className="text-foreground font-medium">{order.tracking_number}</span>
               </p>
             )}
           </div>
