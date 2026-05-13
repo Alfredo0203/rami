@@ -110,7 +110,21 @@ export default function Cart() {
         <span className="text-sm text-muted-foreground">({cartItems.length})</span>
       </div>
 
-      {isLoading ? (
+      {isGuest ? (
+        <div className="flex flex-col items-center justify-center py-20 px-4">
+          <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
+            <ShoppingBag className="w-10 h-10 text-muted-foreground" />
+          </div>
+          <p className="text-foreground font-semibold text-lg mb-1">Inicia sesión para ver tu carrito</p>
+          <p className="text-muted-foreground text-sm mb-6 text-center">Necesitas una cuenta para guardar productos y realizar pedidos</p>
+          <Button
+            onClick={() => base44.auth.redirectToLogin('/Cart')}
+            className="bg-primary text-primary-foreground rounded-full px-8"
+          >
+            Iniciar sesión
+          </Button>
+        </div>
+      ) : isLoading ? (
         <div className="flex justify-center py-20">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
