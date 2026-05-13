@@ -418,7 +418,7 @@ export default function Browse() {
         <p className="text-xs text-muted-foreground">{t('products_count', { count: filteredProducts.length })}</p>
         <Select value={sortBy ?? ''} onValueChange={(val) => setSortBy(val === '' ? null : val)}>
           <SelectTrigger className="w-36 h-8 text-xs">
-            <SelectValue placeholder={t('sort_no_order') || 'Aleatorio'} />
+            <SelectValue placeholder="Aleatorio" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={null}>Aleatorio</SelectItem>
