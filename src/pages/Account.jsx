@@ -111,10 +111,14 @@ export default function Account() {
 
   const handleRequestReactivation = async () => {
     try {
-      await base44.functions.invoke('requestAccountReactivation', {});
+      console.log('Requesting account reactivation...');
+      const response = await base44.functions.invoke('requestAccountReactivation', {});
+      console.log('Reactivation response:', response);
       toast.success('Email de reactivación enviado. Revisa tu bandeja de entrada.');
     } catch (err) {
-      toast.error(err?.response?.data?.error || 'Error al solicitar reactivación');
+      console.error('Reactivation error:', err);
+      const errorMsg = err?.response?.data?.error || err?.message || 'Error al solicitar reactivación';
+      toast.error(errorMsg);
     }
   };
 
@@ -183,7 +187,7 @@ export default function Account() {
         {userStatus !== 'active' && (
           <div className={`flex items-start gap-2 rounded-xl p-3 ${STATUS_STYLES[userStatus]}`}>
             <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold capitalize">
                 {t(userStatus === 'suspended' ? 'account_suspended' : 'account_deactivated')}
               </p>
@@ -196,19 +200,19 @@ export default function Account() {
                   <p className="text-xs opacity-80">Por favor contacta a soporte para más información.</p>
                 </>
               ) : (
-                user?.status_reason && (
-                  <p className="text-xs opacity-80">{user.status_reason}</p>
-                )
-              )}
-              {userStatus === 'deactivated' && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleRequestReactivation}
-                  className="mt-2 text-xs h-7"
-                >
-                  Solicitar reactivación
-                </Button>
+                <>
+                  {user?.status_reason && (
+                    <p className="text-xs opacity-80 mt-1">{user.status_reason}</p>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleRequestReactivation}
+                    className="mt-2 text-xs h-7 w-full sm:w-auto"
+                  >
+                    Solicitar reactivación
+                  </Button>
+                </>
               )}
             </div>
           </div>
