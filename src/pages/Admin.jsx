@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import AdminProductForm from '../components/admin/AdminProductForm';
 import AdminOrderCard from '../components/admin/AdminOrderCard';
 import AdminUserCard from '../components/admin/AdminUserCard';
-import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, Trash2, Loader2, Eye, EyeOff, Users, Settings, MessageSquare, LayoutGrid, BarChart3, Ticket, Search, AlertTriangle, History, Store, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, Trash2, Loader2, Eye, EyeOff, Users, Settings, MessageSquare, LayoutGrid, BarChart3, Ticket, Search, AlertTriangle, History, Store, ChevronDown, ChevronUp, SlidersHorizontal, X } from 'lucide-react';
 import AdminSettingsTab from '../components/admin/AdminSettingsTab';
 import AdminReviewsTab from '../components/admin/AdminReviewsTab';
 import AdminCategoriesTab from '../components/admin/AdminCategoriesTab';
@@ -37,6 +37,8 @@ export default function Admin() {
   const [orderSearch, setOrderSearch] = useState('');
   const [orderSort, setOrderSort] = useState('newest');
   const [showSummary, setShowSummary] = useState(false);
+  const [showProductFilters, setShowProductFilters] = useState(false);
+  const [showOrderFilters, setShowOrderFilters] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -210,52 +212,74 @@ export default function Admin() {
             <Plus className="w-4 h-4 mr-2" /> Agregar Producto
           </Button>
 
-          {/* Filtros */}
-          <div className="space-y-2 mb-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Buscar producto..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-            <div className="flex gap-2">
-              <select
-                value={stockFilter}
-                onChange={(e) => setStockFilter(e.target.value)}
-                className="flex-1 px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="all">Todo el stock</option>
-                <option value="low">⚠️ Casi agotado (&lt;5)</option>
-                <option value="out">❌ Agotado</option>
-                <option value="in_stock">✅ En stock</option>
-              </select>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="flex-1 px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="recent">Más recientes</option>
-                <option value="name">Nombre</option>
-                <option value="stock">Stock</option>
-                <option value="sold">Más vendidos</option>
-              </select>
-            </div>
-            <div className="flex gap-2">
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="flex-1 px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="all">Todas las categorías</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-              </select>
-            </div>
+          {/* Filtros colapsables */}
+          <div className="mb-3">
+            <button
+              onClick={() => setShowProductFilters(v => !v)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+            >
+              <SlidersHorizontal className="w-4 h-4 text-primary" />
+              Filtros
+              {(searchQuery || stockFilter !== 'all' || sortBy !== 'recent' || categoryFilter !== 'all') && (
+                <span className="w-2 h-2 rounded-full bg-primary"></span>
+              )}
+              {showProductFilters ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />}
+            </button>
+
+            {showProductFilters && (
+              <div className="mt-2 space-y-2 p-3 bg-card border border-border rounded-xl">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Buscar producto..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <select
+                    value={stockFilter}
+                    onChange={(e) => setStockFilter(e.target.value)}
+                    className="flex-1 px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="all">Todo el stock</option>
+                    <option value="low">⚠️ Casi agotado</option>
+                    <option value="out">❌ Agotado</option>
+                    <option value="in_stock">✅ En stock</option>
+                  </select>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="flex-1 px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="recent">Más recientes</option>
+                    <option value="name">Nombre</option>
+                    <option value="stock">Stock</option>
+                    <option value="sold">Más vendidos</option>
+                  </select>
+                </div>
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="all">Todas las categorías</option>
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+                {(searchQuery || stockFilter !== 'all' || sortBy !== 'recent' || categoryFilter !== 'all') && (
+                  <button
+                    onClick={() => { setSearchQuery(''); setStockFilter('all'); setSortBy('recent'); setCategoryFilter('all'); }}
+                    className="flex items-center gap-1 text-xs text-destructive hover:underline"
+                  >
+                    <X className="w-3 h-3" /> Limpiar filtros
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {loadingProducts ? (
@@ -356,56 +380,77 @@ export default function Admin() {
         </TabsContent>
 
         <TabsContent value="orders" className="space-y-3 mt-3">
-          {/* Filtros de pedidos */}
-          <div className="space-y-2">
-            {/* Búsqueda */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Buscar por cliente o N° pedido..."
-                value={orderSearch}
-                onChange={(e) => setOrderSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-            {/* Estado y ordenamiento */}
-            <div className="flex gap-2">
-              <select
-                value={orderStatusFilter}
-                onChange={(e) => setOrderStatusFilter(e.target.value)}
-                className="flex-1 px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="all">Todos los estados</option>
-                <option value="pending">⏳ Pendientes</option>
-                <option value="processing">🔄 En proceso</option>
-                <option value="shipped">🚚 Enviados</option>
-                <option value="delivered">✅ Entregados</option>
-                <option value="cancelled">❌ Cancelados</option>
-              </select>
-              <select
-                value={orderSort}
-                onChange={(e) => setOrderSort(e.target.value)}
-                className="flex-1 px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="newest">Más recientes</option>
-                <option value="oldest">Más antiguos</option>
-                <option value="total_desc">Mayor monto</option>
-                <option value="total_asc">Menor monto</option>
-              </select>
-            </div>
-            {/* Tienda */}
-            <select
-              value={selectedStoreFilter}
-              onChange={(e) => setSelectedStoreFilter(e.target.value)}
-              className="w-full px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+          {/* Filtros colapsables de pedidos */}
+          <div className="mb-1">
+            <button
+              onClick={() => setShowOrderFilters(v => !v)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-secondary transition-colors"
             >
-              <option value="all">Todas las tiendas</option>
-              <option value="main">Rami (Mi tienda)</option>
-              {externalStores.map(store => (
-                <option key={store.id} value={store.id}>{store.name}</option>
-              ))}
-            </select>
+              <SlidersHorizontal className="w-4 h-4 text-primary" />
+              Filtros
+              {(orderSearch || orderStatusFilter !== 'all' || orderSort !== 'newest' || selectedStoreFilter !== 'all') && (
+                <span className="w-2 h-2 rounded-full bg-primary"></span>
+              )}
+              {showOrderFilters ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />}
+            </button>
+
+            {showOrderFilters && (
+              <div className="mt-2 space-y-2 p-3 bg-card border border-border rounded-xl">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Buscar por cliente o N° pedido..."
+                    value={orderSearch}
+                    onChange={(e) => setOrderSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <select
+                    value={orderStatusFilter}
+                    onChange={(e) => setOrderStatusFilter(e.target.value)}
+                    className="flex-1 px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="all">Todos los estados</option>
+                    <option value="pending">⏳ Pendientes</option>
+                    <option value="processing">🔄 En proceso</option>
+                    <option value="shipped">🚚 Enviados</option>
+                    <option value="delivered">✅ Entregados</option>
+                    <option value="cancelled">❌ Cancelados</option>
+                  </select>
+                  <select
+                    value={orderSort}
+                    onChange={(e) => setOrderSort(e.target.value)}
+                    className="flex-1 px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="newest">Más recientes</option>
+                    <option value="oldest">Más antiguos</option>
+                    <option value="total_desc">Mayor monto</option>
+                    <option value="total_asc">Menor monto</option>
+                  </select>
+                </div>
+                <select
+                  value={selectedStoreFilter}
+                  onChange={(e) => setSelectedStoreFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="all">Todas las tiendas</option>
+                  <option value="main">Rami (Mi tienda)</option>
+                  {externalStores.map(store => (
+                    <option key={store.id} value={store.id}>{store.name}</option>
+                  ))}
+                </select>
+                {(orderSearch || orderStatusFilter !== 'all' || orderSort !== 'newest' || selectedStoreFilter !== 'all') && (
+                  <button
+                    onClick={() => { setOrderSearch(''); setOrderStatusFilter('all'); setOrderSort('newest'); setSelectedStoreFilter('all'); }}
+                    className="flex items-center gap-1 text-xs text-destructive hover:underline"
+                  >
+                    <X className="w-3 h-3" /> Limpiar filtros
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {loadingOrders ? (
