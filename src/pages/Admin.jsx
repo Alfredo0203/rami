@@ -32,6 +32,7 @@ export default function Admin() {
   const [stockFilter, setStockFilter] = useState('all'); // 'all', 'low', 'out', 'in_stock'
   const [sortBy, setSortBy] = useState('recent'); // 'recent', 'name', 'stock', 'sold'
   const [selectedStoreFilter, setSelectedStoreFilter] = useState('all'); // Por defecto todas las tiendas
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -107,11 +108,12 @@ export default function Admin() {
 
   const totalRevenue = orders.filter(o => o.status === 'delivered').reduce((sum, o) => sum + (o.total || 0), 0);
   const activeProducts = products.filter(p => p.is_active).length;
+  const inactiveProducts = products.filter(p => !p.is_active).length;
   const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'processing').length;
 
   const stats = [
     { label: 'Ingresos', value: `$${totalRevenue.toFixed(0)}`, icon: DollarSign, color: 'bg-success/10 text-success' },
-    { label: 'Productos', value: activeProducts, icon: Package, color: 'bg-primary/10 text-primary' },
+    { label: 'Productos', value: products.length, icon: Package, color: 'bg-primary/10 text-primary', sub: `${activeProducts} activos` },
     { label: 'Pedidos', value: orders.length, icon: ShoppingBag, color: 'bg-chart-5/10 text-chart-5' },
     { label: 'Pendientes', value: pendingOrders, icon: TrendingUp, color: 'bg-warning/10 text-warning' },
   ];
@@ -140,6 +142,7 @@ export default function Admin() {
             </div>
             <p className="text-xl font-extrabold text-foreground">{stat.value}</p>
             <p className="text-xs text-muted-foreground">{stat.label}</p>
+            {stat.sub && <p className="text-[10px] text-muted-foreground">{stat.sub}</p>}
           </motion.div>
         ))}
       </div>
@@ -220,6 +223,18 @@ export default function Admin() {
                 <option value="sold">Más vendidos</option>
               </select>
             </div>
+            <div className="flex gap-2">
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="flex-1 px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="all">Todas las categorías</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {loadingProducts ? (
@@ -228,13 +243,13 @@ export default function Admin() {
             (() => {
               let filtered = products.filter(p => {
                 const stock = getProductStock(p);
-                const sold = getProductSold(p);
                 const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
                 const matchesStock = stockFilter === 'all' ||
                   (stockFilter === 'low' && stock > 0 && stock < 5) ||
                   (stockFilter === 'out' && stock === 0) ||
                   (stockFilter === 'in_stock' && stock >= 5);
-                return matchesSearch && matchesStock;
+                const matchesCategory = categoryFilter === 'all' || p.category_id === categoryFilter;
+                return matchesSearch && matchesStock && matchesCategory;
               });
 
               if (sortBy === 'recent') filtered.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
@@ -244,6 +259,10 @@ export default function Admin() {
 
               return (
                 <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    Mostrando <span className="font-semibold text-foreground">{filtered.length}</span> de <span className="font-semibold text-foreground">{products.length}</span> productos
+                    {inactiveProducts > 0 && <span className="ml-1">({inactiveProducts} inactivos)</span>}
+                  </p>
                   {filtered.map(product => (
                   <div key={product.id} className="bg-card rounded-xl p-3 shadow-sm space-y-2">
                   <div className="flex gap-1">
