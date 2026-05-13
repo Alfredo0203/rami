@@ -6,6 +6,7 @@ import AdminProductForm from '../components/admin/AdminProductForm';
 import AdminOrderCard from '../components/admin/AdminOrderCard';
 import AdminUserCard from '../components/admin/AdminUserCard';
 import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, Trash2, Loader2, Eye, EyeOff, Users, Settings, MessageSquare, LayoutGrid, BarChart3, Ticket, Search, AlertTriangle, History, Store, ChevronDown, ChevronUp, SlidersHorizontal, X } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import AdminSettingsTab from '../components/admin/AdminSettingsTab';
 import AdminReviewsTab from '../components/admin/AdminReviewsTab';
 import AdminCategoriesTab from '../components/admin/AdminCategoriesTab';
@@ -212,75 +213,103 @@ export default function Admin() {
             <Plus className="w-4 h-4 mr-2" /> Agregar Producto
           </Button>
 
-          {/* Filtros colapsables */}
-          <div className="mb-3">
-            <button
-              onClick={() => setShowProductFilters(v => !v)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-secondary transition-colors"
-            >
-              <SlidersHorizontal className="w-4 h-4 text-primary" />
-              Filtros
-              {(searchQuery || stockFilter !== 'all' || sortBy !== 'recent' || categoryFilter !== 'all') && (
-                <span className="w-2 h-2 rounded-full bg-primary"></span>
-              )}
-              {showProductFilters ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />}
-            </button>
-
-            {showProductFilters && (
-              <div className="mt-2 space-y-2 p-3 bg-card border border-border rounded-xl">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    type="text"
-                    placeholder="Buscar producto..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <select
-                    value={stockFilter}
-                    onChange={(e) => setStockFilter(e.target.value)}
-                    className="flex-1 px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="all">Todo el stock</option>
-                    <option value="low">⚠️ Casi agotado</option>
-                    <option value="out">❌ Agotado</option>
-                    <option value="in_stock">✅ En stock</option>
-                  </select>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="flex-1 px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="recent">Más recientes</option>
-                    <option value="name">Nombre</option>
-                    <option value="stock">Stock</option>
-                    <option value="sold">Más vendidos</option>
-                  </select>
-                </div>
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="all">Todas las categorías</option>
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
-                {(searchQuery || stockFilter !== 'all' || sortBy !== 'recent' || categoryFilter !== 'all') && (
+          {/* Filtros — Sheet igual que Browse */}
+          {(() => {
+            const activeCount = [
+              !!searchQuery,
+              stockFilter !== 'all',
+              sortBy !== 'recent',
+              categoryFilter !== 'all',
+            ].filter(Boolean).length;
+            return (
+              <Sheet open={showProductFilters} onOpenChange={setShowProductFilters}>
+                <div className="flex items-center gap-2 mb-3">
                   <button
-                    onClick={() => { setSearchQuery(''); setStockFilter('all'); setSortBy('recent'); setCategoryFilter('all'); }}
-                    className="flex items-center gap-1 text-xs text-destructive hover:underline"
+                    onClick={() => setShowProductFilters(true)}
+                    className="relative p-2.5 bg-secondary rounded-full"
                   >
-                    <X className="w-3 h-3" /> Limpiar filtros
+                    <SlidersHorizontal className="w-5 h-5 text-foreground" />
+                    {activeCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full text-[10px] text-primary-foreground font-bold flex items-center justify-center">
+                        {activeCount}
+                      </span>
+                    )}
                   </button>
-                )}
-              </div>
-            )}
-          </div>
+                  {activeCount > 0 && (
+                    <span className="text-xs text-muted-foreground">{activeCount} filtro{activeCount !== 1 ? 's' : ''} activo{activeCount !== 1 ? 's' : ''}</span>
+                  )}
+                </div>
+                <SheetContent side="bottom" className="rounded-t-3xl max-h-[80vh] overflow-y-auto">
+                  <SheetHeader className="flex flex-row items-center justify-between pr-8">
+                    <SheetTitle>Filtros de productos</SheetTitle>
+                    {activeCount > 0 && (
+                      <button
+                        onClick={() => { setSearchQuery(''); setStockFilter('all'); setSortBy('recent'); setCategoryFilter('all'); }}
+                        className="text-xs text-primary font-medium"
+                      >
+                        Limpiar todo
+                      </button>
+                    )}
+                  </SheetHeader>
+                  <div className="space-y-5 py-4">
+                    <div>
+                      <label className="text-sm font-semibold text-foreground mb-2 block">Buscar</label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <input
+                          type="text"
+                          placeholder="Nombre del producto..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 text-sm bg-secondary border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-foreground mb-2 block">Stock</label>
+                      <div className="flex flex-wrap gap-2">
+                        {[['all','Todos'],['in_stock','✅ En stock'],['low','⚠️ Casi agotado'],['out','❌ Agotado']].map(([v, label]) => (
+                          <button key={v} onClick={() => setStockFilter(v)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${stockFilter === v ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-foreground mb-2 block">Categoría</label>
+                      <div className="flex flex-wrap gap-2">
+                        <button onClick={() => setCategoryFilter('all')}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${categoryFilter === 'all' ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
+                          Todas
+                        </button>
+                        {categories.map(cat => (
+                          <button key={cat.id} onClick={() => setCategoryFilter(cat.id)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${categoryFilter === cat.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
+                            {cat.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-foreground mb-2 block">Ordenar por</label>
+                      <div className="flex flex-wrap gap-2">
+                        {[['recent','Más recientes'],['name','Nombre'],['stock','Stock'],['sold','Más vendidos']].map(([v, label]) => (
+                          <button key={v} onClick={() => setSortBy(v)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${sortBy === v ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <Button onClick={() => setShowProductFilters(false)} className="w-full bg-primary text-primary-foreground rounded-full">
+                      Aplicar
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            );
+          })()}
 
           {loadingProducts ? (
             <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
@@ -380,78 +409,107 @@ export default function Admin() {
         </TabsContent>
 
         <TabsContent value="orders" className="space-y-3 mt-3">
-          {/* Filtros colapsables de pedidos */}
-          <div className="mb-1">
-            <button
-              onClick={() => setShowOrderFilters(v => !v)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-secondary transition-colors"
-            >
-              <SlidersHorizontal className="w-4 h-4 text-primary" />
-              Filtros
-              {(orderSearch || orderStatusFilter !== 'all' || orderSort !== 'newest' || selectedStoreFilter !== 'all') && (
-                <span className="w-2 h-2 rounded-full bg-primary"></span>
-              )}
-              {showOrderFilters ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />}
-            </button>
-
-            {showOrderFilters && (
-              <div className="mt-2 space-y-2 p-3 bg-card border border-border rounded-xl">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    type="text"
-                    placeholder="Buscar por cliente o N° pedido..."
-                    value={orderSearch}
-                    onChange={(e) => setOrderSearch(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <select
-                    value={orderStatusFilter}
-                    onChange={(e) => setOrderStatusFilter(e.target.value)}
-                    className="flex-1 px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="all">Todos los estados</option>
-                    <option value="pending">⏳ Pendientes</option>
-                    <option value="processing">🔄 En proceso</option>
-                    <option value="shipped">🚚 Enviados</option>
-                    <option value="delivered">✅ Entregados</option>
-                    <option value="cancelled">❌ Cancelados</option>
-                  </select>
-                  <select
-                    value={orderSort}
-                    onChange={(e) => setOrderSort(e.target.value)}
-                    className="flex-1 px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="newest">Más recientes</option>
-                    <option value="oldest">Más antiguos</option>
-                    <option value="total_desc">Mayor monto</option>
-                    <option value="total_asc">Menor monto</option>
-                  </select>
-                </div>
-                <select
-                  value={selectedStoreFilter}
-                  onChange={(e) => setSelectedStoreFilter(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="all">Todas las tiendas</option>
-                  <option value="main">Rami (Mi tienda)</option>
-                  {externalStores.map(store => (
-                    <option key={store.id} value={store.id}>{store.name}</option>
-                  ))}
-                </select>
-                {(orderSearch || orderStatusFilter !== 'all' || orderSort !== 'newest' || selectedStoreFilter !== 'all') && (
+          {/* Filtros — Sheet igual que Browse */}
+          {(() => {
+            const activeCount = [
+              !!orderSearch,
+              orderStatusFilter !== 'all',
+              orderSort !== 'newest',
+              selectedStoreFilter !== 'all',
+            ].filter(Boolean).length;
+            return (
+              <Sheet open={showOrderFilters} onOpenChange={setShowOrderFilters}>
+                <div className="flex items-center gap-2 mb-3">
                   <button
-                    onClick={() => { setOrderSearch(''); setOrderStatusFilter('all'); setOrderSort('newest'); setSelectedStoreFilter('all'); }}
-                    className="flex items-center gap-1 text-xs text-destructive hover:underline"
+                    onClick={() => setShowOrderFilters(true)}
+                    className="relative p-2.5 bg-secondary rounded-full"
                   >
-                    <X className="w-3 h-3" /> Limpiar filtros
+                    <SlidersHorizontal className="w-5 h-5 text-foreground" />
+                    {activeCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full text-[10px] text-primary-foreground font-bold flex items-center justify-center">
+                        {activeCount}
+                      </span>
+                    )}
                   </button>
-                )}
-              </div>
-            )}
-          </div>
+                  {activeCount > 0 && (
+                    <span className="text-xs text-muted-foreground">{activeCount} filtro{activeCount !== 1 ? 's' : ''} activo{activeCount !== 1 ? 's' : ''}</span>
+                  )}
+                </div>
+                <SheetContent side="bottom" className="rounded-t-3xl max-h-[80vh] overflow-y-auto">
+                  <SheetHeader className="flex flex-row items-center justify-between pr-8">
+                    <SheetTitle>Filtros de pedidos</SheetTitle>
+                    {activeCount > 0 && (
+                      <button
+                        onClick={() => { setOrderSearch(''); setOrderStatusFilter('all'); setOrderSort('newest'); setSelectedStoreFilter('all'); }}
+                        className="text-xs text-primary font-medium"
+                      >
+                        Limpiar todo
+                      </button>
+                    )}
+                  </SheetHeader>
+                  <div className="space-y-5 py-4">
+                    <div>
+                      <label className="text-sm font-semibold text-foreground mb-2 block">Buscar</label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <input
+                          type="text"
+                          placeholder="Cliente o N° pedido..."
+                          value={orderSearch}
+                          onChange={(e) => setOrderSearch(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 text-sm bg-secondary border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-foreground mb-2 block">Estado</label>
+                      <div className="flex flex-wrap gap-2">
+                        {[['all','Todos'],['pending','⏳ Pendientes'],['processing','🔄 En proceso'],['shipped','🚚 Enviados'],['delivered','✅ Entregados'],['cancelled','❌ Cancelados']].map(([v, label]) => (
+                          <button key={v} onClick={() => setOrderStatusFilter(v)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${orderStatusFilter === v ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-foreground mb-2 block">Tienda</label>
+                      <div className="flex flex-wrap gap-2">
+                        <button onClick={() => setSelectedStoreFilter('all')}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${selectedStoreFilter === 'all' ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
+                          Todas
+                        </button>
+                        <button onClick={() => setSelectedStoreFilter('main')}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${selectedStoreFilter === 'main' ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
+                          Rami (Mi tienda)
+                        </button>
+                        {externalStores.map(store => (
+                          <button key={store.id} onClick={() => setSelectedStoreFilter(store.id)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${selectedStoreFilter === store.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
+                            {store.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-foreground mb-2 block">Ordenar por</label>
+                      <div className="flex flex-wrap gap-2">
+                        {[['newest','Más recientes'],['oldest','Más antiguos'],['total_desc','Mayor monto'],['total_asc','Menor monto']].map(([v, label]) => (
+                          <button key={v} onClick={() => setOrderSort(v)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${orderSort === v ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <Button onClick={() => setShowOrderFilters(false)} className="w-full bg-primary text-primary-foreground rounded-full">
+                      Aplicar
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            );
+          })()}
 
           {loadingOrders ? (
             <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
