@@ -99,6 +99,7 @@ export default function Account() {
         status_reason: 'Self-requested account deactivation',
         status_changed_at: new Date().toISOString(),
       });
+      setUser({ ...user, status: 'deactivated' });
       setUserStatus('deactivated');
       setDeleteOpen(false);
       setDeleteEmail('');
