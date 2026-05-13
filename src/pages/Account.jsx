@@ -173,6 +173,9 @@ export default function Account() {
               {userStatus === 'suspended' ? (
                 <>
                   <p className="text-xs opacity-80 mt-1">Tu cuenta ha sido suspendida por el equipo de administración.</p>
+                  {user?.status_reason && (
+                    <p className="text-xs opacity-80 mt-1"><strong>Razón:</strong> {user.status_reason}</p>
+                  )}
                   <p className="text-xs opacity-80">Por favor contacta a soporte para más información.</p>
                 </>
               ) : (
