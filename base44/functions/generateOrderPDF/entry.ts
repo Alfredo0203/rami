@@ -97,21 +97,23 @@ Deno.serve(async (req) => {
 
     if (logoDataUrl) {
       try {
-        // Insertar logo con altura fija 18mm, ancho proporcional aprox 50mm
-        doc.addImage(logoDataUrl, 'PNG', marginX, y - 4, 50, 18);
+        // Obtener dimensiones reales del logo para mantener proporción
+        const imgProps = doc.getImageProperties(logoDataUrl);
+        const logoH = 16; // altura fija siempre 16mm
+        const logoW = (imgProps.width / imgProps.height) * logoH;
+        doc.addImage(logoDataUrl, 'PNG', marginX, y - 2, logoW, logoH);
       } catch (e) {
         // fallback texto si falla la imagen
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(36);
+        doc.setFontSize(28);
         doc.setTextColor(...colors.primary);
-        doc.text('RAmi', marginX, y + 8);
+        doc.text('RAmi', marginX, y + 10);
       }
     } else {
-      // Fallback: texto RAmi en azul
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(36);
+      doc.setFontSize(28);
       doc.setTextColor(...colors.primary);
-      doc.text('RAmi', marginX, y + 8);
+      doc.text('RAmi', marginX, y + 10);
     }
 
     // Info factura alineada a la derecha
