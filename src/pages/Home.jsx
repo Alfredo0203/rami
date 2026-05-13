@@ -10,7 +10,9 @@ import BottomNav from '../components/shop/BottomNav';
 import InfiniteScroll from '../components/shop/InfiniteScroll';
 import { useBackExitConfirm } from '../components/useBackExitConfirm';
 import { useTranslation } from '../components/i18n/useTranslation';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { useScrollRestoration } from '../components/useScrollRestoration';
 
 export default function Home() {
@@ -88,6 +90,20 @@ export default function Home() {
   }, []);
 
   const userStatus = currentUser?.status || 'active';
+  const [requestingReactivation, setRequestingReactivation] = useState(false);
+
+  const handleRequestReactivation = async () => {
+    try {
+      setRequestingReactivation(true);
+      await base44.functions.invoke('requestAccountReactivation', {});
+      toast.success('Email de reactivación enviado. Revisa tu bandeja de entrada.');
+    } catch (err) {
+      const errorMsg = err?.response?.data?.error || err?.message || 'Error al solicitar reactivación';
+      toast.error(errorMsg);
+    } finally {
+      setRequestingReactivation(false);
+    }
+  };
 
   if (userStatus === 'suspended' || userStatus === 'deactivated') {
     return (
@@ -101,6 +117,16 @@ export default function Home() {
         <p className="text-sm text-muted-foreground text-center">
           {currentUser?.status_reason || t('account_restricted')}
         </p>
+        {userStatus === 'deactivated' && (
+          <Button
+            onClick={handleRequestReactivation}
+            disabled={requestingReactivation}
+            className="mt-4 bg-destructive hover:bg-destructive/90 text-white"
+          >
+            {requestingReactivation && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+            Solicitar reactivación
+          </Button>
+        )}
         <button
           onClick={() => base44.auth.logout()}
           className="mt-2 text-sm text-destructive underline"

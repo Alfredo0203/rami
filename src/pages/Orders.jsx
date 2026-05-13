@@ -11,6 +11,7 @@ import { formatDateSV } from '@/lib/dateUtils';
 import { motion } from 'framer-motion';
 import { useScrollRestoration } from '../components/useScrollRestoration';
 import { useTranslation } from '../components/i18n/useTranslation';
+import { toast } from 'sonner';
 
 export default function Orders() {
   useScrollRestoration();
@@ -19,6 +20,7 @@ export default function Orders() {
   const queryClient = useQueryClient();
   const [userEmail, setUserEmail] = useState(null);
   const [userStatus, setUserStatus] = useState(null);
+  const [requestingReactivation, setRequestingReactivation] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -26,6 +28,19 @@ export default function Orders() {
       setUserStatus(u?.status);
     }).catch(() => {});
   }, []);
+
+  const handleRequestReactivation = async () => {
+    try {
+      setRequestingReactivation(true);
+      await base44.functions.invoke('requestAccountReactivation', {});
+      toast.success('Email de reactivación enviado. Revisa tu bandeja de entrada.');
+    } catch (err) {
+      const errorMsg = err?.response?.data?.error || err?.message || 'Error al solicitar reactivación';
+      toast.error(errorMsg);
+    } finally {
+      setRequestingReactivation(false);
+    }
+  };
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['orders', userEmail],
@@ -62,9 +77,11 @@ export default function Orders() {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => navigate('/Account')}
+              onClick={handleRequestReactivation}
+              disabled={requestingReactivation}
               className="mt-3 text-xs h-7 border-destructive/20 text-destructive hover:bg-destructive/5"
             >
+              {requestingReactivation && <Loader2 className="w-3 h-3 animate-spin mr-1" />}
               Reactivar cuenta
             </Button>
           </div>

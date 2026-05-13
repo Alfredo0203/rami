@@ -30,6 +30,7 @@ export default function Checkout() {
   const [stripePublishableKey, setStripePublishableKey] = useState(null);
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState(null);
+  const [requestingReactivation, setRequestingReactivation] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -263,14 +264,32 @@ export default function Checkout() {
     navigate(createPageUrl('OrderConfirmation') + `?id=${pendingOrderId}&payment=success`);
   };
 
+  const handleRequestReactivation = async () => {
+    try {
+      setRequestingReactivation(true);
+      await base44.functions.invoke('requestAccountReactivation', {});
+      toast.success('Email de reactivación enviado. Revisa tu bandeja de entrada.');
+    } catch (err) {
+      const errorMsg = err?.response?.data?.error || err?.message || 'Error al solicitar reactivación';
+      toast.error(errorMsg);
+    } finally {
+      setRequestingReactivation(false);
+    }
+  };
+
   if (userStatus === 'deactivated') {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
         <AlertTriangle className="w-12 h-12 text-destructive mb-4" />
         <p className="text-foreground font-semibold mb-2">Tu cuenta está desactivada</p>
         <p className="text-muted-foreground text-sm mb-6 text-center">Revisa tu email para reactivar tu cuenta y continuar comprando</p>
-        <Button onClick={() => navigate('/Account')} className="bg-primary text-primary-foreground rounded-full">
-          Ir a mi cuenta
+        <Button 
+          onClick={handleRequestReactivation}
+          disabled={requestingReactivation}
+          className="bg-destructive hover:bg-destructive/90 text-white rounded-full"
+        >
+          {requestingReactivation && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+          Solicitar reactivación
         </Button>
       </div>
     );

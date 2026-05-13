@@ -15,6 +15,8 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { useScrollRestoration } from '../components/useScrollRestoration';
 import { useTranslation } from '../components/i18n/useTranslation';
+import { AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function Browse() {
   useScrollRestoration();
@@ -22,6 +24,14 @@ export default function Browse() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState(null); // null = random order
   const [priceRange, setPriceRange] = useState([0, 100]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [requestingReactivation, setRequestingReactivation] = useState(false);
+
+  useEffect(() => {
+    base44.auth.me()
+      .then(setCurrentUser)
+      .catch(() => setCurrentUser(null));
+  }, []);
 
   // Read ?category= from URL on mount
   const urlParams = new URLSearchParams(window.location.search);
@@ -211,6 +221,53 @@ export default function Browse() {
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
   }, [queryClient]);
+
+  const handleRequestReactivation = async () => {
+    try {
+      setRequestingReactivation(true);
+      await base44.functions.invoke('requestAccountReactivation', {});
+      toast.success('Email de reactivación enviado. Revisa tu bandeja de entrada.');
+    } catch (err) {
+      const errorMsg = err?.response?.data?.error || err?.message || 'Error al solicitar reactivación';
+      toast.error(errorMsg);
+    } finally {
+      setRequestingReactivation(false);
+    }
+  };
+
+  const userStatus = currentUser?.status || 'active';
+
+  if (userStatus === 'suspended' || userStatus === 'deactivated') {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 gap-4">
+        <div className="w-14 h-14 bg-destructive/10 rounded-full flex items-center justify-center">
+          <AlertTriangle className="w-7 h-7 text-destructive" />
+        </div>
+        <h1 className="text-lg font-bold text-foreground">
+          {t(userStatus === 'suspended' ? 'account_suspended' : 'account_deactivated')}
+        </h1>
+        <p className="text-sm text-muted-foreground text-center">
+          {currentUser?.status_reason || t('account_restricted')}
+        </p>
+        {userStatus === 'deactivated' && (
+          <Button
+            onClick={handleRequestReactivation}
+            disabled={requestingReactivation}
+            className="mt-4 bg-destructive hover:bg-destructive/90 text-white"
+          >
+            {requestingReactivation && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+            Solicitar reactivación
+          </Button>
+        )}
+        <button
+          onClick={() => base44.auth.logout()}
+          className="mt-2 text-sm text-destructive underline"
+        >
+          {t('sign_out')}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">
