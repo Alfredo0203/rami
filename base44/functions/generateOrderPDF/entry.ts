@@ -18,443 +18,247 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    const doc = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4',
-    });
-
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
 
     const colors = {
-      primary: [255, 102, 51],      // naranja estilo app
-      text: [20, 20, 20],
-      muted: [110, 110, 110],
-      border: [232, 232, 232],
-      cardBg: [250, 250, 250],
-      line: [235, 235, 235],
-      white: [255, 255, 255],
+      primary:   [41, 128, 185],   // azul para el logo RAmi
+      orange:    [211, 84, 0],     // naranja para el total
+      text:      [30, 30, 30],
+      muted:     [100, 100, 100],
+      border:    [220, 220, 220],
+      white:     [255, 255, 255],
+      line:      [230, 230, 230],
     };
 
-    const marginX = 12;
-    const contentWidth = pageWidth - (marginX * 2);
-    let y = 12;
+    const marginX = 18;
+    const contentWidth = pageWidth - marginX * 2;
+    let y = 18;
 
-    function formatCurrency(value) {
-      return `$${Number(value || 0).toFixed(2)}`;
-    }
+    function fmt(v) { return `$${Number(v || 0).toFixed(2)}`; }
+    function cap(v) { if (!v) return 'N/A'; return String(v).charAt(0).toUpperCase() + String(v).slice(1); }
 
-    function capitalizeText(value) {
-      if (!value) return 'N/A';
-      return String(value).charAt(0).toUpperCase() + String(value).slice(1);
-    }
-
-    function roundRect(x, y, w, h, r = 4, style = 'S') {
-      doc.roundedRect(x, y, w, h, r, r, style);
-    }
-
-    function drawCard(x, y, w, h) {
-      doc.setFillColor(...colors.white);
-      doc.setDrawColor(...colors.border);
-      doc.setLineWidth(0.3);
-      roundRect(x, y, w, h, 4, 'FD');
-    }
-
-    function text(textValue, x, y, options = {}) {
-      const {
-        size = 10,
-        style = 'normal',
-        color = colors.text,
-        align = 'left',
-        maxWidth,
-      } = options;
-
+    function t(val, x, yy, opts = {}) {
+      const { size = 10, style = 'normal', color = colors.text, align = 'left', maxWidth } = opts;
       doc.setFont('helvetica', style);
       doc.setFontSize(size);
       doc.setTextColor(...color);
-
       if (maxWidth) {
-        const lines = doc.splitTextToSize(String(textValue || ''), maxWidth);
-        doc.text(lines, x, y, { align });
+        const lines = doc.splitTextToSize(String(val || ''), maxWidth);
+        doc.text(lines, x, yy, { align });
         return lines.length;
       }
-
-      doc.text(String(textValue || ''), x, y, { align });
+      doc.text(String(val || ''), x, yy, { align });
       return 1;
     }
 
-    async function loadImageAsDataUrl(url) {
-      if (!url) return null;
-      try {
-        const response = await fetch(url);
-        if (!response.ok) return null;
-
-        const contentType = response.headers.get('content-type') || '';
-        const bytes = new Uint8Array(await response.arrayBuffer());
-
-        let binary = '';
-        for (let i = 0; i < bytes.length; i++) {
-          binary += String.fromCharCode(bytes[i]);
-        }
-
-        const base64 = btoa(binary);
-        return `data:${contentType};base64,${base64}`;
-      } catch (e) {
-        return null;
-      }
+    function drawCard(x, yy, w, h) {
+      doc.setFillColor(...colors.white);
+      doc.setDrawColor(...colors.border);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(x, yy, w, h, 3, 3, 'FD');
     }
 
-    function getPaymentLabel(paymentMethod) {
-      if (paymentMethod === 'credit_card') return 'Tarjeta de Crédito';
-      if (paymentMethod === 'cash_on_delivery') return 'Pago contra entrega';
-      if (paymentMethod === 'paypal') return 'PayPal';
-      if (paymentMethod === 'apple_pay') return 'Apple Pay';
-      return 'N/A';
-    }
-
-    function getPaymentStatusLabel(paymentStatus) {
-      if (paymentStatus === 'paid') return 'Pagado';
-      if (paymentStatus === 'pending_payment') return 'Pendiente de pago';
-      if (paymentStatus === 'failed') return 'Falló';
-      return 'N/A';
-    }
-
-    function drawDivider(x1, y1, x2, y2) {
+    function drawLine(x1, y1, x2, y2) {
       doc.setDrawColor(...colors.line);
       doc.setLineWidth(0.25);
       doc.line(x1, y1, x2, y2);
     }
 
-    function ensurePageSpace(requiredHeight) {
-      if (y + requiredHeight > pageHeight - 20) {
-        doc.addPage();
-        y = 12;
-      }
+    function ensureSpace(h) {
+      if (y + h > pageHeight - 18) { doc.addPage(); y = 18; }
     }
 
-    // Encabezado tipo marca / factura
-    const logoDataUrl = await loadImageAsDataUrl(appSettings.logo_url);
-
-    if (logoDataUrl) {
-      try {
-        doc.addImage(logoDataUrl, 'PNG', marginX, y, 14, 14);
-      } catch (e) {
-        // ignore logo errors
-      }
-    } else {
-      doc.setFillColor(...colors.primary);
-      roundRect(marginX, y, 14, 14, 3, 'F');
-      text('R', marginX + 7, y + 9.2, {
-        size: 10,
-        style: 'bold',
-        color: colors.white,
-        align: 'center',
-      });
-    }
-/*
-    text(appSettings.store_name || 'RAmi', marginX + 18, y + 5.5, {
-      size: 16,
-      style: 'bold',
-      color: colors.text,
-    }); */
-
-    text(`Factura #${order.order_number || 'N/A'}`, pageWidth - marginX, y + 5.5, {
-      size: 10,
-      style: 'bold',
-      color: colors.text,
-      align: 'right',
-    });
-
-    text(
-      `Fecha: ${new Date(order.created_date).toLocaleDateString('es-SV')}  •  Estado: ${capitalizeText(order.status || 'pendiente')}`,
-      pageWidth - marginX,
-      y + 11,
-      {
-        size: 8.5,
-        color: colors.muted,
-        align: 'right',
-      }
-    );
-
-    y += 22;
-
-    // Cliente
-    const customerCardHeight = 24;
-    ensurePageSpace(customerCardHeight);
-    drawCard(marginX, y, contentWidth, customerCardHeight);
-
-    text('Cliente', marginX + 5, y + 6, {
-      size: 10,
-      style: 'bold',
-      color: colors.text,
-    });
-
-    text(order.customer_name || 'N/A', marginX + 5, y + 12, {
-      size: 10,
-      style: 'normal',
-      color: colors.text,
-    });
-
-    text(order.customer_email || 'N/A', marginX + 5, y + 17, {
-      size: 8.5,
-      color: colors.muted,
-    });
-
-    text(order.shipping_address?.phone || 'N/A', marginX + 5, y + 21.5, {
-      size: 8.5,
-      color: colors.muted,
-    });
-
-    y += customerCardHeight + 6;
-
-    // Productos
-    const items = Array.isArray(order.items) ? order.items : [];
-    const itemImageSize = 16;
-    const productCardPadding = 5;
-
-    let productsCardHeight = 12;
-    for (const item of items) {
-      const productName = `${item.product_name || 'Producto'}${item.variant_name ? ` (${item.variant_name})` : ''}`;
-      const lines = doc.splitTextToSize(productName, contentWidth - 45);
-      const blockHeight = Math.max(18, 8 + (lines.length * 4.2));
-      productsCardHeight += blockHeight;
-    }
-    productsCardHeight += 4;
-
-    ensurePageSpace(productsCardHeight);
-    drawCard(marginX, y, contentWidth, productsCardHeight);
-
-    text('Productos', marginX + 5, y + 7, {
-      size: 11,
-      style: 'bold',
-      color: colors.text,
-    });
-
-    let innerY = y + 11;
-    let totalItems = 0;
-
-    for (let index = 0; index < items.length; index++) {
-      const item = items[index];
-      const qty = Number(item.quantity || 1);
-      const itemTotal = Number(item.price || 0) * qty;
-      totalItems += qty;
-
-      const productName = `${item.product_name || 'Producto'}${item.variant_name ? ` (${item.variant_name})` : ''}`;
-      const nameLines = doc.splitTextToSize(productName, contentWidth - 48);
-      const rowHeight = Math.max(18, 8 + (nameLines.length * 4.2));
-
-      const imgX = marginX + productCardPadding;
-      const imgY = innerY + 1.5;
-
-      if (item.product_image) {
-        const productImageData = await loadImageAsDataUrl(item.product_image);
-        if (productImageData) {
-          try {
-            doc.addImage(productImageData, 'JPEG', imgX, imgY, itemImageSize, itemImageSize);
-          } catch (e) {
-            doc.setFillColor(245, 245, 245);
-            roundRect(imgX, imgY, itemImageSize, itemImageSize, 2.5, 'F');
-          }
-        } else {
-          doc.setFillColor(245, 245, 245);
-          roundRect(imgX, imgY, itemImageSize, itemImageSize, 2.5, 'F');
-        }
-      } else {
-        doc.setFillColor(245, 245, 245);
-        roundRect(imgX, imgY, itemImageSize, itemImageSize, 2.5, 'F');
-      }
-
-      const infoX = imgX + itemImageSize + 4;
-
-      text(productName, infoX, innerY + 6, {
-        size: 10,
-        style: 'normal',
-        color: colors.text,
-        maxWidth: contentWidth - 52,
-      });
-
-      text(`Cant: ${qty}`, infoX, innerY + 11 + ((nameLines.length - 1) * 4.2), {
-        size: 8.5,
-        color: colors.muted,
-      });
-
-      text(formatCurrency(itemTotal), pageWidth - marginX - 5, innerY + 6, {
-        size: 11,
-        style: 'bold',
-        color: colors.text,
-        align: 'right',
-      });
-
-      innerY += rowHeight;
-
-      if (index < items.length - 1) {
-        drawDivider(marginX + 5, innerY - 1, pageWidth - marginX - 5, innerY - 1);
-      }
+    function getPaymentLabel(m) {
+      if (m === 'credit_card') return 'Tarjeta de Crédito';
+      if (m === 'cash_on_delivery') return 'Pago contra entrega';
+      if (m === 'paypal') return 'PayPal';
+      if (m === 'apple_pay') return 'Apple Pay';
+      return m || 'N/A';
     }
 
-    y += productsCardHeight + 6;
+    // ─── ENCABEZADO ────────────────────────────────────────────────────────────
+    // Logo RAmi en texto grande azul
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(36);
+    doc.setTextColor(...colors.primary);
+    doc.text('RAmi', marginX, y + 8);
 
-    // Totales tipo tarjeta igual al resumen de app
-    const totalsCardHeight = order.discount_amount > 0 ? 33 : 27;
-    ensurePageSpace(totalsCardHeight);
-    drawCard(marginX, y, contentWidth, totalsCardHeight);
+    // Info factura alineada a la derecha
+    const facRight = pageWidth - marginX;
+    t(`Factura #${order.order_number || 'N/A'}`, facRight, y, { size: 10, style: 'bold', align: 'right' });
+    t(`Fecha: ${new Date(order.created_date).toLocaleDateString('es-SV')}`, facRight, y + 6, { size: 10, align: 'right' });
+    t(`Estado: ${cap(order.status || 'pending')}`, facRight, y + 12, { size: 10, align: 'right' });
 
-    let totalsY = y + 8;
-    const leftX = marginX + 5;
-    const rightX = pageWidth - marginX - 5;
+    y += 26;
 
-    text('Subtotal', leftX, totalsY, {
-      size: 10,
-      color: colors.muted,
-    });
-    text(formatCurrency(order.subtotal || 0), rightX, totalsY, {
-      size: 10,
-      color: colors.text,
-      align: 'right',
-    });
-
-    totalsY += 6;
-
-    text('Envío', leftX, totalsY, {
-      size: 10,
-      color: colors.muted,
-    });
-    text(formatCurrency(order.shipping_cost || 0), rightX, totalsY, {
-      size: 10,
-      color: colors.text,
-      align: 'right',
-    });
-
-    if (Number(order.discount_amount || 0) > 0) {
-      totalsY += 6;
-
-      text(`Descuento${order.coupon_code ? ` (${order.coupon_code})` : ''}`, leftX, totalsY, {
-        size: 10,
-        color: colors.muted,
-      });
-      text(`-${formatCurrency(order.discount_amount || 0)}`, rightX, totalsY, {
-        size: 10,
-        color: colors.text,
-        align: 'right',
-      });
-    }
-
-    totalsY += 4;
-    drawDivider(leftX, totalsY, rightX, totalsY);
-    totalsY += 7;
-
-    text('Total', leftX, totalsY, {
-      size: 12,
-      style: 'bold',
-      color: colors.text,
-    });
-    text(formatCurrency(order.total || 0), rightX, totalsY, {
-      size: 15,
-      style: 'bold',
-      color: colors.primary,
-      align: 'right',
-    });
-
-    y += totalsCardHeight + 6;
-
-    // Dirección de envío
+    // ─── INFORMACIÓN DEL CLIENTE ────────────────────────────────────────────────
     const addr = order.shipping_address || {};
-    const addressLinesRaw = [];
+    const phone = addr.phone || order.customer_phone || 'N/A';
+    const clientCardH = 32;
+    ensureSpace(clientCardH);
+    drawCard(marginX, y, contentWidth, clientCardH);
 
-    if (addr.full_name) addressLinesRaw.push(addr.full_name);
-    else if (order.customer_name) addressLinesRaw.push(order.customer_name);
+    t('Información del Cliente', marginX + 5, y + 8, { size: 11, style: 'bold' });
+    t(`Cliente: ${order.customer_name || 'N/A'}`, marginX + 5, y + 16, { size: 10 });
+    t(`Email: ${order.customer_email || 'N/A'}`, marginX + 5, y + 22, { size: 10 });
+    t(`Tel: ${phone}`, marginX + 5, y + 28, { size: 10 });
 
-    if (addr.street) addressLinesRaw.push(addr.street);
+    y += clientCardH + 6;
 
-    const cityStateLine = [addr.city, addr.state].filter(Boolean).join(', ');
-    if (cityStateLine) addressLinesRaw.push(cityStateLine);
+    // ─── DETALLE DEL PEDIDO ─────────────────────────────────────────────────────
+    const items = Array.isArray(order.items) ? order.items : [];
 
-    const zipCountryLine = [addr.zip_code, addr.country].filter(Boolean).join(', ');
-    if (zipCountryLine) addressLinesRaw.push(zipCountryLine);
+    // Calcular descuento por ítem (prorratear el descuento total)
+    const subtotalCalc = items.reduce((s, it) => s + (Number(it.price || 0) * Number(it.quantity || 1)), 0);
+    const totalDiscount = Number(order.discount_amount || 0);
 
-    const addressTextLines = [];
-    for (const line of addressLinesRaw) {
-      const wrapped = doc.splitTextToSize(line, contentWidth - 10);
-      for (const part of wrapped) addressTextLines.push(part);
-    }
+    // Cabecera de tabla
+    const colDesc    = marginX + 5;
+    const colCant    = marginX + contentWidth * 0.58;
+    const colPrecio  = marginX + contentWidth * 0.70;
+    const colDesc2   = marginX + contentWidth * 0.82;
+    const colTotal   = pageWidth - marginX - 5;
 
-    const addressCardHeight = Math.max(24, 12 + (addressTextLines.length * 4.5));
-    ensurePageSpace(addressCardHeight);
-    drawCard(marginX, y, contentWidth, addressCardHeight);
-
-    text('Dirección de Envío', marginX + 5, y + 7, {
-      size: 11,
-      style: 'bold',
-      color: colors.text,
+    // Medir altura total de la card
+    let detailCardH = 18; // header row
+    const itemLinesArr = items.map(item => {
+      const name = `${item.product_name || 'Producto'}${item.variant_name ? ` - ${item.variant_name}` : ''}`;
+      const lines = doc.splitTextToSize(name, colCant - colDesc - 4);
+      const rowH = Math.max(10, lines.length * 5 + 4);
+      detailCardH += rowH;
     });
+    detailCardH += 4;
 
-    let addrY = y + 14;
-    for (const line of addressTextLines) {
-      text(line, marginX + 5, addrY, {
-        size: 10,
-        color: colors.text,
-      });
-      addrY += 4.5;
-    }
+    ensureSpace(detailCardH);
+    drawCard(marginX, y, contentWidth, detailCardH);
 
-    y += addressCardHeight + 6;
+    t('Detalle del Pedido', marginX + 5, y + 8, { size: 11, style: 'bold' });
 
-    // Pago
-    const paymentMethodLabel = getPaymentLabel(order.payment_method);
-    const paymentStatusLabel = getPaymentStatusLabel(order.payment_status);
+    // Header de columnas
+    const headerY = y + 16;
+    t('Descripción',     colDesc,   headerY, { size: 9, style: 'bold' });
+    t('Cant.',           colCant,   headerY, { size: 9, style: 'bold', align: 'center' });
+    t('Precio Unitario', colPrecio, headerY, { size: 9, style: 'bold', align: 'center' });
+    t('Descuento',       colDesc2,  headerY, { size: 9, style: 'bold', align: 'center' });
+    t('Total',           colTotal,  headerY, { size: 9, style: 'bold', align: 'right' });
 
-    const paymentLines = [paymentMethodLabel];
-    if (order.payment_status) paymentLines.push(`Estado: ${paymentStatusLabel}`);
-    if (order.tracking_number) paymentLines.push(`Tracking: ${order.tracking_number}`);
-    if (order.carrier) paymentLines.push(`Transportista: ${order.carrier}`);
+    drawLine(marginX + 3, headerY + 2, pageWidth - marginX - 3, headerY + 2);
 
-    const paymentCardHeight = Math.max(22, 11 + (paymentLines.length * 4.5));
-    ensurePageSpace(paymentCardHeight);
-    drawCard(marginX, y, contentWidth, paymentCardHeight);
+    let rowY = headerY + 7;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const qty = Number(item.quantity || 1);
+      const unitPrice = Number(item.price || 0);
+      const lineSubtotal = unitPrice * qty;
 
-    text('Pago', marginX + 5, y + 7, {
-      size: 11,
-      style: 'bold',
-      color: colors.text,
-    });
-
-    let payY = y + 14;
-    for (let i = 0; i < paymentLines.length; i++) {
-      text(paymentLines[i], marginX + 5, payY, {
-        size: i === 0 ? 10 : 8.8,
-        color: i === 0 ? colors.text : colors.muted,
-      });
-      payY += 4.5;
-    }
-
-    y += paymentCardHeight + 8;
-
-    // Footer
-    const footerY = pageHeight - 10;
-    text(
-      `Gracias por tu compra${appSettings.store_name ? ` en ${appSettings.store_name}` : ''}`,
-      pageWidth / 2,
-      footerY,
-      {
-        size: 8,
-        color: colors.muted,
-        align: 'center',
+      // Calcular descuento proporcional %
+      let discountPct = 0;
+      if (subtotalCalc > 0 && totalDiscount > 0) {
+        discountPct = Math.round((totalDiscount / subtotalCalc) * 100);
       }
-    );
+      const lineTotal = lineSubtotal - (lineSubtotal * discountPct / 100);
+
+      const name = `${item.product_name || 'Producto'}${item.variant_name ? ` - ${item.variant_name}` : ''}`;
+      const nameLines = doc.splitTextToSize(name, colCant - colDesc - 4);
+      const rowH = Math.max(10, nameLines.length * 5 + 4);
+
+      t(name,                  colDesc,   rowY + 4, { size: 9.5, maxWidth: colCant - colDesc - 4 });
+      t(String(qty),           colCant,   rowY + 4, { size: 9.5, align: 'center' });
+      t(fmt(unitPrice),        colPrecio, rowY + 4, { size: 9.5, align: 'center' });
+      t(`${discountPct}%`,     colDesc2,  rowY + 4, { size: 9.5, align: 'center' });
+      t(fmt(lineTotal),        colTotal,  rowY + 4, { size: 9.5, align: 'right' });
+
+      rowY += rowH;
+    }
+
+    y += detailCardH + 6;
+
+    // ─── TOTALES ────────────────────────────────────────────────────────────────
+    const hasDiscount = totalDiscount > 0;
+    const totalsH = hasDiscount ? 36 : 28;
+    ensureSpace(totalsH);
+    drawCard(marginX, y, contentWidth, totalsH);
+
+    const tLeft = marginX + 5;
+    const tRight = pageWidth - marginX - 5;
+    let tY = y + 8;
+
+    t('Subtotal:',               tLeft,  tY, { size: 10 });
+    t(fmt(order.subtotal || 0),  tRight, tY, { size: 10, align: 'right' });
+    tY += 7;
+
+    t('Envio:',                         tLeft,  tY, { size: 10 });
+    t(fmt(order.shipping_cost || 0),    tRight, tY, { size: 10, align: 'right' });
+
+    if (hasDiscount) {
+      tY += 7;
+      t(`Descuento${order.coupon_code ? ` (${order.coupon_code})` : ''}:`, tLeft, tY, { size: 10 });
+      t(`-${fmt(totalDiscount)}`, tRight, tY, { size: 10, align: 'right' });
+    }
+
+    tY += 5;
+    drawLine(tLeft, tY, tRight, tY);
+    tY += 7;
+
+    t('Total',           tLeft,  tY, { size: 12, style: 'bold' });
+    t(fmt(order.total || 0), tRight, tY, { size: 13, style: 'bold', color: colors.orange, align: 'right' });
+
+    y += totalsH + 6;
+
+    // ─── INFORMACIÓN DE ENVÍO ────────────────────────────────────────────────────
+    const municipio = addr.municipio || addr.city || '';
+    const departamento = addr.departamento || addr.state || '';
+    const lugar = [municipio, departamento].filter(Boolean).join(', ');
+    const streetLine = [addr.street, addr.house_number].filter(Boolean).join(' #');
+
+    const envioH = 42;
+    ensureSpace(envioH);
+    drawCard(marginX, y, contentWidth, envioH);
+
+    t('Información de Envio', marginX + 5, y + 8, { size: 11, style: 'bold' });
+    t(`Entregar a: ${addr.full_name || order.customer_name || 'N/A'}`, marginX + 5, y + 17, { size: 10 });
+    t(`Dirección: ${streetLine || 'N/A'}`, marginX + 5, y + 24, { size: 10 });
+    if (lugar) t(`Lugar: ${lugar}`, marginX + 5, y + 31, { size: 10 });
+    t(`Pais: ${addr.country || 'El Salvador'}`, marginX + 5, y + (lugar ? 38 : 31), { size: 10 });
+
+    y += envioH + 6;
+
+    // ─── INFORMACIÓN DE PAGO ─────────────────────────────────────────────────────
+    const paymentH = 30;
+    ensureSpace(paymentH);
+    drawCard(marginX, y, contentWidth, paymentH);
+
+    t('Información de Pago', marginX + 5, y + 8, { size: 11, style: 'bold' });
+    t(`Método: ${getPaymentLabel(order.payment_method)}`, marginX + 5, y + 17, { size: 10 });
+
+    if (order.payment_method === 'credit_card') {
+      const txId = order.payment_transaction_id || '';
+      // Si tenemos últimos 4 dígitos del txId
+      const last4 = txId.length >= 4 ? txId.slice(-4) : '';
+      if (last4) {
+        t(`terminando en **** **** **** ${last4}`, marginX + 5, y + 24, { size: 10 });
+      }
+    } else if (order.tracking_number) {
+      t(`Tracking: ${order.tracking_number}`, marginX + 5, y + 24, { size: 10 });
+    }
+
+    y += paymentH + 8;
+
+    // ─── FOOTER ──────────────────────────────────────────────────────────────────
+    t('Gracias por tu compra', pageWidth / 2, pageHeight - 10, {
+      size: 9,
+      color: colors.muted,
+      align: 'center',
+    });
 
     const pdfData = doc.output('dataurlstring');
-
-    const orderDate = new Date(order.created_date);
-    const dateStr = orderDate.toLocaleDateString('es-SV').replace(/\//g, '-');
+    const dateStr = new Date(order.created_date).toLocaleDateString('es-SV').replace(/\//g, '-');
     const fileName = `Factura_${order.order_number}_${dateStr}`;
 
-    return Response.json({
-      success: true,
-      pdfData,
-      orderId: order.id,
-      fileName,
-    });
+    return Response.json({ success: true, pdfData, orderId: order.id, fileName });
+
   } catch (error) {
     console.error('PDF Generation Error:', error);
     return Response.json({ error: error.message }, { status: 500 });
