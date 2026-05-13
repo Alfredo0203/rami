@@ -149,6 +149,7 @@ Deno.serve(async (req) => {
          quantity: Number(item.quantity) || 1,
          ...(item.variant_id && { variant_id: item.variant_id }),
          ...(item.variant_name && { variant_name: item.variant_name }),
+         ...(item.original_price && { original_price: Number(item.original_price) }),
        };
      });
 

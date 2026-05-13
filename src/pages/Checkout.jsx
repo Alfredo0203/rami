@@ -176,6 +176,7 @@ export default function Checkout() {
       variant_name: item.variant_name || undefined,
       product_image: item.product_image,
       product_price: item.product_price,
+      original_price: item.original_price || undefined,
     }));
 
     return { shippingAddress, cleanedCartItems };

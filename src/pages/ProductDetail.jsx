@@ -308,6 +308,7 @@ export default function ProductDetail() {
         variant_name: selectedVariant?.name || undefined,
         product_image: selectedVariant?.image_url || product.images?.[0] || '',
         product_price: effectivePrice,
+        original_price: effectiveOriginalPrice || undefined,
       };
 
       if (existingItem) {
