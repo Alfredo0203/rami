@@ -5,7 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import BottomNav from '../components/shop/BottomNav';
 import OrderStatusBadge from '../components/shop/OrderStatusBadge';
-import { Package, ChevronRight, Loader2 } from 'lucide-react';
+import { Package, ChevronRight, Loader2, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { formatDateSV } from '@/lib/dateUtils';
 import { motion } from 'framer-motion';
 import { useScrollRestoration } from '../components/useScrollRestoration';
@@ -17,9 +18,13 @@ export default function Orders() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [userEmail, setUserEmail] = useState(null);
+  const [userStatus, setUserStatus] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(u => setUserEmail(u?.email)).catch(() => {});
+    base44.auth.me().then(u => {
+      setUserEmail(u?.email);
+      setUserStatus(u?.status);
+    }).catch(() => {});
   }, []);
 
   const { data: orders = [], isLoading } = useQuery({
@@ -47,6 +52,24 @@ export default function Orders() {
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 safe-area-top">
         <h1 className="text-lg font-bold text-foreground">{t('orders_title')}</h1>
       </div>
+
+      {userStatus === 'deactivated' && (
+        <div className="mx-4 mt-4 flex items-start gap-3 rounded-xl bg-destructive/10 border border-destructive/20 p-4">
+          <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-destructive">Tu cuenta está desactivada</p>
+            <p className="text-xs text-destructive/80 mt-1">Puedes ver tu historial de órdenes, pero necesitas reactivar tu cuenta para hacer nuevas compras.</p>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate('/Account')}
+              className="mt-3 text-xs h-7 border-destructive/20 text-destructive hover:bg-destructive/5"
+            >
+              Reactivar cuenta
+            </Button>
+          </div>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center py-20">
