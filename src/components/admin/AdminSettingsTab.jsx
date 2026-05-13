@@ -292,7 +292,7 @@ export default function AdminSettingsTab({ currentUser }) {
          </div>
          <p className="text-xs text-muted-foreground mb-3">Sube una imagen PNG o JPG. Se usará en facturas PDF y emails.</p>
          {logoUrl && (
-           <img src={logoUrl} alt="Logo" className="h-12 object-contain mb-3 rounded border border-border p-1 bg-white" />
+           <img src={logoUrl} alt="Logo" className="h-20 object-contain mb-3 rounded border border-border p-2 bg-white" />
          )}
          <div className="space-y-2">
            <label className="flex items-center justify-center gap-2 w-full h-10 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary transition-colors bg-secondary/30">
