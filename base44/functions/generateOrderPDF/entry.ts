@@ -81,29 +81,38 @@ Deno.serve(async (req) => {
     // ─── ENCABEZADO ────────────────────────────────────────────────────────────
     // Cargar logo real desde appSettings
     async function loadImageAsDataUrl(url) {
-      if (!url) return null;
+      if (!url) { console.log('Logo URL: vacío'); return null; }
       try {
-        const response = await fetch(url);
+        console.log('Cargando logo desde:', url);
+        const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+        console.log('Logo fetch status:', response.status, response.headers.get('content-type'));
         if (!response.ok) return null;
         const contentType = response.headers.get('content-type') || 'image/png';
         const bytes = new Uint8Array(await response.arrayBuffer());
         let binary = '';
         for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-        return `data:${contentType};base64,${btoa(binary)}`;
-      } catch (e) { return null; }
+        const dataUrl = `data:${contentType};base64,${btoa(binary)}`;
+        console.log('Logo cargado OK, tamaño base64:', dataUrl.length);
+        return dataUrl;
+      } catch (e) {
+        console.error('Error cargando logo:', e.message);
+        return null;
+      }
     }
 
     const logoDataUrl = await loadImageAsDataUrl(appSettings.logo_url);
+    console.log('logoDataUrl presente:', !!logoDataUrl, '| logo_url en settings:', appSettings.logo_url);
 
     if (logoDataUrl) {
       try {
-        // Obtener dimensiones reales del logo para mantener proporción
         const imgProps = doc.getImageProperties(logoDataUrl);
-        const logoH = 16; // altura fija siempre 16mm
+        console.log('imgProps:', imgProps);
+        const logoH = 16;
         const logoW = (imgProps.width / imgProps.height) * logoH;
-        doc.addImage(logoDataUrl, 'PNG', marginX, y - 2, logoW, logoH);
+        const format = (appSettings.logo_url || '').toLowerCase().includes('.png') ? 'PNG' : 'JPEG';
+        doc.addImage(logoDataUrl, format, marginX, y - 2, logoW, logoH);
       } catch (e) {
-        // fallback texto si falla la imagen
+        console.error('Error insertando imagen en PDF:', e.message);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(28);
         doc.setTextColor(...colors.primary);
