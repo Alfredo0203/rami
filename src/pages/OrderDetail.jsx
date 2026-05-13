@@ -137,7 +137,7 @@ export default function OrderDetail() {
         <button
           onClick={handleReorder}
           disabled={reordering}
-          className="w-full flex items-center justify-center gap-2 py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm disabled:opacity-60 transition-opacity"
+          className="w-full flex items-center justify-center gap-2 h-12 bg-primary text-primary-foreground rounded-xl font-semibold text-sm disabled:opacity-60 transition-opacity"
         >
           {reordering ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
           {reordering ? 'Agregando al carrito…' : 'Volver a pedir'}

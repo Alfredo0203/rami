@@ -49,7 +49,7 @@ export default function InvoicePDF({ orderId }) {
     <Button
       onClick={generatePDF}
       disabled={loading}
-      className="w-full bg-primary text-primary-foreground gap-2"
+      className="w-full bg-primary text-primary-foreground gap-2 h-12 text-sm font-semibold rounded-xl"
     >
       {loading ? (
         <>
@@ -59,7 +59,7 @@ export default function InvoicePDF({ orderId }) {
       ) : (
         <>
           <Download className="w-4 h-4" />
-          Descargar Factura PDF
+          Descargar Factura
         </>
       )}
     </Button>
