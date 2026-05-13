@@ -14,6 +14,8 @@ export default function Cart() {
   const queryClient = useQueryClient();
   const { user, isGuest } = useCurrentUser();
 
+  const isDeactivated = user?.status === 'deactivated';
+
   const { data: cartItems = [], isLoading } = useQuery({
     queryKey: ['cart', user?.email],
     queryFn: () => isGuest || !user?.email ? [] : base44.entities.CartItem.filter({ created_by: user.email }),
@@ -110,7 +112,21 @@ export default function Cart() {
         <span className="text-sm text-muted-foreground">({cartItems.length})</span>
       </div>
 
-      {isGuest ? (
+      {isDeactivated ? (
+        <div className="flex flex-col items-center justify-center py-20 px-4">
+          <div className="w-20 h-20 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
+            <AlertTriangle className="w-10 h-10 text-destructive" />
+          </div>
+          <p className="text-foreground font-semibold text-lg mb-1">Tu cuenta está desactivada</p>
+          <p className="text-muted-foreground text-sm mb-6 text-center">Revisa tu email para reactivar tu cuenta y continuar comprando</p>
+          <Button
+            onClick={() => navigate('/Account')}
+            className="bg-primary text-primary-foreground rounded-full px-8"
+          >
+            Ir a mi cuenta
+          </Button>
+        </div>
+      ) : isGuest ? (
         <div className="flex flex-col items-center justify-center py-20 px-4">
           <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
             <ShoppingBag className="w-10 h-10 text-muted-foreground" />

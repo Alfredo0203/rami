@@ -91,6 +91,15 @@ export default function Account() {
     }
   };
 
+  const handleRequestReactivation = async () => {
+    try {
+      await base44.functions.invoke('requestAccountReactivation', {});
+      toast.success('Email de reactivación enviado. Revisa tu bandeja de entrada.');
+    } catch (err) {
+      toast.error(err?.response?.data?.error || 'Error al solicitar reactivación');
+    }
+  };
+
   const isRegularUser = user?.role === 'user';
   const userStatus = user?.status || 'active';
 
@@ -157,12 +166,22 @@ export default function Account() {
         {userStatus !== 'active' && (
           <div className={`flex items-start gap-2 rounded-xl p-3 ${STATUS_STYLES[userStatus]}`}>
             <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-semibold capitalize">
                 {t(userStatus === 'suspended' ? 'account_suspended' : 'account_deactivated')}
               </p>
               {user?.status_reason && (
                 <p className="text-xs opacity-80">{user.status_reason}</p>
+              )}
+              {userStatus === 'deactivated' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleRequestReactivation}
+                  className="mt-2 text-xs h-7"
+                >
+                  Solicitar reactivación
+                </Button>
               )}
             </div>
           </div>

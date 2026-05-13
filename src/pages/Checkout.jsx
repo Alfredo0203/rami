@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { ArrowLeft, MapPin, CreditCard, Banknote, Loader2, Plus, Ticket, Shield } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Banknote, Loader2, Plus, Ticket, Shield, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,7 @@ export default function Checkout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [paymentMethod, setPaymentMethod] = useState(null);
+  const [userStatus, setUserStatus] = useState(null);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [allowedPaymentMethods, setAllowedPaymentMethods] = useState(['credit_card']);
   const [showAddressForm, setShowAddressForm] = useState(false);
@@ -31,7 +32,10 @@ export default function Checkout() {
   const [pendingOrderId, setPendingOrderId] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
+    base44.auth.me().then(u => {
+      setUser(u);
+      setUserStatus(u?.status);
+    }).catch(() => {});
     base44.entities.AppSettings.filter({ key: 'global' }).then(results => {
       const s = results[0];
       const methods = s?.allowed_payment_methods?.length ? s.allowed_payment_methods : ['credit_card'];
@@ -258,6 +262,19 @@ export default function Checkout() {
     queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
     navigate(createPageUrl('OrderConfirmation') + `?id=${pendingOrderId}&payment=success`);
   };
+
+  if (userStatus === 'deactivated') {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <AlertTriangle className="w-12 h-12 text-destructive mb-4" />
+        <p className="text-foreground font-semibold mb-2">Tu cuenta está desactivada</p>
+        <p className="text-muted-foreground text-sm mb-6 text-center">Revisa tu email para reactivar tu cuenta y continuar comprando</p>
+        <Button onClick={() => navigate('/Account')} className="bg-primary text-primary-foreground rounded-full">
+          Ir a mi cuenta
+        </Button>
+      </div>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
