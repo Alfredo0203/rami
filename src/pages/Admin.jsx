@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import AdminProductForm from '../components/admin/AdminProductForm';
 import AdminOrderCard from '../components/admin/AdminOrderCard';
 import AdminUserCard from '../components/admin/AdminUserCard';
-import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, Trash2, Loader2, Eye, EyeOff, Users, Settings, MessageSquare, LayoutGrid, BarChart3, Ticket, Search, AlertTriangle, History, Store } from 'lucide-react';
+import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, Trash2, Loader2, Eye, EyeOff, Users, Settings, MessageSquare, LayoutGrid, BarChart3, Ticket, Search, AlertTriangle, History, Store, ChevronDown, ChevronUp } from 'lucide-react';
 import AdminSettingsTab from '../components/admin/AdminSettingsTab';
 import AdminReviewsTab from '../components/admin/AdminReviewsTab';
 import AdminCategoriesTab from '../components/admin/AdminCategoriesTab';
@@ -33,6 +33,7 @@ export default function Admin() {
   const [sortBy, setSortBy] = useState('recent'); // 'recent', 'name', 'stock', 'sold'
   const [selectedStoreFilter, setSelectedStoreFilter] = useState('all'); // Por defecto todas las tiendas
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [showSummary, setShowSummary] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -127,42 +128,56 @@ export default function Admin() {
         <h1 className="text-lg font-bold text-foreground">Panel de Administración</h1>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 px-4 py-4">
-        {stats.map((stat, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="bg-card rounded-xl p-3 shadow-sm"
-          >
-            <div className={`w-8 h-8 rounded-lg ${stat.color} flex items-center justify-center mb-2`}>
-              <stat.icon className="w-4 h-4" />
-            </div>
-            <p className="text-xl font-extrabold text-foreground">{stat.value}</p>
-            <p className="text-xs text-muted-foreground">{stat.label}</p>
-            {stat.sub && <p className="text-[10px] text-muted-foreground">{stat.sub}</p>}
-          </motion.div>
-        ))}
+      {/* Stats toggle */}
+      <div className="px-4 pt-3 pb-1">
+        <button
+          onClick={() => setShowSummary(v => !v)}
+          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {showSummary ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          {showSummary ? 'Ocultar resumen' : 'Ver resumen'}
+        </button>
       </div>
 
-      <div className="px-4 mb-3 flex gap-2">
-        <Button
-          onClick={() => navigate('/AdminSalesCharts')}
-          className="flex-1 bg-chart-1 text-primary-foreground rounded-lg h-9 hover:bg-chart-1/90 text-xs"
-        >
-          <BarChart3 className="w-3.5 h-3.5 mr-1" /> Ventas
-        </Button>
-        <Button
-          onClick={() => navigate('/InventoryDashboard')}
-          className="flex-1 bg-primary text-primary-foreground rounded-lg h-9 hover:bg-primary/90 text-xs"
-        >
-          <Package className="w-3.5 h-3.5 mr-1" /> Inventario
-        </Button>
-      </div>
+      {showSummary && (
+        <>
+          <div className="grid grid-cols-2 gap-3 px-4 py-3">
+            {stats.map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="bg-card rounded-xl p-3 shadow-sm"
+              >
+                <div className={`w-8 h-8 rounded-lg ${stat.color} flex items-center justify-center mb-2`}>
+                  <stat.icon className="w-4 h-4" />
+                </div>
+                <p className="text-xl font-extrabold text-foreground">{stat.value}</p>
+                <p className="text-xs text-muted-foreground">{stat.label}</p>
+                {stat.sub && <p className="text-[10px] text-muted-foreground">{stat.sub}</p>}
+              </motion.div>
+            ))}
+          </div>
 
-      <div className="flex flex-col h-[calc(100vh-310px)]">
+          <div className="px-4 mb-3 flex gap-2">
+            <Button
+              onClick={() => navigate('/AdminSalesCharts')}
+              className="flex-1 bg-chart-1 text-primary-foreground rounded-lg h-9 hover:bg-chart-1/90 text-xs"
+            >
+              <BarChart3 className="w-3.5 h-3.5 mr-1" /> Ventas
+            </Button>
+            <Button
+              onClick={() => navigate('/InventoryDashboard')}
+              className="flex-1 bg-primary text-primary-foreground rounded-lg h-9 hover:bg-primary/90 text-xs"
+            >
+              <Package className="w-3.5 h-3.5 mr-1" /> Inventario
+            </Button>
+          </div>
+        </>
+      )}
+
+      <div className="flex flex-col" style={{ height: showSummary ? 'calc(100vh - 310px)' : 'calc(100vh - 110px)' }}>
         <Tabs defaultValue="products" className="flex flex-col flex-1 min-h-0">
           <div className="px-4 sticky top-0 z-40 bg-background overflow-x-auto">
             <TabsList className="w-full justify-start bg-transparent">
