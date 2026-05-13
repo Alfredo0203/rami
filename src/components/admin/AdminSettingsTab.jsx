@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard, Megaphone, MessageCircle, Shield } from 'lucide-react';
+import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard, Megaphone, MessageCircle, Shield, Image } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -35,6 +35,7 @@ export default function AdminSettingsTab({ currentUser }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [whatsappPhone, setWhatsappPhone] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
   
 
 
@@ -88,6 +89,9 @@ export default function AdminSettingsTab({ currentUser }) {
     }
     if (settings && whatsappPhone === '') {
       setWhatsappPhone(settings.whatsapp_phone ?? '+50370000000');
+    }
+    if (settings && logoUrl === '') {
+      setLogoUrl(settings.logo_url ?? '');
     }
   }, [settings]);
 
@@ -277,6 +281,34 @@ export default function AdminSettingsTab({ currentUser }) {
                </div>
              );
            })}
+         </div>
+       </div>
+
+       {/* Logo */}
+       <div className="bg-card rounded-xl p-4 shadow-sm">
+         <div className="flex items-center gap-2 mb-3">
+           <Image className="w-4 h-4 text-primary" />
+           <p className="text-sm font-semibold text-foreground">Logo de la Tienda</p>
+         </div>
+         <p className="text-xs text-muted-foreground mb-3">URL de la imagen del logo (se usa en facturas PDF y emails).</p>
+         {logoUrl && (
+           <img src={logoUrl} alt="Logo" className="h-12 object-contain mb-3 rounded border border-border p-1" />
+         )}
+         <div className="space-y-2">
+           <Input
+             value={logoUrl}
+             onChange={e => setLogoUrl(e.target.value)}
+             placeholder="https://..."
+             className="h-9 text-sm"
+           />
+           <Button
+             size="sm"
+             onClick={() => saveSettings({ logo_url: logoUrl })}
+             disabled={saving}
+             className="w-full mt-2"
+           >
+             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar logo'}
+           </Button>
          </div>
        </div>
 
