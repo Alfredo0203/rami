@@ -207,9 +207,8 @@ export default function Account() {
                   )}
                   <Button
                     size="sm"
-                    variant="outline"
                     onClick={handleRequestReactivation}
-                    className="mt-2 text-xs h-7 w-full sm:w-auto"
+                    className="mt-3 text-xs h-8 w-full sm:w-auto bg-destructive hover:bg-destructive/90 text-white font-medium"
                   >
                     Solicitar reactivación
                   </Button>
