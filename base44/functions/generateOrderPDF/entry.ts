@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
       try {
         const imgProps = doc.getImageProperties(logoDataUrl);
         console.log('imgProps:', imgProps);
-        const logoH = 16;
+        const logoH = 28;
         const logoW = (imgProps.width / imgProps.height) * logoH;
         const format = (appSettings.logo_url || '').toLowerCase().includes('.png') ? 'PNG' : 'JPEG';
         doc.addImage(logoDataUrl, format, marginX, y - 2, logoW, logoH);
