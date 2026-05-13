@@ -236,7 +236,12 @@ export default function Admin() {
                     )}
                   </button>
                   {activeCount > 0 && (
-                    <span className="text-xs text-muted-foreground">{activeCount} filtro{activeCount !== 1 ? 's' : ''} activo{activeCount !== 1 ? 's' : ''}</span>
+                    <button
+                      onClick={() => { setSearchQuery(''); setStockFilter('all'); setSortBy('recent'); setCategoryFilter('all'); }}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-colors"
+                    >
+                      <X className="w-3 h-3" /> Limpiar filtros
+                    </button>
                   )}
                 </div>
                 <SheetContent side="bottom" className="rounded-t-3xl max-h-[80vh] overflow-y-auto">
@@ -432,7 +437,12 @@ export default function Admin() {
                     )}
                   </button>
                   {activeCount > 0 && (
-                    <span className="text-xs text-muted-foreground">{activeCount} filtro{activeCount !== 1 ? 's' : ''} activo{activeCount !== 1 ? 's' : ''}</span>
+                    <button
+                      onClick={() => { setOrderSearch(''); setOrderStatusFilter('all'); setOrderSort('newest'); setSelectedStoreFilter('all'); }}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-colors"
+                    >
+                      <X className="w-3 h-3" /> Limpiar filtros
+                    </button>
                   )}
                 </div>
                 <SheetContent side="bottom" className="rounded-t-3xl max-h-[80vh] overflow-y-auto">
