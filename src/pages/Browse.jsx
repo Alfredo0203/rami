@@ -218,8 +218,8 @@ export default function Browse() {
         <div className="flex items-center gap-2 max-w-lg mx-auto pt-2 pb-2">
           <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
             <SheetTrigger asChild>
-              <button className="relative p-2.5 bg-secondary rounded-full mt-1">
-                <SlidersHorizontal className="w-5 h-5 text-foreground" />
+              <button className="relative p-1.5 bg-secondary rounded-full mt-1">
+                <SlidersHorizontal className="w-4 h-4 text-foreground" />
                 {activeFiltersCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full text-[10px] text-primary-foreground font-bold flex items-center justify-center">
                     {activeFiltersCount}

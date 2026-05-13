@@ -226,9 +226,9 @@ export default function Admin() {
                 <div className="flex items-center gap-2 mb-3">
                   <button
                     onClick={() => setShowProductFilters(true)}
-                    className="relative p-2.5 bg-secondary rounded-full"
+                    className="relative p-1.5 bg-secondary rounded-full"
                   >
-                    <SlidersHorizontal className="w-5 h-5 text-foreground" />
+                    <SlidersHorizontal className="w-4 h-4 text-foreground" />
                     {activeCount > 0 && (
                       <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full text-[10px] text-primary-foreground font-bold flex items-center justify-center">
                         {activeCount}
@@ -427,9 +427,9 @@ export default function Admin() {
                 <div className="flex items-center gap-2 mb-3">
                   <button
                     onClick={() => setShowOrderFilters(true)}
-                    className="relative p-2.5 bg-secondary rounded-full"
-                  >
-                    <SlidersHorizontal className="w-5 h-5 text-foreground" />
+                    className="relative p-1.5 bg-secondary rounded-full"
+                    >
+                    <SlidersHorizontal className="w-4 h-4 text-foreground" />
                     {activeCount > 0 && (
                       <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full text-[10px] text-primary-foreground font-bold flex items-center justify-center">
                         {activeCount}
