@@ -214,11 +214,11 @@ export default function Browse() {
         cartCount={cartCount}
       />
 
-      <div className="sticky top-16 z-40 bg-card/95 backdrop-blur-lg border-b border-border px-4">
-        <div className="flex items-center gap-2 max-w-lg mx-auto pt-0">
+      <div className="sticky top-16 z-40 bg-card/95 backdrop-blur-lg border-b border-border px-4 overflow-visible">
+        <div className="flex items-center gap-2 max-w-lg mx-auto pt-2 pb-2">
           <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
             <SheetTrigger asChild>
-              <button className="relative p-2.5 bg-secondary rounded-full">
+              <button className="relative p-2.5 bg-secondary rounded-full mt-1">
                 <SlidersHorizontal className="w-5 h-5 text-foreground" />
                 {activeFiltersCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full text-[10px] text-primary-foreground font-bold flex items-center justify-center">
@@ -227,6 +227,14 @@ export default function Browse() {
                 )}
               </button>
             </SheetTrigger>
+            {activeFiltersCount > 0 && (
+              <button
+                onClick={resetFilters}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-colors"
+              >
+                <X className="w-3 h-3" /> Limpiar filtros
+              </button>
+            )}
             <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
               <SheetHeader className="flex flex-row items-center justify-between pr-8">
                 <SheetTitle>Filtros</SheetTitle>
