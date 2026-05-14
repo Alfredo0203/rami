@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 });
 
     const body = await req.json();
-    const { cartItems, shippingAddress, paymentMethod, couponCode, skipCartClear } = body;
+    const { cartItems, shippingAddress, paymentMethod, couponCode } = body;
 
     if (!cartItems?.length) return Response.json({ error: 'El carrito está vacío' }, { status: 400 });
     if (!shippingAddress) return Response.json({ error: 'Dirección de envío requerida' }, { status: 400 });
@@ -184,9 +184,7 @@ Deno.serve(async (req) => {
        console.error('Error creating history record:', historyErr);
      }
 
-    // ── 4. Para pagos en línea (credit_card, wompi), el stock/cupón/carrito
-    //     se confirman en confirmOrder tras el pago exitoso.
-    //     Para contra entrega, confirmar aquí directamente.
+    // ── 4. Descontar stock y limpiar carrito para todos los métodos ───
     if (paymentMethod === 'cash_on_delivery') {
       // Descontar stock
       for (const item of cartItems) {
@@ -243,12 +241,6 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Limpiar carrito
-      for (const item of cartItems) {
-        if (!item.id) continue;
-        try { await base44.asServiceRole.entities.CartItem.delete(item.id); } catch (_) {}
-      }
-
       // Email al usuario
       try {
         const itemsText = cartItems.map(item =>
@@ -272,6 +264,12 @@ Deno.serve(async (req) => {
           body: `Nueva orden de ${order.customer_name} (${user.email})\n\n${adminItemsText}\n\nSubtotal: $${subtotal.toFixed(2)}\n${discountAmount > 0 ? `Descuento: -$${discountAmount.toFixed(2)}\n` : ''}Envío: $${shipping.toFixed(2)}\nTotal: $${total.toFixed(2)}\n\nMétodo de pago: Contra entrega`,
         });
       } catch (_) {}
+    }
+
+    // ── 5. Limpiar carrito siempre después de crear orden ─────────────
+    for (const item of cartItems) {
+      if (!item.id) continue;
+      try { await base44.asServiceRole.entities.CartItem.delete(item.id); } catch (_) {}
     }
 
     return Response.json({ order });
