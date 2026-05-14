@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
 import { useTranslation } from './i18n/useTranslation';
-import { Wrench } from 'lucide-react';
+import { Wrench, ShieldOff, RefreshCw } from 'lucide-react';
 
 const SUPER_ADMIN_ROLES = ['super_admin', 'owner'];
 const ADMIN_ROLES = ['admin', 'super_admin', 'owner'];
@@ -13,12 +13,21 @@ const HOME_PATH = createPageUrl('Home');
 const GUEST_ALLOWED_PATHS = ['/Home', '/Browse', '/ProductDetail', '/Account', '/'];
 const SELLER_ALLOWED_PATHS = ['/SellerDashboard', '/Home', '/Browse', '/Account', '/'];
 
+const DEACTIVATION_REASON_LABELS = {
+  self_deactivated: 'Desactivaste tu cuenta voluntariamente.',
+  admin_deactivated: 'Tu cuenta fue desactivada por un administrador.',
+  inactivity: 'Tu cuenta fue desactivada por inactividad.',
+  policy_violation: 'Tu cuenta fue desactivada por violación de políticas.',
+};
+
 export default function DevModeGuard({ children }) {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const [checked, setChecked] = useState(false);
   const [blocked, setBlocked] = useState(false);
+  const [deactivatedUser, setDeactivatedUser] = useState(null);
+  const [requestingSent, setRequestingSent] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -30,6 +39,13 @@ export default function DevModeGuard({ children }) {
         ]);
 
         if (cancelled) return;
+
+        // Block deactivated users from everything except /reactivate
+        if (user?.status === 'deactivated' && location.pathname !== '/reactivate') {
+          setDeactivatedUser(user);
+          setChecked(true);
+          return;
+        }
 
         const devMode = settings?.development_mode === true;
         const disabledPages = settings?.disabled_pages || [];
@@ -110,6 +126,52 @@ export default function DevModeGuard({ children }) {
   }, [location.pathname]);
 
   if (!checked) return null;
+
+  if (deactivatedUser) {
+    const reason = deactivatedUser.status_reason;
+    const reasonLabel = DEACTIVATION_REASON_LABELS[reason] || 'Tu cuenta ha sido desactivada.';
+
+    const handleRequestReactivation = async () => {
+      if (requestingSent) return;
+      try {
+        await base44.functions.invoke('requestAccountReactivation', {});
+        setRequestingSent(true);
+      } catch {
+        setRequestingSent(true); // aun así muestra confirmación
+      }
+    };
+
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 gap-5 text-center">
+        <div className="w-20 h-20 bg-destructive/10 rounded-full flex items-center justify-center">
+          <ShieldOff className="w-10 h-10 text-destructive" />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-foreground mb-2">Cuenta desactivada</h1>
+          <p className="text-sm text-muted-foreground max-w-xs">{reasonLabel}</p>
+        </div>
+        {!requestingSent ? (
+          <button
+            onClick={handleRequestReactivation}
+            className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-full text-sm font-semibold shadow"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Solicitar reactivación
+          </button>
+        ) : (
+          <div className="bg-success/10 text-success rounded-xl px-5 py-3 text-sm font-medium max-w-xs">
+            ✅ Te enviamos un enlace de reactivación a tu correo.
+          </div>
+        )}
+        <button
+          onClick={() => base44.auth.logout('/')}
+          className="text-xs text-muted-foreground underline underline-offset-2"
+        >
+          Cerrar sesión
+        </button>
+      </div>
+    );
+  }
 
   if (blocked) {
     return (
