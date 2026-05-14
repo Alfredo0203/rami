@@ -36,9 +36,6 @@
     "status"
   ],
   "rls": {
-    "read": {
-      "user.role": "admin"
-    },
     "create": {},
     "delete": {
       "user.role": "admin"
