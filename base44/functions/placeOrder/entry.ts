@@ -153,9 +153,6 @@ Deno.serve(async (req) => {
        };
      });
 
-     // Validate items structure before sending
-     console.log('Cleaned items:', JSON.stringify(cleanedItems));
-
      const order = await base44.asServiceRole.entities.Order.create({
         order_number: orderNumber,
         items: cleanedItems,

@@ -12,23 +12,19 @@ Deno.serve(async (req) => {
 
     if (!orderId) return Response.json({ error: 'orderId requerido' }, { status: 400 });
 
+    // Autenticar usuario - REQUERIDO
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 });
+
     // Obtener la orden
     const order = await base44.asServiceRole.entities.Order.get(orderId);
     if (!order) return Response.json({ error: 'Orden no encontrada' }, { status: 404 });
 
-    // Intentar obtener usuario autenticado
-    let user;
-    try {
-      user = await base44.auth.me();
-    } catch (_) {
-      user = null;
-    }
-
     // Validar permisos: owner o admin/super_admin
-    const isOwner = user && order.customer_email === user.email;
-    const isAdminOrSuperAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+    const isOwner = order.customer_email === user.email;
+    const isAdminOrSuperAdmin = user.role === 'admin' || user.role === 'super_admin';
     
-    if (user && !isOwner && !isAdminOrSuperAdmin) {
+    if (!isOwner && !isAdminOrSuperAdmin) {
       return Response.json({ error: 'No tienes permiso para confirmar esta orden' }, { status: 403 });
     }
 
