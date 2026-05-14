@@ -12,7 +12,6 @@ import AdminReviewsTab from '../components/admin/AdminReviewsTab';
 import AdminCategoriesTab from '../components/admin/AdminCategoriesTab';
 import AdminCouponsTab from '../components/admin/AdminCouponsTab';
 import AdminStoresTab from '../components/admin/AdminStoresTab';
-import DeactivatedAccountsTable from '../components/admin/DeactivatedAccountsTable';
 import AdminInventoryModal from '../components/admin/AdminInventoryModal';
 import InventoryHistoryModal from '../components/admin/InventoryHistoryModal';
 import { Button } from '@/components/ui/button';
@@ -41,6 +40,10 @@ export default function Admin() {
   const [showSummary, setShowSummary] = useState(false);
   const [showProductFilters, setShowProductFilters] = useState(false);
   const [showOrderFilters, setShowOrderFilters] = useState(false);
+  const [showUserFilters, setShowUserFilters] = useState(false);
+  const [userSearch, setUserSearch] = useState('');
+  const [userStatusFilter, setUserStatusFilter] = useState('all');
+  const [userRoleFilter, setUserRoleFilter] = useState('all');
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -582,7 +585,93 @@ export default function Admin() {
         </TabsContent>
 
         <TabsContent value="users" className="space-y-3 mt-3">
-          {!loadingUsers && <DeactivatedAccountsTable users={allUsers} />}
+          {/* Filtros de usuarios */}
+          {(() => {
+            const activeCount = [
+              !!userSearch,
+              userStatusFilter !== 'all',
+              userRoleFilter !== 'all',
+            ].filter(Boolean).length;
+            return (
+              <Sheet open={showUserFilters} onOpenChange={setShowUserFilters}>
+                <div className="flex items-center gap-2 mb-3">
+                  <button
+                    onClick={() => setShowUserFilters(true)}
+                    className="relative p-1.5 bg-secondary rounded-full"
+                  >
+                    <SlidersHorizontal className="w-4 h-4 text-foreground" />
+                    {activeCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full text-[10px] text-primary-foreground font-bold flex items-center justify-center">
+                        {activeCount}
+                      </span>
+                    )}
+                  </button>
+                  {activeCount > 0 && (
+                    <button
+                      onClick={() => { setUserSearch(''); setUserStatusFilter('all'); setUserRoleFilter('all'); }}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-colors"
+                    >
+                      <X className="w-3 h-3" /> Limpiar filtros
+                    </button>
+                  )}
+                </div>
+                <SheetContent side="bottom" className="rounded-t-3xl max-h-[80vh] overflow-y-auto">
+                  <SheetHeader className="flex flex-row items-center justify-between pr-8">
+                    <SheetTitle>Filtros de usuarios</SheetTitle>
+                    {activeCount > 0 && (
+                      <button
+                        onClick={() => { setUserSearch(''); setUserStatusFilter('all'); setUserRoleFilter('all'); }}
+                        className="text-xs text-primary font-medium"
+                      >
+                        Limpiar todo
+                      </button>
+                    )}
+                  </SheetHeader>
+                  <div className="space-y-5 py-4">
+                    <div>
+                      <label className="text-sm font-semibold text-foreground mb-2 block">Buscar</label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <input
+                          type="text"
+                          placeholder="Nombre o email..."
+                          value={userSearch}
+                          onChange={(e) => setUserSearch(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 text-sm bg-secondary border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-foreground mb-2 block">Estado</label>
+                      <div className="flex flex-wrap gap-2">
+                        {[['all','Todos'],['active','✅ Activos'],['suspended','⚠️ Suspendidos'],['deactivated','🚫 Desactivados']].map(([v, label]) => (
+                          <button key={v} onClick={() => setUserStatusFilter(v)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${userStatusFilter === v ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-foreground mb-2 block">Rol</label>
+                      <div className="flex flex-wrap gap-2">
+                        {[['all','Todos'],['user','Clientes'],['admin','Admins'],['seller','Vendedores'],['super_admin','Propietarios']].map(([v, label]) => (
+                          <button key={v} onClick={() => setUserRoleFilter(v)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${userRoleFilter === v ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <Button onClick={() => setShowUserFilters(false)} className="w-full bg-primary text-primary-foreground rounded-full">
+                      Aplicar
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            );
+          })()}
+
           {loadingUsers ? (
             <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
           ) : allUsers.length === 0 ? (
@@ -590,9 +679,32 @@ export default function Admin() {
               <p className="text-muted-foreground text-sm">No se encontraron usuarios</p>
             </div>
           ) : (
-            allUsers.map(u => (
-              <AdminUserCard key={u.id} targetUser={u} currentUser={user} orders={orders} stores={stores} />
-            ))
+            (() => {
+              let filtered = allUsers;
+              if (userStatusFilter !== 'all') filtered = filtered.filter(u => (u.status || 'active') === userStatusFilter);
+              if (userRoleFilter !== 'all') filtered = filtered.filter(u => u.role === userRoleFilter);
+              if (userSearch.trim()) {
+                const q = userSearch.toLowerCase();
+                filtered = filtered.filter(u =>
+                  u.full_name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)
+                );
+              }
+              return filtered.length === 0 ? (
+                <div className="text-center py-10">
+                  <p className="text-muted-foreground text-sm">No hay usuarios que coincidan</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-semibold text-foreground">{filtered.length}</span> usuario{filtered.length !== 1 ? 's' : ''}
+                    {filtered.length !== allUsers.length && ` de ${allUsers.length}`}
+                  </p>
+                  {filtered.map(u => (
+                    <AdminUserCard key={u.id} targetUser={u} currentUser={user} orders={orders} stores={stores} />
+                  ))}
+                </div>
+              );
+            })()
           )}
         </TabsContent>
 
