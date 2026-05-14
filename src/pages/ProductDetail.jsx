@@ -227,7 +227,7 @@ export default function ProductDetail() {
       setSelectedVariant(variantToSelect);
       
       // Sync attribute map
-      if (variantToSelect.attributes) {
+      if (Array.isArray(variantToSelect.attributes)) {
         const map = {};
         variantToSelect.attributes.forEach(a => { 
           if (a.key && a.values?.[0]) map[a.key] = a.values[0]; 
