@@ -59,15 +59,25 @@
     "update": {
       "$or": [
         {
-          "data.created_by": "{{user.email}}"
+          "user.role": "admin"
         },
         {
-          "user.role": "admin"
+          "user.role": "super_admin"
+        },
+        {
+          "data.created_by": "{{user.email}}"
         }
       ]
     },
     "delete": {
-      "user.role": "admin"
+      "$or": [
+        {
+          "user.role": "admin"
+        },
+        {
+          "user.role": "super_admin"
+        }
+      ]
     }
   }
 }
