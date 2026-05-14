@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 });
 
     const body = await req.json();
-    const { cartItems, shippingAddress, paymentMethod, couponCode } = body;
+    const { cartItems, shippingAddress, paymentMethod, couponCode, skipCartClear } = body;
 
     if (!cartItems?.length) return Response.json({ error: 'El carrito está vacío' }, { status: 400 });
     if (!shippingAddress) return Response.json({ error: 'Dirección de envío requerida' }, { status: 400 });
@@ -138,7 +138,9 @@ Deno.serve(async (req) => {
     // tracking_number se genera automáticamente cuando el admin cambia estado a "shipped"
 
     // ── 3. Crear la orden ─────────────────────────────────────────────
+     // Validate each item before creating order
      const cleanedItems = cartItems.map(item => {
+       // Only include the exact fields Order schema expects
        return {
          product_id: item.product_id || '',
          product_name: item.product_name || '',
@@ -151,18 +153,12 @@ Deno.serve(async (req) => {
        };
      });
 
-     console.log('Creating order with:', {
-       order_number: orderNumber,
-       items_count: cleanedItems.length,
-       user_email: user.email,
-       total,
-       payment_method: paymentMethod,
-     });
+     // Validate items structure before sending
+     console.log('Cleaned items:', JSON.stringify(cleanedItems));
 
      const order = await base44.asServiceRole.entities.Order.create({
         order_number: orderNumber,
         items: cleanedItems,
-       user_email: user.email,
        subtotal: Number(subtotal) || 0,
        discount_amount: Number(discountAmount) || 0,
        coupon_code: appliedCoupon?.code || undefined,
@@ -172,15 +168,15 @@ Deno.serve(async (req) => {
        payment_status: 'pending_payment',
        payment_method: paymentMethod,
        shipping_address: shippingAddress,
+       customer_email: user.email || '',
        customer_name: user.full_name || shippingAddress.full_name || '',
      });
-
-     console.log('Order created with ID:', order.id);
 
      // Registrar estado inicial en historial
      try {
        await base44.asServiceRole.entities.OrderStatusHistory.create({
          order_id: order.id,
+         user_email: user.email,
          status: 'pending',
          timestamp: new Date().toISOString(),
          notes: 'Pedido creado automáticamente'
@@ -189,7 +185,9 @@ Deno.serve(async (req) => {
        console.error('Error creating history record:', historyErr);
      }
 
-    // ── 4. Descontar stock y limpiar carrito para todos los métodos ───
+    // ── 4. Para pagos en línea (credit_card, wompi), el stock/cupón/carrito
+    //     se confirman en confirmOrder tras el pago exitoso.
+    //     Para contra entrega, confirmar aquí directamente.
     if (paymentMethod === 'cash_on_delivery') {
       // Descontar stock
       for (const item of cartItems) {
@@ -246,7 +244,13 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Email al usuario
+      // Limpiar carrito
+      for (const item of cartItems) {
+        if (!item.id) continue;
+        try { await base44.asServiceRole.entities.CartItem.delete(item.id); } catch (_) {}
+      }
+
+      // Email
       try {
         const itemsText = cartItems.map(item =>
           `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} - ${item.quantity}x $${item.product_price.toFixed(2)}`
@@ -257,27 +261,7 @@ Deno.serve(async (req) => {
           body: `Hola, ${order.customer_name || 'Estimado Cliente'}.\n\nGracias por tu compra.\n\nOrden #${order.order_number}\n\n${itemsText}\n\nTotal: $${total.toFixed(2)}\n\nSaludos,\nRAmi.`,
         });
       } catch (_) {}
-
-      // Email al admin: nueva orden
-      try {
-        const adminItemsText = cartItems.map(item =>
-          `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} x${item.quantity} - $${(item.product_price * item.quantity).toFixed(2)}`
-        ).join('\n');
-        await base44.integrations.Core.SendEmail({
-          to: 'somosrami@gmail.com',
-          subject: `🛒 Nueva orden recibida #${order.order_number}`,
-          body: `Nueva orden de ${order.customer_name} (${user.email})\n\n${adminItemsText}\n\nSubtotal: $${subtotal.toFixed(2)}\n${discountAmount > 0 ? `Descuento: -$${discountAmount.toFixed(2)}\n` : ''}Envío: $${shipping.toFixed(2)}\nTotal: $${total.toFixed(2)}\n\nMétodo de pago: Contra entrega`,
-        });
-      } catch (_) {}
     }
-
-    // ── 5. Limpiar carrito siempre después de crear orden ─────────────
-    try {
-      const allCartItems = await base44.asServiceRole.entities.CartItem.filter({ created_by: user.email });
-      for (const ci of allCartItems) {
-        await base44.asServiceRole.entities.CartItem.delete(ci.id);
-      }
-    } catch (e) { console.error('Error limpiando carrito:', e); }
 
     return Response.json({ order });
   } catch (error) {

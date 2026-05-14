@@ -7,25 +7,20 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const body = await req.json();
-    const { orderId, paymentTransactionId, userEmail } = body;
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 });
 
-    if (!userEmail) return Response.json({ error: 'userEmail requerido' }, { status: 400 });
+    const body = await req.json();
+    const { orderId, paymentTransactionId } = body;
 
     if (!orderId) return Response.json({ error: 'orderId requerido' }, { status: 400 });
 
-    // Obtener la orden directamente por ID (asServiceRole evita RLS)
-    let order;
-    try {
-      order = await base44.asServiceRole.entities.Order.get(orderId);
-    } catch (err) {
-      console.error('Error getting order:', err.message);
-      return Response.json({ error: 'Orden no encontrada' }, { status: 404 });
-    }
+    // Obtener la orden
+    const order = await base44.asServiceRole.entities.Order.get(orderId);
     if (!order) return Response.json({ error: 'Orden no encontrada' }, { status: 404 });
 
     // Validar que el usuario sea el dueño de la orden
-    if (order.user_email !== userEmail) {
+    if (order.created_by !== user.email) {
       return Response.json({ error: 'No tienes permiso para confirmar esta orden' }, { status: 403 });
     }
 
@@ -43,12 +38,13 @@ Deno.serve(async (req) => {
 
     // Registrar cambio de estado
     try {
-     await base44.asServiceRole.entities.OrderStatusHistory.create({
-       order_id: orderId,
-       status: 'processing',
-       timestamp: new Date().toISOString(),
-       notes: 'Pago confirmado'
-     });
+      await base44.asServiceRole.entities.OrderStatusHistory.create({
+        order_id: orderId,
+        user_email: user.email,
+        status: 'processing',
+        timestamp: new Date().toISOString(),
+        notes: 'Pago confirmado'
+      });
     } catch (_) {}
 
     // 2. Descontar stock y registrar InventoryLog
@@ -107,7 +103,7 @@ Deno.serve(async (req) => {
           if (coupon.is_user_specific) {
             const assignments = await base44.asServiceRole.entities.CouponAssignment.filter({
               coupon_id: coupon.id,
-              user_email: userEmail
+              user_email: user.email
             });
             if (assignments.length > 0) {
               const a = assignments[0];
@@ -128,23 +124,22 @@ Deno.serve(async (req) => {
 
     // 4. Limpiar carrito
     try {
-     const cartItems = await base44.asServiceRole.entities.CartItem.filter({ created_by: userEmail });
-     for (const ci of cartItems) {
-       await base44.asServiceRole.entities.CartItem.delete(ci.id);
-     }
+      const cartItems = await base44.asServiceRole.entities.CartItem.filter({ created_by: user.email });
+      for (const ci of cartItems) {
+        await base44.asServiceRole.entities.CartItem.delete(ci.id);
+      }
     } catch (cartErr) {
-     console.error('Error limpiando carrito:', cartErr);
+      console.error('Error limpiando carrito:', cartErr);
     }
 
-    // 5. Enviar emails de confirmación
+    // 5. Enviar email de confirmación
     try {
-     const itemsText = order.items.map(item =>
-       `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} - ${item.quantity}x $${Number(item.price).toFixed(2)}`
-     ).join('\n');
+      const itemsText = order.items.map(item =>
+        `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} - ${item.quantity}x $${Number(item.price).toFixed(2)}`
+      ).join('\n');
 
-     // Al usuario
-     await base44.integrations.Core.SendEmail({
-       to: userEmail,
+      await base44.integrations.Core.SendEmail({
+        to: user.email,
         subject: `Confirmación de Pedido - Orden ${order.order_number}`,
         body: `Hola, ${order.customer_name || 'Estimado Cliente'}.
 
@@ -167,13 +162,6 @@ Puedes ver tu orden y descargar la factura en tu cuenta en la app.
 
 Saludos,
 RAmi.`,
-      });
-
-      // Al admin
-      await base44.integrations.Core.SendEmail({
-        to: 'somosrami@gmail.com',
-        subject: `🛒 Nueva orden recibida #${order.order_number}`,
-        body: `Nueva orden de ${order.customer_name} (${userEmail})\n\n${itemsText}\n\nSubtotal: $${Number(order.subtotal).toFixed(2)}\n${order.discount_amount > 0 ? `Descuento: -$${Number(order.discount_amount).toFixed(2)}\n` : ''}Envío: $${Number(order.shipping_cost).toFixed(2)}\nTotal: $${Number(order.total).toFixed(2)}\n\nMétodo de pago: ${order.payment_method}`,
       });
     } catch (_) {}
 

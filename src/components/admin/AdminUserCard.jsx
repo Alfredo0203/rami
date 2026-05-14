@@ -167,20 +167,7 @@ export default function AdminUserCard({ targetUser, currentUser, orders = [], st
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
                     <AlertDialogAction
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      onClick={async () => {
-                        updateUser.mutate(confirmAction.data);
-                        // Si es suspensión, notificar al usuario por correo
-                        if (confirmAction.data?.status === 'suspended') {
-                          try {
-                            await base44.functions.invoke('notifyUserSuspended', {
-                              userEmail: targetUser.email,
-                              userName: targetUser.full_name,
-                              reason: confirmAction.data.status_reason,
-                            });
-                          } catch (e) { console.error('Error enviando correo de suspensión:', e); }
-                        }
-                        setConfirmAction(null);
-                      }}
+                      onClick={() => { updateUser.mutate(confirmAction.data); setConfirmAction(null); }}
                     >
                       {confirmAction?.label}
                     </AlertDialogAction>

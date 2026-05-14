@@ -11,7 +11,6 @@ import InfiniteScroll from '../components/shop/InfiniteScroll';
 import { useBackExitConfirm } from '../components/useBackExitConfirm';
 import { useTranslation } from '../components/i18n/useTranslation';
 import { AlertTriangle, Loader2 } from 'lucide-react';
-import AppealForm from '../components/shop/AppealForm';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useScrollRestoration } from '../components/useScrollRestoration';
@@ -127,12 +126,6 @@ export default function Home() {
             {requestingReactivation && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
             Solicitar reactivación
           </Button>
-        )}
-        {userStatus === 'suspended' && (
-          <AppealForm
-            userEmail={currentUser?.email}
-            userName={currentUser?.full_name}
-          />
         )}
         <button
           onClick={() => base44.auth.logout()}

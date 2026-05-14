@@ -79,7 +79,7 @@ export default function ProductDetail() {
 
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart', user?.email],
-    queryFn: () => isGuest || !user?.email ? [] : base44.entities.CartItem.list().then(items => items.filter(i => i.created_by === user.email)).catch(() => []),
+    queryFn: () => isGuest || !user?.email ? [] : base44.entities.CartItem.filter({ created_by: user.email }).catch(() => []),
     enabled: !isGuest && !!user?.email,
   });
 
@@ -227,7 +227,7 @@ export default function ProductDetail() {
       setSelectedVariant(variantToSelect);
       
       // Sync attribute map
-      if (Array.isArray(variantToSelect.attributes)) {
+      if (variantToSelect.attributes) {
         const map = {};
         variantToSelect.attributes.forEach(a => { 
           if (a.key && a.values?.[0]) map[a.key] = a.values[0]; 
@@ -301,7 +301,6 @@ export default function ProductDetail() {
       );
 
       const cartData = {
-        user_email: user.email,
         product_id: productId,
         variant_id: variantId || undefined,
         quantity,

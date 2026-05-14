@@ -205,16 +205,11 @@ export default function Checkout() {
         shippingAddress,
         paymentMethod,
         couponCode: appliedCoupon?.code,
+        skipCartClear: paymentMethod !== 'cash_on_delivery',
       });
 
-      console.log('placeOrder response:', res.data);
       if (res.data?.error) throw new Error(res.data.details?.join('\n') || res.data.error);
       const order = res.data.order;
-      if (!order || !order.id) {
-        console.error('Order ID missing:', order);
-        throw new Error('Error al crear la orden - ID inválido');
-      }
-      console.log('Order from placeOrder:', order.id);
 
       // Si pago con tarjeta → abrir modal embebido de Stripe
       if (paymentMethod === 'credit_card') {
@@ -235,6 +230,7 @@ export default function Checkout() {
 
         if (intentRes.data?.error) throw new Error(intentRes.data.error);
 
+        setPendingOrderId(order.id);
         setStripeClientSecret(intentRes.data.clientSecret);
         setShowStripeModal(true);
         return order;
@@ -243,10 +239,8 @@ export default function Checkout() {
       return order;
     },
     onSuccess: (order) => {
-      // Guardar orderId para credit_card
-      if (paymentMethod === 'credit_card') {
-        setPendingOrderId(order.id);
-      } else {
+      // Para credit_card el modal maneja la navegación
+      if (paymentMethod !== 'credit_card') {
         queryClient.invalidateQueries({ queryKey: ['cart'] });
         queryClient.invalidateQueries({ queryKey: ['orders'] });
         queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
@@ -259,27 +253,15 @@ export default function Checkout() {
   });
 
   const handleStripeSuccess = async (paymentIntentId) => {
-    try {
-      console.log('handleStripeSuccess called with:', { pendingOrderId, paymentIntentId });
-      if (!pendingOrderId) {
-        throw new Error('No hay orden pendiente - pendingOrderId es null');
-      }
-      const confirmRes = await base44.functions.invoke('confirmOrder', {
-        orderId: pendingOrderId,
-        paymentTransactionId: paymentIntentId,
-        userEmail: user?.email,
-      });
-      console.log('confirmOrder response:', confirmRes.data);
-      setShowStripeModal(false);
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
-      navigate(createPageUrl('OrderConfirmation') + `?id=${pendingOrderId}&payment=success`);
-    } catch (err) {
-      console.error('handleStripeSuccess error:', err);
-      toast.error(err.message || 'Error al confirmar el pago');
-      setShowStripeModal(false);
-    }
+    await base44.functions.invoke('confirmOrder', {
+      orderId: pendingOrderId,
+      paymentTransactionId: paymentIntentId,
+    });
+    setShowStripeModal(false);
+    queryClient.invalidateQueries({ queryKey: ['cart'] });
+    queryClient.invalidateQueries({ queryKey: ['orders'] });
+    queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
+    navigate(createPageUrl('OrderConfirmation') + `?id=${pendingOrderId}&payment=success`);
   };
 
   const handleRequestReactivation = async () => {

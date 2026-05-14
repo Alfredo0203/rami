@@ -29,15 +29,6 @@ Deno.serve(async (req) => {
       reactivation_token_expires: null,
     });
 
-    // Correo de confirmación al usuario
-    try {
-      await base44.integrations.Core.SendEmail({
-        to: user.email,
-        subject: '¡Tu cuenta en RAmi ha sido reactivada!',
-        body: `Hola ${user.full_name || 'estimado cliente'},\n\nTu cuenta ha sido reactivada exitosamente. Ya puedes iniciar sesión y seguir comprando.\n\nSaludos,\nRAmi`,
-      });
-    } catch (e) { console.error('Error enviando correo de reactivación:', e); }
-
     return Response.json({ message: 'Account reactivated successfully' });
   } catch (error) {
     console.error('reactivateAccount error:', error);

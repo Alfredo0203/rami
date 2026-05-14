@@ -44,7 +44,7 @@ export default function Orders() {
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['orders', userEmail],
-    queryFn: () => base44.entities.Order.filter({ user_email: userEmail }, '-created_date'),
+    queryFn: () => base44.entities.Order.filter({ customer_email: userEmail }, '-created_date'),
     enabled: !!userEmail,
   });
 

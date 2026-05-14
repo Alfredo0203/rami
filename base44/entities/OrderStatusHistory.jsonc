@@ -6,6 +6,10 @@
       "type": "string",
       "description": "ID de la orden"
     },
+    "user_email": {
+      "type": "string",
+      "description": "Email del usuario propietario de la orden"
+    },
     "status": {
       "type": "string",
       "enum": [
@@ -32,39 +36,24 @@
     "status"
   ],
   "rls": {
-    "create": {},
     "read": {
       "$or": [
         {
+          "data.user_email": "{{user.email}}"
+        },
+        {
           "user.role": "admin"
-        },
-        {
-          "user.role": "super_admin"
-        },
-        {
-          "created_by": "{{user.email}}"
         }
       ]
+    },
+    "create": {
+      "user.role": "admin"
     },
     "update": {
-      "$or": [
-        {
-          "user.role": "admin"
-        },
-        {
-          "user.role": "super_admin"
-        }
-      ]
+      "user.role": "admin"
     },
     "delete": {
-      "$or": [
-        {
-          "user.role": "admin"
-        },
-        {
-          "user.role": "super_admin"
-        }
-      ]
+      "user.role": "admin"
     }
   }
 }

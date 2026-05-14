@@ -2,9 +2,9 @@
   "name": "SearchHistory",
   "type": "object",
   "properties": {
-    "user_id": {
+    "user_email": {
       "type": "string",
-      "description": "User ID (explicit foreign key)"
+      "description": "Email del usuario que realiz\u00f3 la b\u00fasqueda"
     },
     "query": {
       "type": "string",
@@ -17,48 +17,7 @@
     }
   },
   "required": [
+    "user_email",
     "query"
-  ],
-  "rls": {
-    "create": true,
-    "read": {
-      "$or": [
-        {
-          "user.role": "admin"
-        },
-        {
-          "user.role": "super_admin"
-        },
-        {
-          "created_by": "{{user.email}}"
-        }
-      ]
-    },
-    "update": {
-      "$or": [
-        {
-          "user.role": "admin"
-        },
-        {
-          "user.role": "super_admin"
-        },
-        {
-          "created_by": "{{user.email}}"
-        }
-      ]
-    },
-    "delete": {
-      "$or": [
-        {
-          "user.role": "admin"
-        },
-        {
-          "user.role": "super_admin"
-        },
-        {
-          "created_by": "{{user.email}}"
-        }
-      ]
-    }
-  }
+  ]
 }

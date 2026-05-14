@@ -12,7 +12,6 @@ import AdminReviewsTab from '../components/admin/AdminReviewsTab';
 import AdminCategoriesTab from '../components/admin/AdminCategoriesTab';
 import AdminCouponsTab from '../components/admin/AdminCouponsTab';
 import AdminStoresTab from '../components/admin/AdminStoresTab';
-import AdminCancelRequestsTab from '../components/admin/AdminCancelRequestsTab';
 import AdminInventoryModal from '../components/admin/AdminInventoryModal';
 import InventoryHistoryModal from '../components/admin/InventoryHistoryModal';
 import { Button } from '@/components/ui/button';
@@ -60,11 +59,7 @@ export default function Admin() {
 
   const { data: orders = [], isLoading: loadingOrders } = useQuery({
     queryKey: ['admin-orders'],
-    queryFn: async () => {
-      const res = await base44.functions.invoke('getAdminOrders', {});
-      return res.data?.orders || [];
-    },
-    enabled: !!user,
+    queryFn: () => base44.entities.Order.list('-created_date'),
   });
 
   const { data: categories = [] } = useQuery({
@@ -206,9 +201,6 @@ export default function Admin() {
               <TabsTrigger value="coupons" className="px-2"><Ticket className="w-4 h-4" /></TabsTrigger>
               <TabsTrigger value="reviews" className="px-2"><MessageSquare className="w-4 h-4" /></TabsTrigger>
               <TabsTrigger value="stores" className="px-2"><Store className="w-4 h-4" /></TabsTrigger>
-              <TabsTrigger value="cancel_requests" className="px-2 relative">
-                <AlertTriangle className="w-4 h-4" />
-              </TabsTrigger>
               {user?.role === 'super_admin' && (
                 <TabsTrigger value="settings" className="px-2"><Settings className="w-4 h-4" /></TabsTrigger>
               )}
@@ -474,12 +466,12 @@ export default function Admin() {
                       <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <input
-                           type="text"
-                           placeholder="Email, cliente o N° pedido..."
-                           value={orderSearch}
-                           onChange={(e) => setOrderSearch(e.target.value)}
-                           className="w-full pl-9 pr-3 py-2 text-sm bg-secondary border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                         />
+                          type="text"
+                          placeholder="Cliente o N° pedido..."
+                          value={orderSearch}
+                          onChange={(e) => setOrderSearch(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 text-sm bg-secondary border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
                       </div>
                     </div>
                     <div>
@@ -726,10 +718,6 @@ export default function Admin() {
 
         <TabsContent value="stores">
           <AdminStoresTab />
-        </TabsContent>
-
-        <TabsContent value="cancel_requests" className="mt-3 px-0">
-          <AdminCancelRequestsTab />
         </TabsContent>
 
         {user?.role === 'super_admin' && (

@@ -2,10 +2,6 @@
   "name": "Review",
   "type": "object",
   "properties": {
-    "user_id": {
-      "type": "string",
-      "description": "User ID (explicit foreign key)"
-    },
     "product_id": {
       "type": "string",
       "description": "ID of the reviewed product"
@@ -56,32 +52,5 @@
   "required": [
     "product_id",
     "rating"
-  ],
-  "rls": {
-    "create": {},
-    "read": {},
-    "update": {
-      "$or": [
-        {
-          "user.role": "admin"
-        },
-        {
-          "user.role": "super_admin"
-        },
-        {
-          "data.created_by": "{{user.email}}"
-        }
-      ]
-    },
-    "delete": {
-      "$or": [
-        {
-          "user.role": "admin"
-        },
-        {
-          "user.role": "super_admin"
-        }
-      ]
-    }
-  }
+  ]
 }

@@ -23,7 +23,7 @@ export default function Wishlist() {
     queryFn: async () => {
       const user = await base44.auth.me();
       if (!user) return [];
-      return base44.entities.Wishlist.filter({ created_by: user.email });
+      return base44.entities.Wishlist.filter({ user_email: user.email });
     },
     enabled: !isGuest,
   });

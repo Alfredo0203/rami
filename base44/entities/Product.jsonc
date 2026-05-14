@@ -118,29 +118,5 @@
   "required": [
     "name",
     "price"
-  ],
-  "rls": {
-    "read": {},
-    "create": {
-      "$or": [
-        {
-          "user.role": "admin"
-        },
-        {
-          "user.role": "super_admin"
-        }
-      ]
-    },
-    "update": {},
-    "delete": {
-      "$or": [
-        {
-          "user.role": "admin"
-        },
-        {
-          "user.role": "super_admin"
-        }
-      ]
-    }
-  }
+  ]
 }

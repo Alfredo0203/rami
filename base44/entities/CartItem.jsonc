@@ -2,10 +2,6 @@
   "name": "CartItem",
   "type": "object",
   "properties": {
-    "user_id": {
-      "type": "string",
-      "description": "User ID (explicit foreign key)"
-    },
     "product_id": {
       "type": "string",
       "description": "Product ID"
@@ -41,45 +37,17 @@
     "quantity"
   ],
   "rls": {
-    "create": true,
+    "create": {
+      "data.created_by": "{{user.email}}"
+    },
     "read": {
-      "$or": [
-        {
-          "user.role": "admin"
-        },
-        {
-          "user.role": "super_admin"
-        },
-        {
-          "created_by": "{{user.email}}"
-        }
-      ]
+      "data.created_by": "{{user.email}}"
     },
     "update": {
-      "$or": [
-        {
-          "user.role": "admin"
-        },
-        {
-          "user.role": "super_admin"
-        },
-        {
-          "created_by": "{{user.email}}"
-        }
-      ]
+      "data.created_by": "{{user.email}}"
     },
     "delete": {
-      "$or": [
-        {
-          "user.role": "admin"
-        },
-        {
-          "user.role": "super_admin"
-        },
-        {
-          "created_by": "{{user.email}}"
-        }
-      ]
+      "data.created_by": "{{user.email}}"
     }
   }
 }

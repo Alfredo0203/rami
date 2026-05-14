@@ -2,10 +2,6 @@
   "name": "Address",
   "type": "object",
   "properties": {
-    "user_id": {
-      "type": "string",
-      "description": "User ID (explicit foreign key)"
-    },
     "label": {
       "type": "string",
       "description": "Etiqueta (Casa, Trabajo, etc.)"
@@ -64,45 +60,15 @@
     "house_number"
   ],
   "rls": {
-    "create": true,
+    "create": {},
     "read": {
-      "$or": [
-        {
-          "user.role": "admin"
-        },
-        {
-          "user.role": "super_admin"
-        },
-        {
-          "created_by": "{{user.email}}"
-        }
-      ]
+      "created_by": "{{user.email}}"
     },
     "update": {
-      "$or": [
-        {
-          "user.role": "admin"
-        },
-        {
-          "user.role": "super_admin"
-        },
-        {
-          "created_by": "{{user.email}}"
-        }
-      ]
+      "created_by": "{{user.email}}"
     },
     "delete": {
-      "$or": [
-        {
-          "user.role": "admin"
-        },
-        {
-          "user.role": "super_admin"
-        },
-        {
-          "created_by": "{{user.email}}"
-        }
-      ]
+      "created_by": "{{user.email}}"
     }
   }
 }

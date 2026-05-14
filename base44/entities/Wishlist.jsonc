@@ -2,13 +2,13 @@
   "name": "Wishlist",
   "type": "object",
   "properties": {
-    "user_id": {
-      "type": "string",
-      "description": "User ID (explicit foreign key)"
-    },
     "product_id": {
       "type": "string",
       "description": "ID del producto guardado en favoritos"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email del usuario propietario del wishlist"
     },
     "product_name": {
       "type": "string",
@@ -27,45 +27,17 @@
     "product_id"
   ],
   "rls": {
-    "create": true,
+    "create": {
+      "data.user_email": "{{user.email}}"
+    },
     "read": {
-      "$or": [
-        {
-          "user.role": "admin"
-        },
-        {
-          "user.role": "super_admin"
-        },
-        {
-          "created_by": "{{user.email}}"
-        }
-      ]
+      "data.user_email": "{{user.email}}"
     },
     "update": {
-      "$or": [
-        {
-          "user.role": "admin"
-        },
-        {
-          "user.role": "super_admin"
-        },
-        {
-          "created_by": "{{user.email}}"
-        }
-      ]
+      "data.user_email": "{{user.email}}"
     },
     "delete": {
-      "$or": [
-        {
-          "user.role": "admin"
-        },
-        {
-          "user.role": "super_admin"
-        },
-        {
-          "created_by": "{{user.email}}"
-        }
-      ]
+      "data.user_email": "{{user.email}}"
     }
   }
 }

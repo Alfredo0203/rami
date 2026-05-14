@@ -20,14 +20,23 @@ export default function OrderConfirmation() {
     enabled: !!orderId,
   });
 
-  // No hacer nada aquí — confirmOrder ya manejó todo
-  // (confirmOrder marca como pagado, descuenta stock, limpia carrito, envía emails)
+  // Si Stripe redirigió con payment=success, marcar la orden como pagada y limpiar carrito
   React.useEffect(() => {
-    // Solo para mostrar el mensaje apropiado
-    if (paymentParam === 'success') {
-      console.log('Pago confirmado correctamente');
+    if (paymentParam === 'success' && orderId && order && order.payment_status !== 'paid') {
+      // Marcar orden como pagada
+      base44.entities.Order.update(orderId, {
+        payment_status: 'paid',
+        status: 'processing',
+      }).catch(console.error);
+
+      // Limpiar el carrito del usuario ahora que el pago fue confirmado
+      base44.entities.CartItem.list().then(items => {
+        items.forEach(item => {
+          base44.entities.CartItem.delete(item.id).catch(() => {});
+        });
+      }).catch(console.error);
     }
-  }, [paymentParam]);
+  }, [paymentParam, orderId, order]);
 
   if (isLoading) {
     return (
