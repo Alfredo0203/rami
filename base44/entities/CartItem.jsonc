@@ -37,9 +37,6 @@
     "quantity"
   ],
   "rls": {
-    "create": {
-      "data.created_by": "{{user.email}}"
-    },
     "read": {
       "data.created_by": "{{user.email}}"
     },
@@ -47,6 +44,9 @@
       "data.created_by": "{{user.email}}"
     },
     "delete": {
+      "data.created_by": "{{user.email}}"
+    },
+    "write": {
       "data.created_by": "{{user.email}}"
     }
   }
