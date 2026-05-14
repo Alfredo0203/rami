@@ -50,7 +50,6 @@ Deno.serve(async (req) => {
     
     await base44.asServiceRole.entities.OrderStatusHistory.create({
       order_id: orderId,
-      user_email: order.customer_email,
       status: newStatus,
       timestamp: new Date().toISOString(),
       notes: `Estado actualizado a ${statusLabels[newStatus] || newStatus}`

@@ -38,13 +38,12 @@ Deno.serve(async (req) => {
 
     // Registrar cambio de estado
     try {
-      await base44.asServiceRole.entities.OrderStatusHistory.create({
-        order_id: orderId,
-        user_email: user.email,
-        status: 'processing',
-        timestamp: new Date().toISOString(),
-        notes: 'Pago confirmado'
-      });
+     await base44.asServiceRole.entities.OrderStatusHistory.create({
+       order_id: orderId,
+       status: 'processing',
+       timestamp: new Date().toISOString(),
+       notes: 'Pago confirmado'
+     });
     } catch (_) {}
 
     // 2. Descontar stock y registrar InventoryLog

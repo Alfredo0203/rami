@@ -179,7 +179,6 @@ Revisa y gestiona desde el panel de administración.`,
 
     await base44.asServiceRole.entities.OrderStatusHistory.create({
       order_id: orderId,
-      user_email: order.customer_email,
       status: 'cancelled',
       timestamp: new Date().toISOString(),
       notes: refundId
