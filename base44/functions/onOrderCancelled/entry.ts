@@ -3,7 +3,11 @@ import Stripe from 'npm:stripe@14.21.0';
 
 /**
  * onOrderCancelled — se dispara via automatización de entidad cuando
- * una orden cambia a status "cancelled". Restaura el stock de cada item.
+ * una orden cambia a status "cancelled". Restaura el stock y notifica al cliente.
+ * 
+ * IMPORTANTE: Solo actúa en cancelaciones reales (status → cancelled).
+ * Las solicitudes manuales (shipped/delivered/fuera de 24h) NO llegan aquí
+ * porque cancelOrder no cambia el status en esos casos.
  */
 Deno.serve(async (req) => {
   try {
@@ -22,7 +26,7 @@ Deno.serve(async (req) => {
     const customerEmail = data.customer_email;
 
     // Solo restaurar stock si fue efectivamente descontado:
-    // - Contraentrega: siempre se descuenta en placeOrder
+    // - Contra entrega: siempre se descuenta en placeOrder
     // - Pago online: solo si payment_status === 'paid'
     const stockWasDeducted =
       data.payment_method === 'cash_on_delivery' ||
@@ -72,8 +76,8 @@ Deno.serve(async (req) => {
     // Recuperar cupón si fue usado
     if (couponCode && customerEmail) {
       try {
-        const coupons = await base44.asServiceRole.entities.Coupon.filter({ 
-          code: couponCode.toUpperCase() 
+        const coupons = await base44.asServiceRole.entities.Coupon.filter({
+          code: couponCode.toUpperCase()
         });
 
         if (coupons.length > 0) {
@@ -108,15 +112,13 @@ Deno.serve(async (req) => {
           .map(item => `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} x${item.quantity} - $${((item.price || 0) * (item.quantity || 1)).toFixed(2)}`)
           .join('\n');
 
-        // Verificar estado real del pago:
-        // 1. Si hay payment_transaction_id → consultar Stripe directamente
-        // 2. Si no → confiar en el campo payment_status de la orden
+        // Verificar estado real del pago vía Stripe
         let stripeConfirmedPaid = false;
+        let stripeRefundAlreadyDone = false;
 
         if (data.payment_transaction_id && data.payment_method !== 'cash_on_delivery') {
           try {
             const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
-            // El transaction_id puede ser un PaymentIntent (pi_...) o un Checkout Session (cs_...)
             const txId = data.payment_transaction_id;
             if (txId.startsWith('pi_')) {
               const pi = await stripe.paymentIntents.retrieve(txId);
@@ -128,19 +130,23 @@ Deno.serve(async (req) => {
               console.log(`Stripe CheckoutSession ${txId} payment_status: ${session.payment_status}`);
             }
           } catch (stripeErr) {
-            // Si falla la consulta a Stripe, caer al campo local como fallback
             console.error('No se pudo verificar con Stripe, usando payment_status local:', stripeErr.message);
             stripeConfirmedPaid = data.payment_status === 'paid';
           }
         } else {
-          // Sin transaction_id: confiar en el campo local
           stripeConfirmedPaid = data.payment_status === 'paid';
         }
 
-        // Nota de pago según verificación real:
+        // Si internal_notes tiene un refund_id, significa que cancelOrder ya procesó el reembolso
+        if (data.internal_notes && data.internal_notes.includes('Reembolso Stripe:')) {
+          stripeRefundAlreadyDone = true;
+        }
+
         let paymentNote = '';
-        if (stripeConfirmedPaid) {
-          paymentNote = `\n⚠️ Información sobre tu pago:\nConfirmamos que se realizó un cobro de $${data.total?.toFixed(2) || '0.00'} para esta orden. Nuestro equipo se pondrá en contacto contigo a este correo para gestionar el reembolso correspondiente.\n`;
+        if (stripeRefundAlreadyDone) {
+          paymentNote = `\n✅ Reembolso procesado:\nTu reembolso de $${data.total?.toFixed(2) || '0.00'} ha sido procesado automáticamente. Llegará a tu método de pago en 5-10 días hábiles.\n`;
+        } else if (stripeConfirmedPaid) {
+          paymentNote = `\n⚠️ Información sobre tu pago:\nConfirmamos que se realizó un cobro de $${data.total?.toFixed(2) || '0.00'}. Nuestro equipo se pondrá en contacto para gestionar el reembolso.\n`;
         } else if (data.payment_method !== 'cash_on_delivery') {
           paymentNote = `\nℹ️ Información sobre tu pago:\nNo se realizó ningún cargo a tu método de pago ya que el pago no fue completado antes de la cancelación.\n`;
         }
