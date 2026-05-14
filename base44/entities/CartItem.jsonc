@@ -36,18 +36,5 @@
     "product_id",
     "quantity"
   ],
-  "rls": {
-    "read": {
-      "data.created_by": "{{user.email}}"
-    },
-    "update": {
-      "data.created_by": "{{user.email}}"
-    },
-    "delete": {
-      "data.created_by": "{{user.email}}"
-    },
-    "write": {
-      "data.created_by": "{{user.email}}"
-    }
-  }
+  "rls": {}
 }
