@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     try {
       await base44.asServiceRole.entities.OrderStatusHistory.create({
         order_id: orderId,
-        user_email: user?.email || order.created_by,
+        user_email: user?.email || order.customer_email || 'guest@shop.local',
         status: 'processing',
         timestamp: new Date().toISOString(),
         notes: 'Pago confirmado'
