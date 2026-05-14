@@ -121,12 +121,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 4. Limpiar carrito
+    // 4. Limpiar carrito (como el usuario autenticado, no asServiceRole)
     try {
-      const cartItems = await base44.asServiceRole.entities.CartItem.list();
-      const userCartItems = cartItems.filter(ci => ci.created_by === user.email);
-      for (const ci of userCartItems) {
-        await base44.asServiceRole.entities.CartItem.delete(ci.id);
+      const cartItems = await base44.entities.CartItem.list();
+      for (const ci of cartItems) {
+        await base44.entities.CartItem.delete(ci.id);
       }
     } catch (cartErr) {
       console.error('Error limpiando carrito:', cartErr);
