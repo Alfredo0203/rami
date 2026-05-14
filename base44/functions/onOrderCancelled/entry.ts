@@ -36,7 +36,6 @@ Deno.serve(async (req) => {
               await base44.asServiceRole.entities.ProductVariant.update(item.variant_id, {
                 stock: (variant.stock ?? 0) + (item.quantity ?? 1),
               });
-              // También restaurar sold_count del producto padre
               const parentProduct = await base44.asServiceRole.entities.Product.get(item.product_id);
               if (parentProduct) {
                 await base44.asServiceRole.entities.Product.update(item.product_id, {
@@ -78,23 +77,18 @@ Deno.serve(async (req) => {
 
         if (coupons.length > 0) {
           const coupon = coupons[0];
-
-          // Decrementar contador total del cupón
           await base44.asServiceRole.entities.Coupon.update(coupon.id, {
             used_count: Math.max(0, (coupon.used_count || 1) - 1),
           });
 
-          // Si es específico de usuarios, recuperar el assignment
           if (coupon.is_user_specific) {
             const assignments = await base44.asServiceRole.entities.CouponAssignment.filter({
               coupon_id: coupon.id,
               user_email: customerEmail
             });
-
             if (assignments.length > 0) {
-              const assignment = assignments[0];
-              await base44.asServiceRole.entities.CouponAssignment.update(assignment.id, {
-                usage_count: Math.max(0, (assignment.usage_count || 1) - 1),
+              await base44.asServiceRole.entities.CouponAssignment.update(assignments[0].id, {
+                usage_count: Math.max(0, (assignments[0].usage_count || 1) - 1),
                 status: 'available',
                 used_date: null
               });
@@ -106,15 +100,51 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Notificar al usuario que su orden fue cancelada (si fue cancelada por automatización, no por el admin)
+    // Notificar al usuario
     if (customerEmail && data.order_number) {
       try {
+        const itemsList = items
+          .map(item => `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} x${item.quantity} - $${((item.price || 0) * (item.quantity || 1)).toFixed(2)}`)
+          .join('\n');
+
+        // Nota de pago según estado real:
+        // - paid: hubo cobro electrónico confirmado → se menciona reembolso
+        // - pending_payment + no es COD: pago no fue completado → no hubo cargo
+        // - cash_on_delivery: nunca hubo cobro previo → no se menciona
+        let paymentNote = '';
+        if (data.payment_status === 'paid') {
+          paymentNote = `\n⚠️ Información sobre tu pago:\nDetectamos que se procesó un pago de $${data.total?.toFixed(2) || '0.00'} para esta orden. Nuestro equipo revisará el caso y se pondrá en contacto contigo a este correo para gestionar el reembolso correspondiente.\n`;
+        } else if (data.payment_status === 'pending_payment' && data.payment_method !== 'cash_on_delivery') {
+          paymentNote = `\nℹ️ Información sobre tu pago:\nEl pago no fue completado antes de la cancelación, por lo que no se realizó ningún cargo a tu método de pago.\n`;
+        }
+
         await base44.asServiceRole.integrations.Core.SendEmail({
           to: customerEmail,
-          subject: `Tu pedido #${data.order_number} fue cancelado`,
-          body: `Hola ${data.customer_name || 'cliente'},\n\nTu pedido #${data.order_number} ha sido cancelado.\n\nSi tienes dudas o crees que esto es un error, contáctanos.\n\nGracias,\nRAmi`,
+          subject: `❌ Tu pedido #${data.order_number} ha sido cancelado - RAmi`,
+          body: `Hola ${data.customer_name || 'cliente'},
+
+Lamentamos informarte que tu pedido ha sido cancelado.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PEDIDO CANCELADO
+Número de orden: #${data.order_number}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Artículos:
+${itemsList}
+
+Total: $${data.total?.toFixed(2) || '0.00'}
+${paymentNote}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Si tienes alguna duda, escríbenos a somosrami@gmail.com indicando tu número de orden #${data.order_number}.
+
+Gracias por tu comprensión.
+Equipo RAmi`,
         });
-      } catch (e) { console.error('Error enviando correo cancelación al usuario:', e); }
+      } catch (e) {
+        console.error('Error enviando correo cancelación al usuario:', e);
+      }
     }
 
     return Response.json({ ok: true, restored: items.length });
