@@ -118,5 +118,6 @@
   "required": [
     "name",
     "price"
-  ]
+  ],
+  "rls": {}
 }

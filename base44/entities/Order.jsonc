@@ -145,7 +145,12 @@
   ],
   "rls": {
     "delete": {
-      "user.role": "admin"
+      "user.role": {
+        "$in": [
+          "admin",
+          "super_admin"
+        ]
+      }
     }
   }
 }

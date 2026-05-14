@@ -69,5 +69,6 @@
   "required": [
     "product_id",
     "name"
-  ]
+  ],
+  "rls": {}
 }
