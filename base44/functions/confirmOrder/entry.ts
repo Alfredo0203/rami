@@ -123,8 +123,9 @@ Deno.serve(async (req) => {
 
     // 4. Limpiar carrito
     try {
-      const cartItems = await base44.asServiceRole.entities.CartItem.filter({ created_by: user.email });
-      for (const ci of cartItems) {
+      const cartItems = await base44.asServiceRole.entities.CartItem.list();
+      const userCartItems = cartItems.filter(ci => ci.created_by === user.email);
+      for (const ci of userCartItems) {
         await base44.asServiceRole.entities.CartItem.delete(ci.id);
       }
     } catch (cartErr) {
