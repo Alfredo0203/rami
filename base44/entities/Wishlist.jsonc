@@ -2,6 +2,10 @@
   "name": "Wishlist",
   "type": "object",
   "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "User ID (explicit foreign key)"
+    },
     "product_id": {
       "type": "string",
       "description": "ID del producto guardado en favoritos"

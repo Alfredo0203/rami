@@ -2,6 +2,10 @@
   "name": "Review",
   "type": "object",
   "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "User ID (explicit foreign key)"
+    },
     "product_id": {
       "type": "string",
       "description": "ID of the reviewed product"

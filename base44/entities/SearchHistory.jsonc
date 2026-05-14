@@ -2,6 +2,10 @@
   "name": "SearchHistory",
   "type": "object",
   "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "User ID (explicit foreign key)"
+    },
     "query": {
       "type": "string",
       "description": "T\u00e9rminos de b\u00fasqueda"
