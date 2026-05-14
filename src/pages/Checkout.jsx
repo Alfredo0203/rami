@@ -196,6 +196,31 @@ export default function Checkout() {
     setShowWompiWidget(true);
   };
 
+  const handleStripeSuccess = async (paymentIntentId, orderId) => {
+    try {
+      if (!orderId) {
+        toast.error('Order ID no encontrado. Por favor, intenta nuevamente.');
+        setShowStripeModal(false);
+        return;
+      }
+
+      await base44.functions.invoke('confirmOrder', {
+        orderId: orderId,
+        paymentTransactionId: paymentIntentId,
+      });
+      setShowStripeModal(false);
+      setPendingOrderId(null);
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
+      navigate(createPageUrl('OrderConfirmation') + `?id=${orderId}&payment=success`);
+    } catch (err) {
+      const errorMsg = err?.response?.data?.error || err?.message || 'Error al confirmar la orden';
+      toast.error(errorMsg);
+      setShowStripeModal(false);
+    }
+  };
+
   const placeOrderMutation = useMutation({
     mutationFn: async () => {
       const { shippingAddress, cleanedCartItems } = buildOrderPayload();
@@ -261,30 +286,6 @@ export default function Checkout() {
       toast.error(err.message || 'Error al realizar el pedido');
     },
   });
-
-  const handleStripeSuccess = async (paymentIntentId) => {
-    try {
-      if (!pendingOrderId) {
-        toast.error('Order ID no encontrado. Por favor, intenta nuevamente.');
-        setShowStripeModal(false);
-        return;
-      }
-
-      await base44.functions.invoke('confirmOrder', {
-        orderId: pendingOrderId,
-        paymentTransactionId: paymentIntentId,
-      });
-      setShowStripeModal(false);
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
-      navigate(createPageUrl('OrderConfirmation') + `?id=${pendingOrderId}&payment=success`);
-    } catch (err) {
-      const errorMsg = err?.response?.data?.error || err?.message || 'Error al confirmar la orden';
-      toast.error(errorMsg);
-      setShowStripeModal(false);
-    }
-  };
 
   const handleRequestReactivation = async () => {
     try {
@@ -520,6 +521,7 @@ export default function Checkout() {
           clientSecret={stripeClientSecret}
           publishableKey={stripePublishableKey}
           total={total.toFixed(2)}
+          orderId={pendingOrderId}
           onSuccess={handleStripeSuccess}
           onClose={() => setShowStripeModal(false)}
         />

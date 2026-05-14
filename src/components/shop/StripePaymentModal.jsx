@@ -47,7 +47,7 @@ const CARD_ELEMENT_OPTIONS = {
   },
 };
 
-function CheckoutForm({ onSuccess, onCancel, total, clientSecret }) {
+function CheckoutForm({ onSuccess, onCancel, total, clientSecret, orderId }) {
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
@@ -70,7 +70,7 @@ function CheckoutForm({ onSuccess, onCancel, total, clientSecret }) {
       setError(confirmError.message);
       setProcessing(false);
     } else if (paymentIntent?.status === 'succeeded') {
-      onSuccess(paymentIntent.id);
+      onSuccess(paymentIntent.id, orderId);
     }
   };
 
@@ -148,7 +148,7 @@ function CheckoutForm({ onSuccess, onCancel, total, clientSecret }) {
   );
 }
 
-export default function StripePaymentModal({ clientSecret, publishableKey, total, onSuccess, onClose }) {
+export default function StripePaymentModal({ clientSecret, publishableKey, total, orderId, onSuccess, onClose }) {
   if (!clientSecret || !publishableKey) return null;
 
   const stripePromise = loadStripe(publishableKey);
@@ -183,7 +183,7 @@ export default function StripePaymentModal({ clientSecret, publishableKey, total
         </div>
         <div className="overflow-y-auto flex-1 p-4">
           <Elements stripe={stripePromise} options={elementsOptions}>
-            <CheckoutForm onSuccess={onSuccess} onCancel={onClose} total={total} clientSecret={clientSecret} />
+            <CheckoutForm onSuccess={onSuccess} onCancel={onClose} total={total} clientSecret={clientSecret} orderId={orderId} />
           </Elements>
         </div>
       </div>
