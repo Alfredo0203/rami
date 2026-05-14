@@ -24,11 +24,11 @@ Deno.serve(async (req) => {
       user = null;
     }
 
-    // Validar permisos: owner o admin
+    // Validar permisos: owner o admin/super_admin
     const isOwner = user && order.customer_email === user.email;
-    const isAdmin = user?.role === 'admin';
+    const isAdminOrSuperAdmin = user?.role === 'admin' || user?.role === 'super_admin';
     
-    if (user && !isOwner && !isAdmin) {
+    if (user && !isOwner && !isAdminOrSuperAdmin) {
       return Response.json({ error: 'No tienes permiso para confirmar esta orden' }, { status: 403 });
     }
 
