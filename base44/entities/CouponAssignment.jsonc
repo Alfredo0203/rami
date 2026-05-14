@@ -41,21 +41,48 @@
     "user_email"
   ],
   "rls": {
+    "create": {
+      "$or": [
+        {
+          "user.role": "admin"
+        },
+        {
+          "user.role": "super_admin"
+        }
+      ]
+    },
     "read": {
       "$or": [
         {
-          "data.user_email": "{{user.email}}"
+          "user.role": "admin"
         },
         {
-          "user.role": "admin"
+          "user.role": "super_admin"
+        },
+        {
+          "data.user_email": "{{user.email}}"
         }
       ]
     },
     "update": {
-      "user.role": "admin"
+      "$or": [
+        {
+          "user.role": "admin"
+        },
+        {
+          "user.role": "super_admin"
+        }
+      ]
     },
     "delete": {
-      "user.role": "admin"
+      "$or": [
+        {
+          "user.role": "admin"
+        },
+        {
+          "user.role": "super_admin"
+        }
+      ]
     }
   }
 }
