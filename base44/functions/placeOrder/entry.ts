@@ -159,6 +159,7 @@ Deno.serve(async (req) => {
      const order = await base44.asServiceRole.entities.Order.create({
         order_number: orderNumber,
         items: cleanedItems,
+       user_email: user.email,
        subtotal: Number(subtotal) || 0,
        discount_amount: Number(discountAmount) || 0,
        coupon_code: appliedCoupon?.code || undefined,
