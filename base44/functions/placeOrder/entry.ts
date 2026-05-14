@@ -267,10 +267,12 @@ Deno.serve(async (req) => {
     }
 
     // ── 5. Limpiar carrito siempre después de crear orden ─────────────
-    for (const item of cartItems) {
-      if (!item.id) continue;
-      try { await base44.asServiceRole.entities.CartItem.delete(item.id); } catch (_) {}
-    }
+    try {
+      const allCartItems = await base44.asServiceRole.entities.CartItem.filter({ created_by: user.email });
+      for (const ci of allCartItems) {
+        await base44.asServiceRole.entities.CartItem.delete(ci.id);
+      }
+    } catch (e) { console.error('Error limpiando carrito:', e); }
 
     return Response.json({ order });
   } catch (error) {

@@ -238,8 +238,10 @@ export default function Checkout() {
       return order;
     },
     onSuccess: (order) => {
-      // Para credit_card el modal maneja la navegación
-      if (paymentMethod !== 'credit_card') {
+      // Guardar orderId para credit_card
+      if (paymentMethod === 'credit_card') {
+        setPendingOrderId(order.id);
+      } else {
         queryClient.invalidateQueries({ queryKey: ['cart'] });
         queryClient.invalidateQueries({ queryKey: ['orders'] });
         queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
@@ -252,15 +254,20 @@ export default function Checkout() {
   });
 
   const handleStripeSuccess = async (paymentIntentId) => {
-    await base44.functions.invoke('confirmOrder', {
-      orderId: pendingOrderId,
-      paymentTransactionId: paymentIntentId,
-    });
-    setShowStripeModal(false);
-    queryClient.invalidateQueries({ queryKey: ['cart'] });
-    queryClient.invalidateQueries({ queryKey: ['orders'] });
-    queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
-    navigate(createPageUrl('OrderConfirmation') + `?id=${pendingOrderId}&payment=success`);
+    try {
+      await base44.functions.invoke('confirmOrder', {
+        orderId: pendingOrderId,
+        paymentTransactionId: paymentIntentId,
+      });
+      setShowStripeModal(false);
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
+      navigate(createPageUrl('OrderConfirmation') + `?id=${pendingOrderId}&payment=success`);
+    } catch (err) {
+      toast.error(err.message || 'Error al confirmar el pago');
+      setShowStripeModal(false);
+    }
   };
 
   const handleRequestReactivation = async () => {
