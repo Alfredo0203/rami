@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import Stripe from 'npm:stripe@14.21.0';
 
 /**
  * onOrderCancelled — se dispara via automatización de entidad cuando
@@ -107,15 +108,41 @@ Deno.serve(async (req) => {
           .map(item => `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} x${item.quantity} - $${((item.price || 0) * (item.quantity || 1)).toFixed(2)}`)
           .join('\n');
 
-        // Nota de pago según estado real:
-        // - paid: hubo cobro electrónico confirmado → se menciona reembolso
-        // - pending_payment + no es COD: pago no fue completado → no hubo cargo
-        // - cash_on_delivery: nunca hubo cobro previo → no se menciona
+        // Verificar estado real del pago:
+        // 1. Si hay payment_transaction_id → consultar Stripe directamente
+        // 2. Si no → confiar en el campo payment_status de la orden
+        let stripeConfirmedPaid = false;
+
+        if (data.payment_transaction_id && data.payment_method !== 'cash_on_delivery') {
+          try {
+            const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
+            // El transaction_id puede ser un PaymentIntent (pi_...) o un Checkout Session (cs_...)
+            const txId = data.payment_transaction_id;
+            if (txId.startsWith('pi_')) {
+              const pi = await stripe.paymentIntents.retrieve(txId);
+              stripeConfirmedPaid = pi.status === 'succeeded';
+              console.log(`Stripe PaymentIntent ${txId} status: ${pi.status}`);
+            } else if (txId.startsWith('cs_')) {
+              const session = await stripe.checkout.sessions.retrieve(txId);
+              stripeConfirmedPaid = session.payment_status === 'paid';
+              console.log(`Stripe CheckoutSession ${txId} payment_status: ${session.payment_status}`);
+            }
+          } catch (stripeErr) {
+            // Si falla la consulta a Stripe, caer al campo local como fallback
+            console.error('No se pudo verificar con Stripe, usando payment_status local:', stripeErr.message);
+            stripeConfirmedPaid = data.payment_status === 'paid';
+          }
+        } else {
+          // Sin transaction_id: confiar en el campo local
+          stripeConfirmedPaid = data.payment_status === 'paid';
+        }
+
+        // Nota de pago según verificación real:
         let paymentNote = '';
-        if (data.payment_status === 'paid') {
-          paymentNote = `\n⚠️ Información sobre tu pago:\nDetectamos que se procesó un pago de $${data.total?.toFixed(2) || '0.00'} para esta orden. Nuestro equipo revisará el caso y se pondrá en contacto contigo a este correo para gestionar el reembolso correspondiente.\n`;
-        } else if (data.payment_status === 'pending_payment' && data.payment_method !== 'cash_on_delivery') {
-          paymentNote = `\nℹ️ Información sobre tu pago:\nEl pago no fue completado antes de la cancelación, por lo que no se realizó ningún cargo a tu método de pago.\n`;
+        if (stripeConfirmedPaid) {
+          paymentNote = `\n⚠️ Información sobre tu pago:\nConfirmamos que se realizó un cobro de $${data.total?.toFixed(2) || '0.00'} para esta orden. Nuestro equipo se pondrá en contacto contigo a este correo para gestionar el reembolso correspondiente.\n`;
+        } else if (data.payment_method !== 'cash_on_delivery') {
+          paymentNote = `\nℹ️ Información sobre tu pago:\nNo se realizó ningún cargo a tu método de pago ya que el pago no fue completado antes de la cancelación.\n`;
         }
 
         await base44.asServiceRole.integrations.Core.SendEmail({
