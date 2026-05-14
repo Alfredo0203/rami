@@ -70,5 +70,109 @@
     "product_id",
     "name"
   ],
-  "rls": {}
+  "rls": {
+    "read": {},
+    "create": {
+      "$or": [
+        {
+          "user.role": {
+            "$in": [
+              "admin",
+              "super_admin"
+            ]
+          }
+        },
+        {
+          "$and": [
+            {
+              "user.role": "seller"
+            },
+            {
+              "data.product_id": {
+                "query": "Product",
+                "field": "id",
+                "filter": {
+                  "data.store_id": {
+                    "query": "Store",
+                    "field": "id",
+                    "filter": {
+                      "data.owner_email": "{{user.email}}"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user.role": {
+            "$in": [
+              "admin",
+              "super_admin"
+            ]
+          }
+        },
+        {
+          "$and": [
+            {
+              "user.role": "seller"
+            },
+            {
+              "data.product_id": {
+                "query": "Product",
+                "field": "id",
+                "filter": {
+                  "data.store_id": {
+                    "query": "Store",
+                    "field": "id",
+                    "filter": {
+                      "data.owner_email": "{{user.email}}"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user.role": {
+            "$in": [
+              "admin",
+              "super_admin"
+            ]
+          }
+        },
+        {
+          "$and": [
+            {
+              "user.role": "seller"
+            },
+            {
+              "data.product_id": {
+                "query": "Product",
+                "field": "id",
+                "filter": {
+                  "data.store_id": {
+                    "query": "Store",
+                    "field": "id",
+                    "filter": {
+                      "data.owner_email": "{{user.email}}"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
 }

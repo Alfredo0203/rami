@@ -35,5 +35,45 @@
     "order_id",
     "status"
   ],
-  "rls": {}
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user.role": {
+            "$in": [
+              "admin",
+              "super_admin"
+            ]
+          }
+        },
+        {
+          "data.user_email": "{{user.email}}"
+        }
+      ]
+    },
+    "create": {
+      "user.role": {
+        "$in": [
+          "admin",
+          "super_admin"
+        ]
+      }
+    },
+    "update": {
+      "user.role": {
+        "$in": [
+          "admin",
+          "super_admin"
+        ]
+      }
+    },
+    "delete": {
+      "user.role": {
+        "$in": [
+          "admin",
+          "super_admin"
+        ]
+      }
+    }
+  }
 }

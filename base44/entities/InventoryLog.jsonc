@@ -47,5 +47,38 @@
     "quantity",
     "cost_per_unit"
   ],
-  "rls": {}
+  "rls": {
+    "read": {
+      "user.role": {
+        "$in": [
+          "admin",
+          "super_admin"
+        ]
+      }
+    },
+    "create": {
+      "user.role": {
+        "$in": [
+          "admin",
+          "super_admin"
+        ]
+      }
+    },
+    "update": {
+      "user.role": {
+        "$in": [
+          "admin",
+          "super_admin"
+        ]
+      }
+    },
+    "delete": {
+      "user.role": {
+        "$in": [
+          "admin",
+          "super_admin"
+        ]
+      }
+    }
+  }
 }

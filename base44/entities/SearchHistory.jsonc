@@ -19,5 +19,53 @@
   "required": [
     "user_email",
     "query"
-  ]
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user.role": {
+            "$in": [
+              "admin",
+              "super_admin"
+            ]
+          }
+        },
+        {
+          "data.user_email": "{{user.email}}"
+        }
+      ]
+    },
+    "create": {},
+    "update": {
+      "$or": [
+        {
+          "user.role": {
+            "$in": [
+              "admin",
+              "super_admin"
+            ]
+          }
+        },
+        {
+          "data.user_email": "{{user.email}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user.role": {
+            "$in": [
+              "admin",
+              "super_admin"
+            ]
+          }
+        },
+        {
+          "data.user_email": "{{user.email}}"
+        }
+      ]
+    }
+  }
 }
