@@ -7,9 +7,6 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 });
-
     const body = await req.json();
     const { orderId, paymentTransactionId } = body;
 
@@ -19,8 +16,16 @@ Deno.serve(async (req) => {
     const order = await base44.asServiceRole.entities.Order.get(orderId);
     if (!order) return Response.json({ error: 'Orden no encontrada' }, { status: 404 });
 
-    // Validar que el usuario sea el dueño de la orden
-    if (order.created_by !== user.email) {
+    // Intentar obtener usuario para validar propiedad (opcional en app pública)
+    let user;
+    try {
+      user = await base44.auth.me();
+    } catch (_) {
+      user = null;
+    }
+
+    // Si hay usuario autenticado, validar que sea el dueño
+    if (user && order.created_by !== user.email) {
       return Response.json({ error: 'No tienes permiso para confirmar esta orden' }, { status: 403 });
     }
 
@@ -40,7 +45,7 @@ Deno.serve(async (req) => {
     try {
       await base44.asServiceRole.entities.OrderStatusHistory.create({
         order_id: orderId,
-        user_email: user.email,
+        user_email: user?.email || order.created_by,
         status: 'processing',
         timestamp: new Date().toISOString(),
         notes: 'Pago confirmado'
@@ -102,7 +107,7 @@ Deno.serve(async (req) => {
           await base44.asServiceRole.entities.Coupon.update(coupon.id, {
             used_count: (coupon.used_count || 0) + 1,
           });
-          if (coupon.is_user_specific) {
+          if (coupon.is_user_specific && user?.email) {
             const assignments = await base44.asServiceRole.entities.CouponAssignment.filter({
               coupon_id: coupon.id,
               user_email: user.email
@@ -126,9 +131,11 @@ Deno.serve(async (req) => {
 
     // 4. Limpiar carrito
     try {
-      const cartItems = await base44.asServiceRole.entities.CartItem.filter({ created_by: user.email });
-      for (const ci of cartItems) {
-        await base44.asServiceRole.entities.CartItem.delete(ci.id);
+      if (user?.email) {
+        const cartItems = await base44.asServiceRole.entities.CartItem.filter({ created_by: user.email });
+        for (const ci of cartItems) {
+          await base44.asServiceRole.entities.CartItem.delete(ci.id);
+        }
       }
     } catch (cartErr) {
       console.error('Error limpiando carrito:', cartErr);
@@ -141,7 +148,7 @@ Deno.serve(async (req) => {
       ).join('\n');
 
       await base44.integrations.Core.SendEmail({
-        to: user.email,
+        to: user?.email || order.customer_email,
         subject: `Confirmación de Pedido - Orden ${order.order_number}`,
         body: `Hola, ${order.customer_name || 'Estimado Cliente'}.
 
