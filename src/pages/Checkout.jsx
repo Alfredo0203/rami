@@ -212,11 +212,8 @@ export default function Checkout() {
       const order = res.data.order;
       
       if (!order || !order.id) {
-        console.error('Order creation failed:', res.data);
         throw new Error('No se pudo crear la orden. Por favor, intenta nuevamente.');
       }
-
-      console.log('Order created in frontend:', { id: order.id, orderNumber: order.order_number });
 
       // Si pago con tarjeta → abrir modal embebido de Stripe
       if (paymentMethod === 'credit_card') {
@@ -239,7 +236,6 @@ export default function Checkout() {
         if (!intentRes.data?.clientSecret) throw new Error('No se pudo obtener el cliente de pago');
 
         // IMPORTANTE: Setear antes de mostrar el modal
-        console.log('Setting pendingOrderId:', order.id);
         setPendingOrderId(order.id);
         setStripeClientSecret(intentRes.data.clientSecret);
         setShowStripeModal(true);
@@ -269,14 +265,11 @@ export default function Checkout() {
   const handleStripeSuccess = async (paymentIntentId) => {
     try {
       if (!pendingOrderId) {
-        console.error('pendingOrderId is null or undefined');
         toast.error('Order ID no encontrado. Por favor, intenta nuevamente.');
         setShowStripeModal(false);
         return;
       }
 
-      console.log('handleStripeSuccess called with:', { pendingOrderId, paymentIntentId });
-      
       await base44.functions.invoke('confirmOrder', {
         orderId: pendingOrderId,
         paymentTransactionId: paymentIntentId,

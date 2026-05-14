@@ -8,9 +8,6 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'), {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 });
-
     const body = await req.json();
     const { amount, orderId, customerEmail, couponCode } = body;
 
@@ -18,9 +15,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Monto inválido' }, { status: 400 });
     }
 
-    // Validar que el email coincida con el del usuario autenticado
-    if (customerEmail && customerEmail !== user.email) {
-      return Response.json({ error: 'El email no coincide con tu cuenta' }, { status: 403 });
+    if (!orderId) {
+      return Response.json({ error: 'orderId requerido' }, { status: 400 });
     }
 
     const paymentIntent = await stripe.paymentIntents.create({

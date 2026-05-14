@@ -172,8 +172,6 @@ Deno.serve(async (req) => {
        customer_name: user.full_name || shippingAddress.full_name || '',
      });
 
-     console.log('Order created successfully:', { id: order.id, orderNumber: order.order_number });
-
      // Registrar estado inicial en historial
      try {
        await base44.asServiceRole.entities.OrderStatusHistory.create({
@@ -267,8 +265,6 @@ Deno.serve(async (req) => {
 
     return Response.json({ order });
   } catch (error) {
-    console.error('placeOrder error:', error.message);
-    console.error('Full error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
