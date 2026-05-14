@@ -145,14 +145,7 @@
   ],
   "rls": {
     "read": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user.role": "admin"
-        }
-      ]
+      "user.role": "admin"
     },
     "update": {
       "user.role": "admin"
