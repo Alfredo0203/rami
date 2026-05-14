@@ -10,11 +10,14 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { orderId, paymentTransactionId } = body;
 
+    console.log('confirmOrder called with orderId:', orderId);
+
     if (!orderId) return Response.json({ error: 'orderId requerido' }, { status: 400 });
 
     // Obtener la orden
     const order = await base44.asServiceRole.entities.Order.get(orderId);
-    if (!order) return Response.json({ error: 'Orden no encontrada' }, { status: 404 });
+    console.log('Order retrieved:', order ? `Found order #${order.order_number}` : 'Order not found');
+    if (!order) return Response.json({ error: `Orden no encontrada (ID: ${orderId})` }, { status: 404 });
 
     // Intentar obtener usuario autenticado
     let user;
