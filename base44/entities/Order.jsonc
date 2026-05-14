@@ -48,6 +48,14 @@
       "type": "string",
       "description": "Coupon code used on this order"
     },
+    "coupon_id": {
+      "type": "string",
+      "description": "Coupon ID (explicit foreign key)"
+    },
+    "address_id": {
+      "type": "string",
+      "description": "Address ID (explicit foreign key)"
+    },
     "shipping_cost": {
       "type": "number",
       "default": 0
