@@ -36,9 +36,6 @@
     "status"
   ],
   "rls": {
-    "create": {},
-    "delete": {
-      "user.role": "admin"
-    }
+    "create": {}
   }
 }
