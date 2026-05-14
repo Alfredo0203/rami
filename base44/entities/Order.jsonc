@@ -144,23 +144,7 @@
     "status"
   ],
   "rls": {
-    "update": {
-      "user.role": {
-        "$in": [
-          "admin",
-          "super_admin"
-        ]
-      }
-    },
     "delete": {
-      "user.role": {
-        "$in": [
-          "admin",
-          "super_admin"
-        ]
-      }
-    },
-    "write": {
       "user.role": {
         "$in": [
           "admin",
