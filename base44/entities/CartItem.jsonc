@@ -2,6 +2,10 @@
   "name": "CartItem",
   "type": "object",
   "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email del usuario propietario del carrito"
+    },
     "product_id": {
       "type": "string",
       "description": "Product ID"
@@ -34,18 +38,49 @@
   },
   "required": [
     "product_id",
-    "quantity"
+    "quantity",
+    "user_email"
   ],
   "rls": {
-    "create": {},
+    "create": true,
     "read": {
-      "data.created_by": "{{user.email}}"
+      "$or": [
+        {
+          "user.role": "admin"
+        },
+        {
+          "user.role": "super_admin"
+        },
+        {
+          "data.user_email": "{{user.email}}"
+        }
+      ]
     },
     "update": {
-      "data.created_by": "{{user.email}}"
+      "$or": [
+        {
+          "user.role": "admin"
+        },
+        {
+          "user.role": "super_admin"
+        },
+        {
+          "data.user_email": "{{user.email}}"
+        }
+      ]
     },
     "delete": {
-      "data.created_by": "{{user.email}}"
+      "$or": [
+        {
+          "user.role": "admin"
+        },
+        {
+          "user.role": "super_admin"
+        },
+        {
+          "data.user_email": "{{user.email}}"
+        }
+      ]
     }
   }
 }

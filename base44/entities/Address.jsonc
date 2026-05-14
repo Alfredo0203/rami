@@ -60,15 +60,45 @@
     "house_number"
   ],
   "rls": {
-    "create": {},
+    "create": true,
     "read": {
-      "data.created_by": "{{user.email}}"
+      "$or": [
+        {
+          "user.role": "admin"
+        },
+        {
+          "user.role": "super_admin"
+        },
+        {
+          "data.created_by": "{{user.email}}"
+        }
+      ]
     },
     "update": {
-      "data.created_by": "{{user.email}}"
+      "$or": [
+        {
+          "user.role": "admin"
+        },
+        {
+          "user.role": "super_admin"
+        },
+        {
+          "data.created_by": "{{user.email}}"
+        }
+      ]
     },
     "delete": {
-      "data.created_by": "{{user.email}}"
+      "$or": [
+        {
+          "user.role": "admin"
+        },
+        {
+          "user.role": "super_admin"
+        },
+        {
+          "data.created_by": "{{user.email}}"
+        }
+      ]
     }
   }
 }

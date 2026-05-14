@@ -79,7 +79,7 @@ export default function ProductDetail() {
 
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart', user?.email],
-    queryFn: () => isGuest || !user?.email ? [] : base44.entities.CartItem.filter({ created_by: user.email }).catch(() => []),
+    queryFn: () => isGuest || !user?.email ? [] : base44.entities.CartItem.filter({ user_email: user.email }).catch(() => []),
     enabled: !isGuest && !!user?.email,
   });
 
@@ -301,6 +301,7 @@ export default function ProductDetail() {
       );
 
       const cartData = {
+        user_email: user.email,
         product_id: productId,
         variant_id: variantId || undefined,
         quantity,
