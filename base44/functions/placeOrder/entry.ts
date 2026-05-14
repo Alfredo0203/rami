@@ -168,7 +168,6 @@ Deno.serve(async (req) => {
        payment_status: 'pending_payment',
        payment_method: paymentMethod,
        shipping_address: shippingAddress,
-       customer_email: user.email || '',
        customer_name: user.full_name || shippingAddress.full_name || '',
      });
 

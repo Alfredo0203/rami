@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
     if (!order) return Response.json({ error: 'Orden no encontrada' }, { status: 404 });
 
     // Validar que el usuario sea el dueño de la orden
-    if (order.customer_email !== user.email) {
+    if (order.created_by !== user.email) {
       return Response.json({ error: 'No tienes permiso para confirmar esta orden' }, { status: 403 });
     }
 
