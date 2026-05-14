@@ -145,19 +145,7 @@
   ],
   "rls": {
     "read": {
-      "$or": [
-        {
-          "user.role": {
-            "$in": [
-              "admin",
-              "super_admin"
-            ]
-          }
-        },
-        {
-          "data.customer_email": "{{user.email}}"
-        }
-      ]
+      "data.customer_email": "{{user.email}}"
     },
     "update": {
       "user.role": {
@@ -168,6 +156,14 @@
       }
     },
     "delete": {
+      "user.role": {
+        "$in": [
+          "admin",
+          "super_admin"
+        ]
+      }
+    },
+    "write": {
       "user.role": {
         "$in": [
           "admin",
