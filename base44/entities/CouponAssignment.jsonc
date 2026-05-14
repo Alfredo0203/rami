@@ -47,15 +47,30 @@
           "data.user_email": "{{user.email}}"
         },
         {
-          "user.role": "admin"
+          "user.role": {
+            "$in": [
+              "admin",
+              "super_admin"
+            ]
+          }
         }
       ]
     },
     "update": {
-      "user.role": "admin"
+      "user.role": {
+        "$in": [
+          "admin",
+          "super_admin"
+        ]
+      }
     },
     "delete": {
-      "user.role": "admin"
+      "user.role": {
+        "$in": [
+          "admin",
+          "super_admin"
+        ]
+      }
     }
   }
 }

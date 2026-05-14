@@ -35,7 +35,5 @@
     "order_id",
     "status"
   ],
-  "rls": {
-    "create": {}
-  }
+  "rls": {}
 }

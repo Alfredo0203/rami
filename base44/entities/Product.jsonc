@@ -119,5 +119,88 @@
     "name",
     "price"
   ],
-  "rls": {}
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "seller"
+              }
+            },
+            {
+              "data.store_id": {
+                "query": "Store",
+                "field": "id",
+                "filter": {
+                  "data.owner_email": "{{user.email}}"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "read": {},
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "seller"
+              }
+            },
+            {
+              "data.store_id": {
+                "query": "Store",
+                "field": "id",
+                "filter": {
+                  "data.owner_email": "{{user.email}}"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "seller"
+              }
+            },
+            {
+              "data.store_id": {
+                "query": "Store",
+                "field": "id",
+                "filter": {
+                  "data.owner_email": "{{user.email}}"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
 }

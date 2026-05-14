@@ -43,34 +43,28 @@
   ],
   "rls": {
     "create": {
-      "user_condition": {
-        "role": {
-          "$in": [
-            "admin",
-            "super_admin"
-          ]
-        }
+      "user.role": {
+        "$in": [
+          "admin",
+          "super_admin"
+        ]
       }
     },
     "read": {},
     "update": {
       "$or": [
         {
-          "user_condition": {
-            "role": {
-              "$in": [
-                "admin",
-                "super_admin"
-              ]
-            }
+          "user.role": {
+            "$in": [
+              "admin",
+              "super_admin"
+            ]
           }
         },
         {
           "$and": [
             {
-              "user_condition": {
-                "role": "seller"
-              }
+              "user.role": "seller"
             },
             {
               "data.owner_email": "{{user.email}}"
@@ -80,13 +74,11 @@
       ]
     },
     "delete": {
-      "user_condition": {
-        "role": {
-          "$in": [
-            "admin",
-            "super_admin"
-          ]
-        }
+      "user.role": {
+        "$in": [
+          "admin",
+          "super_admin"
+        ]
       }
     }
   }

@@ -47,18 +47,5 @@
     "quantity",
     "cost_per_unit"
   ],
-  "rls": {
-    "read": {
-      "user.role": "admin"
-    },
-    "create": {
-      "user.role": "admin"
-    },
-    "update": {
-      "user.role": "admin"
-    },
-    "delete": {
-      "user.role": "admin"
-    }
-  }
+  "rls": {}
 }
