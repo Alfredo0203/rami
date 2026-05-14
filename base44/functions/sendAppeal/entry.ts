@@ -9,17 +9,21 @@ Deno.serve(async (req) => {
     const { userEmail, userName, message } = await req.json();
     if (!message?.trim()) return Response.json({ error: 'Mensaje requerido' }, { status: 400 });
 
+    const appealId = `APL-${Date.now()}`;
+    const now = new Date().toLocaleString('es-SV', { timeZone: 'America/El_Salvador', dateStyle: 'long', timeStyle: 'short' });
+
+    // Al admin
     await base44.asServiceRole.integrations.Core.SendEmail({
       to: 'somosrami@gmail.com',
-      subject: `⚠️ Apelación de cuenta - ${userName || userEmail}`,
-      body: `El usuario ${userName || 'desconocido'} (${userEmail}) ha enviado una apelación:\n\n"${message}"\n\nPuedes revisar y gestionar su cuenta desde el panel de administración.`,
+      subject: `⚠️ [${appealId}] Solicitud de apelación - ${userName || userEmail}`,
+      body: `Se ha recibido una nueva solicitud de apelación para levantar la suspensión de cuenta.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nID de apelación: ${appealId}\nFecha: ${now}\nUsuario: ${userName || 'desconocido'}\nCorreo: ${userEmail}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nMensaje del usuario:\n"${message}"\n\nPuedes revisar y gestionar esta cuenta desde el panel de administración.`,
     });
 
-    // Confirmar al usuario
+    // Al usuario (confirmación)
     await base44.asServiceRole.integrations.Core.SendEmail({
       to: userEmail,
-      subject: 'Hemos recibido tu apelación - RAmi',
-      body: `Hola ${userName || 'estimado cliente'},\n\nHemos recibido tu apelación y la revisaremos a la brevedad posible. Te contactaremos a este mismo correo con nuestra respuesta.\n\nMensaje enviado:\n"${message}"\n\nGracias por comunicarte con nosotros.\n\nEquipo RAmi`,
+      subject: `[${appealId}] Hemos recibido tu solicitud de apelación - RAmi`,
+      body: `Hola ${userName || 'estimado cliente'},\n\nHemos recibido correctamente tu solicitud de apelación para levantar la suspensión de tu cuenta en RAmi.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nID de apelación: ${appealId}\nFecha: ${now}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nTu mensaje:\n"${message}"\n\nNuestro equipo revisará tu caso y te contactará a este mismo correo en un plazo de 3 a 5 días hábiles.\n\nSi tienes dudas adicionales, puedes responder directamente a este correo o escribirnos a somosrami@gmail.com indicando tu ID de apelación: ${appealId}.\n\nGracias por comunicarte con nosotros.\n\nEquipo RAmi`,
     });
 
     return Response.json({ ok: true });
