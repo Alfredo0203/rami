@@ -169,10 +169,16 @@ Deno.serve(async (req) => {
        customer_name: user.full_name || shippingAddress.full_name || '',
      });
 
+     // Verificar que la orden se creó correctamente
+     const verifiedOrder = await base44.asServiceRole.entities.Order.get(order.id);
+     if (!verifiedOrder) {
+       throw new Error('No se pudo verificar la creación de la orden');
+     }
+
      // Registrar estado inicial en historial
      try {
        await base44.asServiceRole.entities.OrderStatusHistory.create({
-         order_id: order.id,
+         order_id: verifiedOrder.id,
          user_email: user.email,
          status: 'pending',
          timestamp: new Date().toISOString(),
@@ -183,84 +189,84 @@ Deno.serve(async (req) => {
      }
 
     // ── 4. Para pagos en línea (credit_card, wompi), el stock/cupón/carrito
-    //     se confirman en confirmOrder tras el pago exitoso.
-    //     Para contra entrega, confirmar aquí directamente.
-    if (paymentMethod === 'cash_on_delivery') {
-      // Descontar stock
-      for (const item of cartItems) {
-        try {
-          if (item.variant_id) {
-            const variant = await base44.asServiceRole.entities.ProductVariant.get(item.variant_id);
-            const newStock = Math.max(0, (variant.stock ?? 0) - item.quantity);
-            await base44.asServiceRole.entities.ProductVariant.update(item.variant_id, { stock: newStock });
-            // Actualizar sold_count del producto padre
-            const parentProduct = await base44.asServiceRole.entities.Product.get(item.product_id);
-            await base44.asServiceRole.entities.Product.update(item.product_id, {
-              sold_count: (parentProduct.sold_count || 0) + item.quantity,
-            });
-            await base44.asServiceRole.entities.InventoryLog.create({
-              product_id: item.product_id, variant_id: item.variant_id,
-              quantity: -item.quantity, cost_per_unit: variant.cost_per_unit || 0,
-              total_cost: -item.quantity * (variant.cost_per_unit || 0),
-              notes: `Venta - Orden ${order.order_number}`, movement_type: 'sale', order_id: order.id,
-            });
-          } else {
-            const product = await base44.asServiceRole.entities.Product.get(item.product_id);
-            const newStock = Math.max(0, (product.stock ?? 0) - item.quantity);
-            await base44.asServiceRole.entities.Product.update(item.product_id, {
-              stock: newStock, sold_count: (product.sold_count || 0) + item.quantity,
-            });
-            await base44.asServiceRole.entities.InventoryLog.create({
-              product_id: item.product_id, quantity: -item.quantity,
-              cost_per_unit: product.cost_per_unit || 0,
-              total_cost: -item.quantity * (product.cost_per_unit || 0),
-              notes: `Venta - Orden ${order.order_number}`, movement_type: 'sale', order_id: order.id,
-            });
-          }
-        } catch (e) { console.error('Stock error:', e); }
-      }
+     //     se confirman en confirmOrder tras el pago exitoso.
+     //     Para contra entrega, confirmar aquí directamente.
+     if (paymentMethod === 'cash_on_delivery') {
+       // Descontar stock
+       for (const item of cartItems) {
+         try {
+           if (item.variant_id) {
+             const variant = await base44.asServiceRole.entities.ProductVariant.get(item.variant_id);
+             const newStock = Math.max(0, (variant.stock ?? 0) - item.quantity);
+             await base44.asServiceRole.entities.ProductVariant.update(item.variant_id, { stock: newStock });
+             // Actualizar sold_count del producto padre
+             const parentProduct = await base44.asServiceRole.entities.Product.get(item.product_id);
+             await base44.asServiceRole.entities.Product.update(item.product_id, {
+               sold_count: (parentProduct.sold_count || 0) + item.quantity,
+             });
+             await base44.asServiceRole.entities.InventoryLog.create({
+               product_id: item.product_id, variant_id: item.variant_id,
+               quantity: -item.quantity, cost_per_unit: variant.cost_per_unit || 0,
+               total_cost: -item.quantity * (variant.cost_per_unit || 0),
+               notes: `Venta - Orden ${verifiedOrder.order_number}`, movement_type: 'sale', order_id: verifiedOrder.id,
+             });
+           } else {
+             const product = await base44.asServiceRole.entities.Product.get(item.product_id);
+             const newStock = Math.max(0, (product.stock ?? 0) - item.quantity);
+             await base44.asServiceRole.entities.Product.update(item.product_id, {
+               stock: newStock, sold_count: (product.sold_count || 0) + item.quantity,
+             });
+             await base44.asServiceRole.entities.InventoryLog.create({
+               product_id: item.product_id, quantity: -item.quantity,
+               cost_per_unit: product.cost_per_unit || 0,
+               total_cost: -item.quantity * (product.cost_per_unit || 0),
+               notes: `Venta - Orden ${verifiedOrder.order_number}`, movement_type: 'sale', order_id: verifiedOrder.id,
+             });
+           }
+         } catch (e) { console.error('Stock error:', e); }
+       }
 
-      // Actualizar cupón
-      if (appliedCoupon) {
-        await base44.asServiceRole.entities.Coupon.update(appliedCoupon.id, {
-          used_count: (appliedCoupon.used_count || 0) + 1,
-        });
-        if (appliedCoupon.is_user_specific) {
-          const assignments = await base44.asServiceRole.entities.CouponAssignment.filter({
-            coupon_id: appliedCoupon.id, user_email: user.email
-          });
-          if (assignments.length > 0) {
-            const a = assignments[0];
-            const newCount = (a.usage_count || 0) + 1;
-            const newStatus = newCount >= (appliedCoupon.usage_limit_per_user || 1) ? 'used' : 'available';
-            await base44.asServiceRole.entities.CouponAssignment.update(a.id, {
-              usage_count: newCount, status: newStatus,
-              ...(newStatus === 'used' && { used_date: new Date().toISOString() }),
-            });
-          }
-        }
-      }
+       // Actualizar cupón
+       if (appliedCoupon) {
+         await base44.asServiceRole.entities.Coupon.update(appliedCoupon.id, {
+           used_count: (appliedCoupon.used_count || 0) + 1,
+         });
+         if (appliedCoupon.is_user_specific) {
+           const assignments = await base44.asServiceRole.entities.CouponAssignment.filter({
+             coupon_id: appliedCoupon.id, user_email: user.email
+           });
+           if (assignments.length > 0) {
+             const a = assignments[0];
+             const newCount = (a.usage_count || 0) + 1;
+             const newStatus = newCount >= (appliedCoupon.usage_limit_per_user || 1) ? 'used' : 'available';
+             await base44.asServiceRole.entities.CouponAssignment.update(a.id, {
+               usage_count: newCount, status: newStatus,
+               ...(newStatus === 'used' && { used_date: new Date().toISOString() }),
+             });
+           }
+         }
+       }
 
-      // Limpiar carrito
-      for (const item of cartItems) {
-        if (!item.id) continue;
-        try { await base44.asServiceRole.entities.CartItem.delete(item.id); } catch (_) {}
-      }
+       // Limpiar carrito
+       for (const item of cartItems) {
+         if (!item.id) continue;
+         try { await base44.asServiceRole.entities.CartItem.delete(item.id); } catch (_) {}
+       }
 
-      // Email
-      try {
-        const itemsText = cartItems.map(item =>
-          `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} - ${item.quantity}x $${item.product_price.toFixed(2)}`
-        ).join('\n');
-        await base44.integrations.Core.SendEmail({
-          to: user.email,
-          subject: `Confirmación de Pedido - Orden ${order.order_number}`,
-          body: `Hola, ${order.customer_name || 'Estimado Cliente'}.\n\nGracias por tu compra.\n\nOrden #${order.order_number}\n\n${itemsText}\n\nTotal: $${total.toFixed(2)}\n\nSaludos,\nRAmi.`,
-        });
-      } catch (_) {}
-    }
+       // Email
+       try {
+         const itemsText = cartItems.map(item =>
+           `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} - ${item.quantity}x $${item.product_price.toFixed(2)}`
+         ).join('\n');
+         await base44.integrations.Core.SendEmail({
+           to: user.email,
+           subject: `Confirmación de Pedido - Orden ${verifiedOrder.order_number}`,
+           body: `Hola, ${verifiedOrder.customer_name || 'Estimado Cliente'}.\n\nGracias por tu compra.\n\nOrden #${verifiedOrder.order_number}\n\n${itemsText}\n\nTotal: $${total.toFixed(2)}\n\nSaludos,\nRAmi.`,
+         });
+       } catch (_) {}
+     }
 
-    return Response.json({ order });
+     return Response.json({ order: verifiedOrder });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
