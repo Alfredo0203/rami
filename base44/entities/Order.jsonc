@@ -144,13 +144,7 @@
     "status"
   ],
   "rls": {
-    "update": {
-      "user.role": "admin"
-    },
     "delete": {
-      "user.role": "admin"
-    },
-    "write": {
       "user.role": "admin"
     }
   }
