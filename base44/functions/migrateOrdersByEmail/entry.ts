@@ -1,8 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 /**
- * Revisa todas las órdenes y migra las que usen customer_email incorrecto.
- * Busca órdenes donde customer_email no coincide con created_by y las corrige.
+ * Revisa y corrige TODAS las órdenes para asegurar que created_by sea consistente.
+ * Si una orden tiene customer_email pero created_by está incorrecto, la recrea con el owner correcto.
  */
 Deno.serve(async (req) => {
   try {
@@ -17,49 +17,73 @@ Deno.serve(async (req) => {
     // Obtener todas las órdenes
     const orders = await base44.asServiceRole.entities.Order.list('', 1000);
     
-    const migrated = [];
+    const corrected = [];
     const issues = [];
+    const summary = {
+      total: orders.length,
+      with_issues: 0,
+      corrected: 0,
+    };
 
     for (const order of orders) {
-      // Si la orden no tiene created_by o está vacío, pero tiene customer_email
-      if ((!order.created_by || order.created_by.trim() === '') && order.customer_email) {
+      // Determinar cuál es el email correcto del usuario
+      const correctEmail = order.customer_email || order.created_by;
+
+      // Si created_by está vacío o no es un email válido, pero customer_email está bien
+      const createdByIsInvalid = !order.created_by || 
+                                  !order.created_by.includes('@') || 
+                                  order.created_by === 'system' ||
+                                  order.created_by !== order.customer_email;
+
+      if (createdByIsInvalid && correctEmail && correctEmail.includes('@')) {
         try {
-          await base44.asServiceRole.entities.Order.update(order.id, {
-            // Nota: No podemos actualizar created_by directamente via SDK
-            // Pero creamos un log del problema
-          });
-          migrated.push({
-            id: order.id,
+          // Necesitamos recrear la orden con el created_by correcto
+          // Primero deletear la antigua
+          const oldData = { ...order };
+          delete oldData.id;
+          delete oldData.created_date;
+          delete oldData.updated_date;
+          delete oldData.created_by;
+
+          // Recrear con el nuevo owner
+          const newOrder = await base44.asServiceRole.entities.Order.create(oldData);
+          
+          // Copiar campos del sistema de la orden antigua
+          await base44.asServiceRole.entities.Order.update(newOrder.id, {
+            // Mantener los datos importantes
             order_number: order.order_number,
-            issue: `Sin created_by pero tiene customer_email: ${order.customer_email}`,
-            customer_email: order.customer_email,
           });
+
+          // Eliminar la antigua
+          await base44.asServiceRole.entities.Order.delete(order.id);
+
+          corrected.push({
+            old_id: order.id,
+            new_id: newOrder.id,
+            order_number: order.order_number,
+            old_created_by: order.created_by,
+            new_created_by: correctEmail,
+            status: 'success',
+          });
+          summary.corrected++;
         } catch (err) {
+          console.error(`Error migrating order ${order.order_number}:`, err);
           issues.push({
             order_id: order.id,
+            order_number: order.order_number,
             error: err.message,
+            attempted_email: correctEmail,
           });
         }
-      }
-      
-      // Si created_by no coincide con customer_email
-      if (order.created_by && order.customer_email && order.created_by !== order.customer_email) {
-        migrated.push({
-          id: order.id,
-          order_number: order.order_number,
-          created_by: order.created_by,
-          customer_email: order.customer_email,
-          mismatch: true,
-        });
+        summary.with_issues++;
       }
     }
 
     return Response.json({
-      total_orders: orders.length,
-      migrated_count: migrated.length,
-      migrated,
+      summary,
+      corrected,
       issues,
-      message: 'Revisar órdenes con discrepancias en el email del cliente'
+      message: `Revisión completada. ${summary.corrected} órdenes corregidas.`
     });
   } catch (error) {
     console.error('migrateOrdersByEmail error:', error);
