@@ -14,10 +14,15 @@ Deno.serve(async (req) => {
 
     if (!orderId) return Response.json({ error: 'orderId requerido' }, { status: 400 });
 
-    // Obtener la orden (usar filter porque get() respeta RLS)
-    const orders = await base44.asServiceRole.entities.Order.filter({ id: orderId });
-    if (orders.length === 0) return Response.json({ error: 'Orden no encontrada' }, { status: 404 });
-    const order = orders[0];
+    // Obtener la orden directamente por ID (asServiceRole evita RLS)
+    let order;
+    try {
+      order = await base44.asServiceRole.entities.Order.get(orderId);
+    } catch (err) {
+      console.error('Error getting order:', err.message);
+      return Response.json({ error: 'Orden no encontrada' }, { status: 404 });
+    }
+    if (!order) return Response.json({ error: 'Orden no encontrada' }, { status: 404 });
 
     // Validar que el usuario sea el dueño de la orden
     if (order.user_email !== userEmail) {
@@ -168,7 +173,7 @@ RAmi.`,
       await base44.integrations.Core.SendEmail({
         to: 'somosrami@gmail.com',
         subject: `🛒 Nueva orden recibida #${order.order_number}`,
-        body: `Nueva orden de ${order.customer_name} (${user.email})\n\n${itemsText}\n\nSubtotal: $${Number(order.subtotal).toFixed(2)}\n${order.discount_amount > 0 ? `Descuento: -$${Number(order.discount_amount).toFixed(2)}\n` : ''}Envío: $${Number(order.shipping_cost).toFixed(2)}\nTotal: $${Number(order.total).toFixed(2)}\n\nMétodo de pago: ${order.payment_method}`,
+        body: `Nueva orden de ${order.customer_name} (${userEmail})\n\n${itemsText}\n\nSubtotal: $${Number(order.subtotal).toFixed(2)}\n${order.discount_amount > 0 ? `Descuento: -$${Number(order.discount_amount).toFixed(2)}\n` : ''}Envío: $${Number(order.shipping_cost).toFixed(2)}\nTotal: $${Number(order.total).toFixed(2)}\n\nMétodo de pago: ${order.payment_method}`,
       });
     } catch (_) {}
 
