@@ -60,7 +60,11 @@ export default function Admin() {
 
   const { data: orders = [], isLoading: loadingOrders } = useQuery({
     queryKey: ['admin-orders'],
-    queryFn: () => base44.entities.Order.list('-created_date'),
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getAdminOrders', {});
+      return res.data?.orders || [];
+    },
+    enabled: !!user,
   });
 
   const { data: categories = [] } = useQuery({
