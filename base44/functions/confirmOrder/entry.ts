@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
     if (!order) return Response.json({ error: 'Orden no encontrada' }, { status: 404 });
 
     // Validar que el usuario sea el dueño de la orden
-    if (order.created_by !== user.email) {
+    if (order.customer_email !== user.email) {
       return Response.json({ error: 'No tienes permiso para confirmar esta orden' }, { status: 403 });
     }
 
@@ -124,7 +124,7 @@ Deno.serve(async (req) => {
 
     // 4. Limpiar carrito
     try {
-      const cartItems = await base44.asServiceRole.entities.CartItem.filter({ created_by: user.email });
+      const cartItems = await base44.asServiceRole.entities.CartItem.filter({ user_email: user.email });
       for (const ci of cartItems) {
         await base44.asServiceRole.entities.CartItem.delete(ci.id);
       }

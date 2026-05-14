@@ -6,6 +6,10 @@
       "type": "string",
       "description": "Unique order number"
     },
+    "customer_email": {
+      "type": "string",
+      "description": "Email del cliente propietario de la orden"
+    },
     "items": {
       "type": "array",
       "items": {
@@ -123,9 +127,6 @@
       "type": "string",
       "description": "Shipping carrier name (e.g. DHL, FedEx, Correos)"
     },
-    "customer_email": {
-      "type": "string"
-    },
     "customer_name": {
       "type": "string"
     },
@@ -148,13 +149,13 @@
     "read": {
       "$or": [
         {
-          "data.created_by": "{{user.email}}"
-        },
-        {
           "user.role": "admin"
         },
         {
           "user.role": "super_admin"
+        },
+        {
+          "data.customer_email": "{{user.email}}"
         }
       ]
     },

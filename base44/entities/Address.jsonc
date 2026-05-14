@@ -2,6 +2,10 @@
   "name": "Address",
   "type": "object",
   "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email del usuario propietario de la direcci\u00f3n"
+    },
     "label": {
       "type": "string",
       "description": "Etiqueta (Casa, Trabajo, etc.)"
@@ -50,6 +54,7 @@
     }
   },
   "required": [
+    "user_email",
     "first_name",
     "last_name",
     "phone",
@@ -70,7 +75,7 @@
           "user.role": "super_admin"
         },
         {
-          "data.created_by": "{{user.email}}"
+          "data.user_email": "{{user.email}}"
         }
       ]
     },
@@ -83,7 +88,7 @@
           "user.role": "super_admin"
         },
         {
-          "data.created_by": "{{user.email}}"
+          "data.user_email": "{{user.email}}"
         }
       ]
     },
@@ -96,7 +101,7 @@
           "user.role": "super_admin"
         },
         {
-          "data.created_by": "{{user.email}}"
+          "data.user_email": "{{user.email}}"
         }
       ]
     }
