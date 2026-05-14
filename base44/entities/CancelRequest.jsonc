@@ -87,6 +87,7 @@
     "request_type"
   ],
   "rls": {
+    "create": {},
     "read": {
       "$or": [
         {
@@ -100,7 +101,6 @@
         }
       ]
     },
-    "create": {},
     "update": {
       "$or": [
         {
