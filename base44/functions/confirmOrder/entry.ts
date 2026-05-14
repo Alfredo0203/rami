@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     const order = await base44.asServiceRole.entities.Order.get(orderId);
     if (!order) return Response.json({ error: 'Orden no encontrada' }, { status: 404 });
 
-    // Intentar obtener usuario para validar propiedad (opcional en app pública)
+    // Intentar obtener usuario autenticado
     let user;
     try {
       user = await base44.auth.me();
@@ -24,8 +24,8 @@ Deno.serve(async (req) => {
       user = null;
     }
 
-    // Si hay usuario autenticado, validar que sea el dueño
-    if (user && order.created_by !== user.email) {
+    // Si hay usuario autenticado, validar que sea dueño por customer_email
+    if (user && order.customer_email !== user.email) {
       return Response.json({ error: 'No tienes permiso para confirmar esta orden' }, { status: 403 });
     }
 
