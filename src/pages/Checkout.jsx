@@ -47,13 +47,13 @@ export default function Checkout() {
 
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart', user?.email],
-    queryFn: () => !user?.email ? [] : base44.entities.CartItem.filter({ created_by: user.email }),
+    queryFn: () => !user?.email ? [] : base44.entities.CartItem.filter({ user_email: user.email }),
     enabled: !!user?.email,
   });
 
   const { data: addresses = [], isLoading: loadingAddresses } = useQuery({
     queryKey: ['addresses', user?.email],
-    queryFn: () => base44.entities.Address.filter({ created_by: user?.email }),
+    queryFn: () => base44.entities.Address.filter({ user_email: user?.email }),
     enabled: !!user?.email,
   });
 
@@ -80,7 +80,7 @@ export default function Checkout() {
   const total = Math.max(0, subtotal - discount + shipping);
 
   const saveAddressMutation = useMutation({
-    mutationFn: (data) => base44.entities.Address.create(data),
+    mutationFn: (data) => base44.entities.Address.create({ ...data, user_email: user?.email }),
     onSuccess: (saved) => {
       queryClient.invalidateQueries({ queryKey: ['addresses'] });
       setSelectedAddressId(saved.id);

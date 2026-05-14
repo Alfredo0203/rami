@@ -28,14 +28,14 @@ export default function Addresses() {
 
   const { data: addresses = [], isLoading } = useQuery({
     queryKey: ['addresses', userEmail],
-    queryFn: () => base44.entities.Address.filter({ created_by: userEmail }),
+    queryFn: () => base44.entities.Address.filter({ user_email: userEmail }),
     enabled: !!userEmail,
   });
 
   const saveMutation = useMutation({
     mutationFn: (data) => editingId
       ? base44.entities.Address.update(editingId, data)
-      : base44.entities.Address.create(data),
+      : base44.entities.Address.create({ ...data, user_email: userEmail }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['addresses', userEmail] });
       setShowForm(false);
