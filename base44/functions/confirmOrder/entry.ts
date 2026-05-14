@@ -7,11 +7,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 });
-
     const body = await req.json();
-    const { orderId, paymentTransactionId } = body;
+    const { orderId, paymentTransactionId, userEmail } = body;
+
+    if (!userEmail) return Response.json({ error: 'userEmail requerido' }, { status: 400 });
 
     if (!orderId) return Response.json({ error: 'orderId requerido' }, { status: 400 });
 
@@ -20,7 +19,7 @@ Deno.serve(async (req) => {
     if (!order) return Response.json({ error: 'Orden no encontrada' }, { status: 404 });
 
     // Validar que el usuario sea el dueño de la orden
-    if (order.user_email !== user.email) {
+    if (order.user_email !== userEmail) {
       return Response.json({ error: 'No tienes permiso para confirmar esta orden' }, { status: 403 });
     }
 
@@ -102,7 +101,7 @@ Deno.serve(async (req) => {
           if (coupon.is_user_specific) {
             const assignments = await base44.asServiceRole.entities.CouponAssignment.filter({
               coupon_id: coupon.id,
-              user_email: user.email
+              user_email: userEmail
             });
             if (assignments.length > 0) {
               const a = assignments[0];
@@ -123,23 +122,23 @@ Deno.serve(async (req) => {
 
     // 4. Limpiar carrito
     try {
-      const cartItems = await base44.asServiceRole.entities.CartItem.filter({ created_by: user.email });
-      for (const ci of cartItems) {
-        await base44.asServiceRole.entities.CartItem.delete(ci.id);
-      }
+     const cartItems = await base44.asServiceRole.entities.CartItem.filter({ created_by: userEmail });
+     for (const ci of cartItems) {
+       await base44.asServiceRole.entities.CartItem.delete(ci.id);
+     }
     } catch (cartErr) {
-      console.error('Error limpiando carrito:', cartErr);
+     console.error('Error limpiando carrito:', cartErr);
     }
 
     // 5. Enviar emails de confirmación
     try {
-      const itemsText = order.items.map(item =>
-        `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} - ${item.quantity}x $${Number(item.price).toFixed(2)}`
-      ).join('\n');
+     const itemsText = order.items.map(item =>
+       `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} - ${item.quantity}x $${Number(item.price).toFixed(2)}`
+     ).join('\n');
 
-      // Al usuario
-      await base44.integrations.Core.SendEmail({
-        to: user.email,
+     // Al usuario
+     await base44.integrations.Core.SendEmail({
+       to: userEmail,
         subject: `Confirmación de Pedido - Orden ${order.order_number}`,
         body: `Hola, ${order.customer_name || 'Estimado Cliente'}.
 

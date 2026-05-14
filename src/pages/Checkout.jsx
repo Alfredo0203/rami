@@ -267,6 +267,7 @@ export default function Checkout() {
       const confirmRes = await base44.functions.invoke('confirmOrder', {
         orderId: pendingOrderId,
         paymentTransactionId: paymentIntentId,
+        userEmail: user?.email,
       });
       console.log('confirmOrder response:', confirmRes.data);
       setShowStripeModal(false);
