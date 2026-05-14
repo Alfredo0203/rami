@@ -210,6 +210,10 @@ export default function Checkout() {
 
       if (res.data?.error) throw new Error(res.data.details?.join('\n') || res.data.error);
       const order = res.data.order;
+      
+      if (!order || !order.id) {
+        throw new Error('No se pudo crear la orden. Por favor, intenta nuevamente.');
+      }
 
       // Si pago con tarjeta → abrir modal embebido de Stripe
       if (paymentMethod === 'credit_card') {
@@ -229,7 +233,9 @@ export default function Checkout() {
         });
 
         if (intentRes.data?.error) throw new Error(intentRes.data.error);
+        if (!intentRes.data?.clientSecret) throw new Error('No se pudo obtener el cliente de pago');
 
+        // IMPORTANTE: Setear antes de mostrar el modal
         setPendingOrderId(order.id);
         setStripeClientSecret(intentRes.data.clientSecret);
         setShowStripeModal(true);
@@ -248,12 +254,22 @@ export default function Checkout() {
       }
     },
     onError: (err) => {
+      console.error('placeOrder error:', err);
+      setPendingOrderId(null);
+      setStripeClientSecret(null);
+      setShowStripeModal(false);
       toast.error(err.message || 'Error al realizar el pedido');
     },
   });
 
   const handleStripeSuccess = async (paymentIntentId) => {
     try {
+      if (!pendingOrderId) {
+        toast.error('Order ID no encontrado. Por favor, intenta nuevamente.');
+        setShowStripeModal(false);
+        return;
+      }
+
       await base44.functions.invoke('confirmOrder', {
         orderId: pendingOrderId,
         paymentTransactionId: paymentIntentId,

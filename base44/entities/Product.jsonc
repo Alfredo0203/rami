@@ -123,16 +123,17 @@
     "create": {
       "$or": [
         {
-          "user_condition": {
-            "role": "admin"
+          "user.role": {
+            "$in": [
+              "admin",
+              "super_admin"
+            ]
           }
         },
         {
           "$and": [
             {
-              "user_condition": {
-                "role": "seller"
-              }
+              "user.role": "seller"
             },
             {
               "data.store_id": {
@@ -151,16 +152,17 @@
     "update": {
       "$or": [
         {
-          "user_condition": {
-            "role": "admin"
+          "user.role": {
+            "$in": [
+              "admin",
+              "super_admin"
+            ]
           }
         },
         {
           "$and": [
             {
-              "user_condition": {
-                "role": "seller"
-              }
+              "user.role": "seller"
             },
             {
               "data.store_id": {
@@ -178,16 +180,17 @@
     "delete": {
       "$or": [
         {
-          "user_condition": {
-            "role": "admin"
+          "user.role": {
+            "$in": [
+              "admin",
+              "super_admin"
+            ]
           }
         },
         {
           "$and": [
             {
-              "user_condition": {
-                "role": "seller"
-              }
+              "user.role": "seller"
             },
             {
               "data.store_id": {

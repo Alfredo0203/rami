@@ -62,13 +62,49 @@
   "rls": {
     "create": {},
     "read": {
-      "created_by": "{{user.email}}"
+      "$or": [
+        {
+          "user.role": {
+            "$in": [
+              "admin",
+              "super_admin"
+            ]
+          }
+        },
+        {
+          "created_by": "{{user.email}}"
+        }
+      ]
     },
     "update": {
-      "created_by": "{{user.email}}"
+      "$or": [
+        {
+          "user.role": {
+            "$in": [
+              "admin",
+              "super_admin"
+            ]
+          }
+        },
+        {
+          "created_by": "{{user.email}}"
+        }
+      ]
     },
     "delete": {
-      "created_by": "{{user.email}}"
+      "$or": [
+        {
+          "user.role": {
+            "$in": [
+              "admin",
+              "super_admin"
+            ]
+          }
+        },
+        {
+          "created_by": "{{user.email}}"
+        }
+      ]
     }
   }
 }

@@ -28,16 +28,50 @@
   ],
   "rls": {
     "read": {
-      "data.user_email": "{{user.email}}"
+      "$or": [
+        {
+          "user.role": {
+            "$in": [
+              "admin",
+              "super_admin"
+            ]
+          }
+        },
+        {
+          "data.user_email": "{{user.email}}"
+        }
+      ]
     },
     "update": {
-      "data.user_email": "{{user.email}}"
+      "$or": [
+        {
+          "user.role": {
+            "$in": [
+              "admin",
+              "super_admin"
+            ]
+          }
+        },
+        {
+          "data.user_email": "{{user.email}}"
+        }
+      ]
     },
     "delete": {
-      "data.user_email": "{{user.email}}"
+      "$or": [
+        {
+          "user.role": {
+            "$in": [
+              "admin",
+              "super_admin"
+            ]
+          }
+        },
+        {
+          "data.user_email": "{{user.email}}"
+        }
+      ]
     },
-    "write": {
-      "data.user_email": "{{user.email}}"
-    }
+    "create": {}
   }
 }

@@ -144,6 +144,29 @@
     "status"
   ],
   "rls": {
+    "read": {
+      "$or": [
+        {
+          "user.role": {
+            "$in": [
+              "admin",
+              "super_admin"
+            ]
+          }
+        },
+        {
+          "data.customer_email": "{{user.email}}"
+        }
+      ]
+    },
+    "update": {
+      "user.role": {
+        "$in": [
+          "admin",
+          "super_admin"
+        ]
+      }
+    },
     "delete": {
       "user.role": {
         "$in": [
