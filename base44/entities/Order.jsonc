@@ -144,9 +144,6 @@
     "status"
   ],
   "rls": {
-    "read": {
-      "user.role": "admin"
-    },
     "update": {
       "user.role": "admin"
     },
