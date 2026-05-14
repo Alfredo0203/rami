@@ -39,16 +39,14 @@
     "read": {
       "$or": [
         {
-          "data.user_email": "{{user.email}}"
+          "user_email": "{{user.email}}"
         },
         {
           "user.role": "admin"
         }
       ]
     },
-    "create": {
-      "user.role": "admin"
-    },
+    "create": {},
     "update": {
       "user.role": "admin"
     },
