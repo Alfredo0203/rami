@@ -32,8 +32,8 @@ export default function Admin() {
   const [searchQuery, setSearchQuery] = useState('');
   const [stockFilters, setStockFilters] = useState([]);
   const [sortBy, setSortBy] = useState('recent'); // 'recent', 'name', 'stock', 'sold'
-  const [selectedStoreFilter, setSelectedStoreFilter] = useState('all'); // Por defecto todas las tiendas
-  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [storeFilters, setStoreFilters] = useState([]);
+  const [categoryFilters, setCategoryFilters] = useState([]);
   const [orderStatusFilters, setOrderStatusFilters] = useState([]);
   const [orderSearch, setOrderSearch] = useState('');
   const [orderSort, setOrderSort] = useState('newest');
@@ -224,7 +224,7 @@ export default function Admin() {
               !!searchQuery,
               stockFilters.length > 0,
               sortBy !== 'recent',
-              categoryFilter !== 'all',
+              categoryFilters.length > 0,
             ].filter(Boolean).length;
             return (
               <Sheet open={showProductFilters} onOpenChange={setShowProductFilters}>
@@ -242,7 +242,7 @@ export default function Admin() {
                   </button>
                   {activeCount > 0 && (
                     <button
-                      onClick={() => { setSearchQuery(''); setStockFilters([]); setSortBy('recent'); setCategoryFilter('all'); }}
+                      onClick={() => { setSearchQuery(''); setStockFilters([]); setSortBy('recent'); setCategoryFilters([]); }}
                       className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-colors"
                     >
                       <X className="w-3 h-3" /> Limpiar filtros
@@ -254,7 +254,7 @@ export default function Admin() {
                     <SheetTitle>Filtros de productos</SheetTitle>
                     {activeCount > 0 && (
                       <button
-                        onClick={() => { setSearchQuery(''); setStockFilters([]); setSortBy('recent'); setCategoryFilter('all'); }}
+                        onClick={() => { setSearchQuery(''); setStockFilters([]); setSortBy('recent'); setCategoryFilters([]); }}
                         className="text-xs text-primary font-medium"
                       >
                         Limpiar todo
@@ -287,15 +287,11 @@ export default function Admin() {
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm font-semibold text-foreground mb-2 block">Categoría</label>
+                      <label className="text-sm font-semibold text-foreground mb-1 block">Categoría <span className="text-[10px] text-muted-foreground font-normal">(selección múltiple)</span></label>
                       <div className="flex flex-wrap gap-2">
-                        <button onClick={() => setCategoryFilter('all')}
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${categoryFilter === 'all' ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
-                          Todas
-                        </button>
                         {categories.map(cat => (
-                          <button key={cat.id} onClick={() => setCategoryFilter(cat.id)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${categoryFilter === cat.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
+                          <button key={cat.id} onClick={() => toggleMulti(categoryFilters, setCategoryFilters, cat.id)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${categoryFilters.includes(cat.id) ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
                             {cat.name}
                           </button>
                         ))}
@@ -333,7 +329,7 @@ export default function Admin() {
                   (f === 'out' && stock === 0) ||
                   (f === 'in_stock' && stock >= 5)
                 );
-                const matchesCategory = categoryFilter === 'all' || p.category_id === categoryFilter;
+                const matchesCategory = categoryFilters.length === 0 || categoryFilters.includes(p.category_id);
                 return matchesSearch && matchesStock && matchesCategory;
               });
 
@@ -427,7 +423,7 @@ export default function Admin() {
               !!orderSearch,
               orderStatusFilters.length > 0,
               orderSort !== 'newest',
-              selectedStoreFilter !== 'all',
+              storeFilters.length > 0,
             ].filter(Boolean).length;
             return (
               <Sheet open={showOrderFilters} onOpenChange={setShowOrderFilters}>
@@ -445,7 +441,7 @@ export default function Admin() {
                   </button>
                   {activeCount > 0 && (
                     <button
-                      onClick={() => { setOrderSearch(''); setOrderStatusFilters([]); setOrderSort('newest'); setSelectedStoreFilter('all'); }}
+                      onClick={() => { setOrderSearch(''); setOrderStatusFilters([]); setOrderSort('newest'); setStoreFilters([]); }}
                       className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-colors"
                     >
                       <X className="w-3 h-3" /> Limpiar filtros
@@ -457,7 +453,7 @@ export default function Admin() {
                     <SheetTitle>Filtros de pedidos</SheetTitle>
                     {activeCount > 0 && (
                       <button
-                        onClick={() => { setOrderSearch(''); setOrderStatusFilters([]); setOrderSort('newest'); setSelectedStoreFilter('all'); }}
+                        onClick={() => { setOrderSearch(''); setOrderStatusFilters([]); setOrderSort('newest'); setStoreFilters([]); }}
                         className="text-xs text-primary font-medium"
                       >
                         Limpiar todo
@@ -490,19 +486,15 @@ export default function Admin() {
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm font-semibold text-foreground mb-2 block">Tienda</label>
+                      <label className="text-sm font-semibold text-foreground mb-1 block">Tienda <span className="text-[10px] text-muted-foreground font-normal">(selección múltiple)</span></label>
                       <div className="flex flex-wrap gap-2">
-                        <button onClick={() => setSelectedStoreFilter('all')}
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${selectedStoreFilter === 'all' ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
-                          Todas
-                        </button>
-                        <button onClick={() => setSelectedStoreFilter('main')}
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${selectedStoreFilter === 'main' ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
+                        <button onClick={() => toggleMulti(storeFilters, setStoreFilters, 'main')}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${storeFilters.includes('main') ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
                           Rami (Mi tienda)
                         </button>
                         {externalStores.map(store => (
-                          <button key={store.id} onClick={() => setSelectedStoreFilter(store.id)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${selectedStoreFilter === store.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
+                          <button key={store.id} onClick={() => toggleMulti(storeFilters, setStoreFilters, store.id)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${storeFilters.includes(store.id) ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
                             {store.name}
                           </button>
                         ))}
@@ -539,12 +531,12 @@ export default function Admin() {
               let filteredOrders = orders;
 
               // Filtro por tienda
-              if (selectedStoreFilter !== 'all') {
+              if (storeFilters.length > 0) {
                 filteredOrders = filteredOrders.filter(order =>
                   order.items?.some(item => {
                     const product = products.find(p => p.id === item.product_id);
                     const storeId = product?.store_id || 'main';
-                    return storeId === selectedStoreFilter;
+                    return storeFilters.includes(storeId);
                   })
                 );
               }
