@@ -144,9 +144,6 @@
     "status"
   ],
   "rls": {
-    "read": {
-      "data.customer_email": "{{user.email}}"
-    },
     "update": {
       "user.role": {
         "$in": [
