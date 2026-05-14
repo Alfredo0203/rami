@@ -12,6 +12,7 @@ import AdminReviewsTab from '../components/admin/AdminReviewsTab';
 import AdminCategoriesTab from '../components/admin/AdminCategoriesTab';
 import AdminCouponsTab from '../components/admin/AdminCouponsTab';
 import AdminStoresTab from '../components/admin/AdminStoresTab';
+import DeactivatedAccountsTable from '../components/admin/DeactivatedAccountsTable';
 import AdminInventoryModal from '../components/admin/AdminInventoryModal';
 import InventoryHistoryModal from '../components/admin/InventoryHistoryModal';
 import { Button } from '@/components/ui/button';
@@ -581,6 +582,7 @@ export default function Admin() {
         </TabsContent>
 
         <TabsContent value="users" className="space-y-3 mt-3">
+          {!loadingUsers && <DeactivatedAccountsTable users={allUsers} />}
           {loadingUsers ? (
             <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
           ) : allUsers.length === 0 ? (
