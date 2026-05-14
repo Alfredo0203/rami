@@ -6,10 +6,6 @@
       "type": "string",
       "description": "ID del producto guardado en favoritos"
     },
-    "user_email": {
-      "type": "string",
-      "description": "Email del usuario propietario del wishlist"
-    },
     "product_name": {
       "type": "string",
       "description": "Nombre del producto (snapshot)"
@@ -27,15 +23,45 @@
     "product_id"
   ],
   "rls": {
-    "create": {},
+    "create": true,
     "read": {
-      "data.user_email": "{{user.email}}"
+      "$or": [
+        {
+          "user.role": "admin"
+        },
+        {
+          "user.role": "super_admin"
+        },
+        {
+          "created_by": "{{user.email}}"
+        }
+      ]
     },
     "update": {
-      "data.user_email": "{{user.email}}"
+      "$or": [
+        {
+          "user.role": "admin"
+        },
+        {
+          "user.role": "super_admin"
+        },
+        {
+          "created_by": "{{user.email}}"
+        }
+      ]
     },
     "delete": {
-      "data.user_email": "{{user.email}}"
+      "$or": [
+        {
+          "user.role": "admin"
+        },
+        {
+          "user.role": "super_admin"
+        },
+        {
+          "created_by": "{{user.email}}"
+        }
+      ]
     }
   }
 }

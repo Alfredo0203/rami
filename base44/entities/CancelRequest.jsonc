@@ -87,17 +87,17 @@
     "request_type"
   ],
   "rls": {
-    "create": {},
+    "create": true,
     "read": {
       "$or": [
-        {
-          "data.customer_email": "{{user.email}}"
-        },
         {
           "user.role": "admin"
         },
         {
           "user.role": "super_admin"
+        },
+        {
+          "data.customer_email": "{{user.email}}"
         }
       ]
     },
