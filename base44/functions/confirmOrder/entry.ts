@@ -14,9 +14,10 @@ Deno.serve(async (req) => {
 
     if (!orderId) return Response.json({ error: 'orderId requerido' }, { status: 400 });
 
-    // Obtener la orden
-    const order = await base44.asServiceRole.entities.Order.get(orderId);
-    if (!order) return Response.json({ error: 'Orden no encontrada' }, { status: 404 });
+    // Obtener la orden (usar filter porque get() respeta RLS)
+    const orders = await base44.asServiceRole.entities.Order.filter({ id: orderId });
+    if (orders.length === 0) return Response.json({ error: 'Orden no encontrada' }, { status: 404 });
+    const order = orders[0];
 
     // Validar que el usuario sea el dueño de la orden
     if (order.user_email !== userEmail) {
