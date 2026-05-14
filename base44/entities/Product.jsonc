@@ -131,16 +131,7 @@
         }
       ]
     },
-    "update": {
-      "$or": [
-        {
-          "user.role": "admin"
-        },
-        {
-          "user.role": "super_admin"
-        }
-      ]
-    },
+    "update": {},
     "delete": {
       "$or": [
         {

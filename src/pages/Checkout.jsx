@@ -205,7 +205,7 @@ export default function Checkout() {
         shippingAddress,
         paymentMethod,
         couponCode: appliedCoupon?.code,
-        skipCartClear: paymentMethod !== 'cash_on_delivery',
+        skipCartClear: paymentMethod === 'credit_card',
       });
 
       if (res.data?.error) throw new Error(res.data.details?.join('\n') || res.data.error);
