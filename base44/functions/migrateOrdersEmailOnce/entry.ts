@@ -9,45 +9,59 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Obtener todas las órdenes
-    const orders = await base44.asServiceRole.entities.Order.list();
-    
+    // Obtener todas las órdenes (sin paginación)
+    const allOrders = [];
+    let offset = 0;
+    let batch;
+    do {
+      batch = await base44.asServiceRole.entities.Order.list();
+      if (batch.length === 0) break;
+      allOrders.push(...batch);
+      offset += batch.length;
+    } while (batch.length > 0);
+
     // Obtener todos los usuarios
     const allUsers = await base44.asServiceRole.entities.User.list();
-    const userMap = Object.fromEntries(allUsers.map(u => [u.full_name?.toLowerCase(), u.email]));
 
     let updated = 0;
     const errors = [];
+    const updated_orders = [];
 
     // Actualizar órdenes sin user_email
-    for (const order of orders) {
+    for (const order of allOrders) {
       if (order.user_email) continue; // Ya tiene email
 
       let emailToAssign = null;
 
       // Intentar matchear por customer_name
       if (order.customer_name) {
-        emailToAssign = userMap[order.customer_name.toLowerCase()];
+        const foundUser = allUsers.find(u => u.full_name?.toLowerCase() === order.customer_name.toLowerCase());
+        if (foundUser) {
+          emailToAssign = foundUser.email;
+        }
       }
 
       // Si no encuentra, asignar admin como fallback
       if (!emailToAssign) {
-        emailToAssign = allUsers.find(u => u.role === 'admin')?.email || user.email;
+        const adminUser = allUsers.find(u => u.role === 'admin');
+        emailToAssign = adminUser?.email || user.email;
       }
 
       try {
         await base44.asServiceRole.entities.Order.update(order.id, { user_email: emailToAssign });
         updated++;
+        updated_orders.push({ orderId: order.id, customer_name: order.customer_name, assigned_email: emailToAssign });
       } catch (e) {
-        errors.push({ orderId: order.id, error: e.message });
+        errors.push({ orderId: order.id, customer_name: order.customer_name, error: e.message });
       }
     }
 
     return Response.json({ 
-      total_orders: orders.length,
+      total_orders: allOrders.length,
       updated,
       errors,
-      message: `${updated}/${orders.length} órdenes actualizadas con email`
+      updated_orders,
+      message: `${updated}/${allOrders.length} órdenes actualizadas con email`
     });
   } catch (error) {
     console.error('Error:', error);
