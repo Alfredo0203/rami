@@ -45,7 +45,9 @@ Deno.serve(async (req) => {
         timestamp: new Date().toISOString(),
         notes: 'Pago confirmado'
       });
-    } catch (_) {}
+    } catch (e) {
+      console.error('Error registrando estado:', e.message);
+    }
 
     // 2. Descontar stock y registrar InventoryLog
     for (const item of order.items) {
@@ -124,9 +126,9 @@ Deno.serve(async (req) => {
 
     // 4. Limpiar carrito
     try {
-      const cartItems = await base44.entities.CartItem.filter({ created_by: user.email });
+      const cartItems = await base44.asServiceRole.entities.CartItem.filter({ created_by: user.email });
       for (const ci of cartItems) {
-        await base44.entities.CartItem.delete(ci.id);
+        await base44.asServiceRole.entities.CartItem.delete(ci.id);
       }
     } catch (cartErr) {
       console.error('Error limpiando carrito:', cartErr);
@@ -167,7 +169,7 @@ RAmi.`,
 
     return Response.json({ order: updatedOrder });
   } catch (error) {
-    console.error('confirmOrder error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('confirmOrder error:', error.message, error?.response?.status);
+    return Response.json({ error: error.message, status: error?.response?.status }, { status: error?.response?.status || 500 });
   }
 });
