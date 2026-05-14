@@ -260,16 +260,22 @@ export default function Checkout() {
 
   const handleStripeSuccess = async (paymentIntentId) => {
     try {
-      await base44.functions.invoke('confirmOrder', {
+      console.log('handleStripeSuccess called with:', { pendingOrderId, paymentIntentId });
+      if (!pendingOrderId) {
+        throw new Error('No hay orden pendiente - pendingOrderId es null');
+      }
+      const confirmRes = await base44.functions.invoke('confirmOrder', {
         orderId: pendingOrderId,
         paymentTransactionId: paymentIntentId,
       });
+      console.log('confirmOrder response:', confirmRes.data);
       setShowStripeModal(false);
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
       navigate(createPageUrl('OrderConfirmation') + `?id=${pendingOrderId}&payment=success`);
     } catch (err) {
+      console.error('handleStripeSuccess error:', err);
       toast.error(err.message || 'Error al confirmar el pago');
       setShowStripeModal(false);
     }
