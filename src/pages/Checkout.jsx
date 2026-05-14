@@ -253,15 +253,21 @@ export default function Checkout() {
   });
 
   const handleStripeSuccess = async (paymentIntentId) => {
-    await base44.functions.invoke('confirmOrder', {
-      orderId: pendingOrderId,
-      paymentTransactionId: paymentIntentId,
-    });
-    setShowStripeModal(false);
-    queryClient.invalidateQueries({ queryKey: ['cart'] });
-    queryClient.invalidateQueries({ queryKey: ['orders'] });
-    queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
-    navigate(createPageUrl('OrderConfirmation') + `?id=${pendingOrderId}&payment=success`);
+    try {
+      await base44.functions.invoke('confirmOrder', {
+        orderId: pendingOrderId,
+        paymentTransactionId: paymentIntentId,
+      });
+      setShowStripeModal(false);
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
+      navigate(createPageUrl('OrderConfirmation') + `?id=${pendingOrderId}&payment=success`);
+    } catch (err) {
+      const errorMsg = err?.response?.data?.error || err?.message || 'Error al confirmar la orden';
+      toast.error(errorMsg);
+      setShowStripeModal(false);
+    }
   };
 
   const handleRequestReactivation = async () => {
