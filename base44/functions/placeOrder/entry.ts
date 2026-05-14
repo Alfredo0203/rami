@@ -138,9 +138,7 @@ Deno.serve(async (req) => {
     // tracking_number se genera automáticamente cuando el admin cambia estado a "shipped"
 
     // ── 3. Crear la orden ─────────────────────────────────────────────
-     // Validate each item before creating order
      const cleanedItems = cartItems.map(item => {
-       // Only include the exact fields Order schema expects
        return {
          product_id: item.product_id || '',
          product_name: item.product_name || '',
@@ -153,8 +151,13 @@ Deno.serve(async (req) => {
        };
      });
 
-     // Validate items structure before sending
-     console.log('Cleaned items:', JSON.stringify(cleanedItems));
+     console.log('Creating order with:', {
+       order_number: orderNumber,
+       items_count: cleanedItems.length,
+       user_email: user.email,
+       total,
+       payment_method: paymentMethod,
+     });
 
      const order = await base44.asServiceRole.entities.Order.create({
         order_number: orderNumber,
@@ -171,6 +174,8 @@ Deno.serve(async (req) => {
        shipping_address: shippingAddress,
        customer_name: user.full_name || shippingAddress.full_name || '',
      });
+
+     console.log('Order created with ID:', order.id);
 
      // Registrar estado inicial en historial
      try {

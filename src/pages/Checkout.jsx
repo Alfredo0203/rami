@@ -207,8 +207,14 @@ export default function Checkout() {
         couponCode: appliedCoupon?.code,
       });
 
+      console.log('placeOrder response:', res.data);
       if (res.data?.error) throw new Error(res.data.details?.join('\n') || res.data.error);
       const order = res.data.order;
+      if (!order || !order.id) {
+        console.error('Order ID missing:', order);
+        throw new Error('Error al crear la orden - ID inválido');
+      }
+      console.log('Order from placeOrder:', order.id);
 
       // Si pago con tarjeta → abrir modal embebido de Stripe
       if (paymentMethod === 'credit_card') {
