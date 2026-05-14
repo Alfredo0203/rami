@@ -250,7 +250,7 @@ Deno.serve(async (req) => {
         try { await base44.asServiceRole.entities.CartItem.delete(item.id); } catch (_) {}
       }
 
-      // Email
+      // Email al usuario
       try {
         const itemsText = cartItems.map(item =>
           `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} - ${item.quantity}x $${item.product_price.toFixed(2)}`
@@ -259,6 +259,18 @@ Deno.serve(async (req) => {
           to: user.email,
           subject: `Confirmación de Pedido - Orden ${order.order_number}`,
           body: `Hola, ${order.customer_name || 'Estimado Cliente'}.\n\nGracias por tu compra.\n\nOrden #${order.order_number}\n\n${itemsText}\n\nTotal: $${total.toFixed(2)}\n\nSaludos,\nRAmi.`,
+        });
+      } catch (_) {}
+
+      // Email al admin: nueva orden
+      try {
+        const adminItemsText = cartItems.map(item =>
+          `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} x${item.quantity} - $${(item.product_price * item.quantity).toFixed(2)}`
+        ).join('\n');
+        await base44.integrations.Core.SendEmail({
+          to: 'somosrami@gmail.com',
+          subject: `🛒 Nueva orden recibida #${order.order_number}`,
+          body: `Nueva orden de ${order.customer_name} (${user.email})\n\n${adminItemsText}\n\nSubtotal: $${subtotal.toFixed(2)}\n${discountAmount > 0 ? `Descuento: -$${discountAmount.toFixed(2)}\n` : ''}Envío: $${shipping.toFixed(2)}\nTotal: $${total.toFixed(2)}\n\nMétodo de pago: Contra entrega`,
         });
       } catch (_) {}
     }

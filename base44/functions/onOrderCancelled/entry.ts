@@ -106,6 +106,17 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Notificar al usuario que su orden fue cancelada (si fue cancelada por automatización, no por el admin)
+    if (customerEmail && data.order_number) {
+      try {
+        await base44.asServiceRole.integrations.Core.SendEmail({
+          to: customerEmail,
+          subject: `Tu pedido #${data.order_number} fue cancelado`,
+          body: `Hola ${data.customer_name || 'cliente'},\n\nTu pedido #${data.order_number} ha sido cancelado.\n\nSi tienes dudas o crees que esto es un error, contáctanos.\n\nGracias,\nRAmi`,
+        });
+      } catch (e) { console.error('Error enviando correo cancelación al usuario:', e); }
+    }
+
     return Response.json({ ok: true, restored: items.length });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

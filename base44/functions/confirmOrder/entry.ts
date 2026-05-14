@@ -132,12 +132,13 @@ Deno.serve(async (req) => {
       console.error('Error limpiando carrito:', cartErr);
     }
 
-    // 5. Enviar email de confirmación
+    // 5. Enviar emails de confirmación
     try {
       const itemsText = order.items.map(item =>
         `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} - ${item.quantity}x $${Number(item.price).toFixed(2)}`
       ).join('\n');
 
+      // Al usuario
       await base44.integrations.Core.SendEmail({
         to: user.email,
         subject: `Confirmación de Pedido - Orden ${order.order_number}`,
@@ -162,6 +163,13 @@ Puedes ver tu orden y descargar la factura en tu cuenta en la app.
 
 Saludos,
 RAmi.`,
+      });
+
+      // Al admin
+      await base44.integrations.Core.SendEmail({
+        to: 'somosrami@gmail.com',
+        subject: `🛒 Nueva orden recibida #${order.order_number}`,
+        body: `Nueva orden de ${order.customer_name} (${user.email})\n\n${itemsText}\n\nSubtotal: $${Number(order.subtotal).toFixed(2)}\n${order.discount_amount > 0 ? `Descuento: -$${Number(order.discount_amount).toFixed(2)}\n` : ''}Envío: $${Number(order.shipping_cost).toFixed(2)}\nTotal: $${Number(order.total).toFixed(2)}\n\nMétodo de pago: ${order.payment_method}`,
       });
     } catch (_) {}
 
