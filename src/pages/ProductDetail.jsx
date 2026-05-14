@@ -79,7 +79,7 @@ export default function ProductDetail() {
 
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart', user?.email],
-    queryFn: () => isGuest || !user?.email ? [] : base44.entities.CartItem.filter({ user_email: user.email }).catch(() => []),
+    queryFn: () => isGuest || !user?.email ? [] : base44.entities.CartItem.list().then(items => items.filter(i => i.created_by === user.email)).catch(() => []),
     enabled: !isGuest && !!user?.email,
   });
 
