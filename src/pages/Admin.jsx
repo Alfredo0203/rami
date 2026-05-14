@@ -30,11 +30,11 @@ export default function Admin() {
   const [inventoryProduct, setInventoryProduct] = useState(null);
   const [historyProduct, setHistoryProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [stockFilter, setStockFilter] = useState('all'); // 'all', 'low', 'out', 'in_stock'
+  const [stockFilters, setStockFilters] = useState([]);
   const [sortBy, setSortBy] = useState('recent'); // 'recent', 'name', 'stock', 'sold'
   const [selectedStoreFilter, setSelectedStoreFilter] = useState('all'); // Por defecto todas las tiendas
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [orderStatusFilter, setOrderStatusFilter] = useState('all');
+  const [orderStatusFilters, setOrderStatusFilters] = useState([]);
   const [orderSearch, setOrderSearch] = useState('');
   const [orderSort, setOrderSort] = useState('newest');
   const [showSummary, setShowSummary] = useState(false);
@@ -42,8 +42,8 @@ export default function Admin() {
   const [showOrderFilters, setShowOrderFilters] = useState(false);
   const [showUserFilters, setShowUserFilters] = useState(false);
   const [userSearch, setUserSearch] = useState('');
-  const [userStatusFilter, setUserStatusFilter] = useState('all');
-  const [userRoleFilter, setUserRoleFilter] = useState('all');
+  const [userStatusFilters, setUserStatusFilters] = useState([]);
+  const [userRoleFilters, setUserRoleFilters] = useState([]);
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -219,9 +219,10 @@ export default function Admin() {
 
           {/* Filtros — Sheet igual que Browse */}
           {(() => {
+            const toggleMulti = (arr, setArr, val) => setArr(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
             const activeCount = [
               !!searchQuery,
-              stockFilter !== 'all',
+              stockFilters.length > 0,
               sortBy !== 'recent',
               categoryFilter !== 'all',
             ].filter(Boolean).length;
@@ -241,7 +242,7 @@ export default function Admin() {
                   </button>
                   {activeCount > 0 && (
                     <button
-                      onClick={() => { setSearchQuery(''); setStockFilter('all'); setSortBy('recent'); setCategoryFilter('all'); }}
+                      onClick={() => { setSearchQuery(''); setStockFilters([]); setSortBy('recent'); setCategoryFilter('all'); }}
                       className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-colors"
                     >
                       <X className="w-3 h-3" /> Limpiar filtros
@@ -253,7 +254,7 @@ export default function Admin() {
                     <SheetTitle>Filtros de productos</SheetTitle>
                     {activeCount > 0 && (
                       <button
-                        onClick={() => { setSearchQuery(''); setStockFilter('all'); setSortBy('recent'); setCategoryFilter('all'); }}
+                        onClick={() => { setSearchQuery(''); setStockFilters([]); setSortBy('recent'); setCategoryFilter('all'); }}
                         className="text-xs text-primary font-medium"
                       >
                         Limpiar todo
@@ -275,11 +276,11 @@ export default function Admin() {
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm font-semibold text-foreground mb-2 block">Stock</label>
+                      <label className="text-sm font-semibold text-foreground mb-1 block">Stock <span className="text-[10px] text-muted-foreground font-normal">(selección múltiple)</span></label>
                       <div className="flex flex-wrap gap-2">
-                        {[['all','Todos'],['in_stock','✅ En stock'],['low','⚠️ Casi agotado'],['out','❌ Agotado']].map(([v, label]) => (
-                          <button key={v} onClick={() => setStockFilter(v)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${stockFilter === v ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
+                        {[['in_stock','✅ En stock'],['low','⚠️ Casi agotado'],['out','❌ Agotado']].map(([v, label]) => (
+                          <button key={v} onClick={() => toggleMulti(stockFilters, setStockFilters, v)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${stockFilters.includes(v) ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
                             {label}
                           </button>
                         ))}
@@ -327,10 +328,11 @@ export default function Admin() {
               let filtered = products.filter(p => {
                 const stock = getProductStock(p);
                 const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-                const matchesStock = stockFilter === 'all' ||
-                  (stockFilter === 'low' && stock > 0 && stock < 5) ||
-                  (stockFilter === 'out' && stock === 0) ||
-                  (stockFilter === 'in_stock' && stock >= 5);
+                const matchesStock = stockFilters.length === 0 || stockFilters.some(f =>
+                  (f === 'low' && stock > 0 && stock < 5) ||
+                  (f === 'out' && stock === 0) ||
+                  (f === 'in_stock' && stock >= 5)
+                );
                 const matchesCategory = categoryFilter === 'all' || p.category_id === categoryFilter;
                 return matchesSearch && matchesStock && matchesCategory;
               });
@@ -420,9 +422,10 @@ export default function Admin() {
         <TabsContent value="orders" className="space-y-3 mt-3">
           {/* Filtros — Sheet igual que Browse */}
           {(() => {
+            const toggleMulti = (arr, setArr, val) => setArr(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
             const activeCount = [
               !!orderSearch,
-              orderStatusFilter !== 'all',
+              orderStatusFilters.length > 0,
               orderSort !== 'newest',
               selectedStoreFilter !== 'all',
             ].filter(Boolean).length;
@@ -442,7 +445,7 @@ export default function Admin() {
                   </button>
                   {activeCount > 0 && (
                     <button
-                      onClick={() => { setOrderSearch(''); setOrderStatusFilter('all'); setOrderSort('newest'); setSelectedStoreFilter('all'); }}
+                      onClick={() => { setOrderSearch(''); setOrderStatusFilters([]); setOrderSort('newest'); setSelectedStoreFilter('all'); }}
                       className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-colors"
                     >
                       <X className="w-3 h-3" /> Limpiar filtros
@@ -454,7 +457,7 @@ export default function Admin() {
                     <SheetTitle>Filtros de pedidos</SheetTitle>
                     {activeCount > 0 && (
                       <button
-                        onClick={() => { setOrderSearch(''); setOrderStatusFilter('all'); setOrderSort('newest'); setSelectedStoreFilter('all'); }}
+                        onClick={() => { setOrderSearch(''); setOrderStatusFilters([]); setOrderSort('newest'); setSelectedStoreFilter('all'); }}
                         className="text-xs text-primary font-medium"
                       >
                         Limpiar todo
@@ -476,11 +479,11 @@ export default function Admin() {
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm font-semibold text-foreground mb-2 block">Estado</label>
+                      <label className="text-sm font-semibold text-foreground mb-1 block">Estado <span className="text-[10px] text-muted-foreground font-normal">(selección múltiple)</span></label>
                       <div className="flex flex-wrap gap-2">
-                        {[['all','Todos'],['pending','⏳ Pendientes'],['processing','🔄 En proceso'],['shipped','🚚 Enviados'],['delivered','✅ Entregados'],['cancelled','❌ Cancelados']].map(([v, label]) => (
-                          <button key={v} onClick={() => setOrderStatusFilter(v)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${orderStatusFilter === v ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
+                        {[['pending','⏳ Pendientes'],['processing','🔄 En proceso'],['shipped','🚚 Enviados'],['delivered','✅ Entregados'],['cancelled','❌ Cancelados']].map(([v, label]) => (
+                          <button key={v} onClick={() => toggleMulti(orderStatusFilters, setOrderStatusFilters, v)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${orderStatusFilters.includes(v) ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
                             {label}
                           </button>
                         ))}
@@ -547,8 +550,8 @@ export default function Admin() {
               }
 
               // Filtro por estado
-              if (orderStatusFilter !== 'all') {
-                filteredOrders = filteredOrders.filter(o => o.status === orderStatusFilter);
+              if (orderStatusFilters.length > 0) {
+                filteredOrders = filteredOrders.filter(o => orderStatusFilters.includes(o.status));
               }
 
               // Búsqueda por cliente o número
@@ -587,10 +590,11 @@ export default function Admin() {
         <TabsContent value="users" className="space-y-3 mt-3">
           {/* Filtros de usuarios */}
           {(() => {
+            const toggleMulti = (arr, setArr, val) => setArr(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
             const activeCount = [
               !!userSearch,
-              userStatusFilter !== 'all',
-              userRoleFilter !== 'all',
+              userStatusFilters.length > 0,
+              userRoleFilters.length > 0,
             ].filter(Boolean).length;
             return (
               <Sheet open={showUserFilters} onOpenChange={setShowUserFilters}>
@@ -608,7 +612,7 @@ export default function Admin() {
                   </button>
                   {activeCount > 0 && (
                     <button
-                      onClick={() => { setUserSearch(''); setUserStatusFilter('all'); setUserRoleFilter('all'); }}
+                      onClick={() => { setUserSearch(''); setUserStatusFilters([]); setUserRoleFilters([]); }}
                       className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-colors"
                     >
                       <X className="w-3 h-3" /> Limpiar filtros
@@ -620,7 +624,7 @@ export default function Admin() {
                     <SheetTitle>Filtros de usuarios</SheetTitle>
                     {activeCount > 0 && (
                       <button
-                        onClick={() => { setUserSearch(''); setUserStatusFilter('all'); setUserRoleFilter('all'); }}
+                        onClick={() => { setUserSearch(''); setUserStatusFilters([]); setUserRoleFilters([]); }}
                         className="text-xs text-primary font-medium"
                       >
                         Limpiar todo
@@ -642,22 +646,22 @@ export default function Admin() {
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm font-semibold text-foreground mb-2 block">Estado</label>
+                      <label className="text-sm font-semibold text-foreground mb-1 block">Estado <span className="text-[10px] text-muted-foreground font-normal">(selección múltiple)</span></label>
                       <div className="flex flex-wrap gap-2">
-                        {[['all','Todos'],['active','✅ Activos'],['suspended','⚠️ Suspendidos'],['deactivated','🚫 Desactivados']].map(([v, label]) => (
-                          <button key={v} onClick={() => setUserStatusFilter(v)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${userStatusFilter === v ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
+                        {[['active','✅ Activos'],['suspended','⚠️ Suspendidos'],['deactivated','🚫 Desactivados']].map(([v, label]) => (
+                          <button key={v} onClick={() => toggleMulti(userStatusFilters, setUserStatusFilters, v)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${userStatusFilters.includes(v) ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
                             {label}
                           </button>
                         ))}
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm font-semibold text-foreground mb-2 block">Rol</label>
+                      <label className="text-sm font-semibold text-foreground mb-1 block">Rol <span className="text-[10px] text-muted-foreground font-normal">(selección múltiple)</span></label>
                       <div className="flex flex-wrap gap-2">
-                        {[['all','Todos'],['user','Clientes'],['admin','Admins'],['seller','Vendedores'],['super_admin','Propietarios']].map(([v, label]) => (
-                          <button key={v} onClick={() => setUserRoleFilter(v)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${userRoleFilter === v ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
+                        {[['user','Clientes'],['admin','Admins'],['seller','Vendedores'],['super_admin','Propietarios']].map(([v, label]) => (
+                          <button key={v} onClick={() => toggleMulti(userRoleFilters, setUserRoleFilters, v)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${userRoleFilters.includes(v) ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
                             {label}
                           </button>
                         ))}
@@ -681,8 +685,8 @@ export default function Admin() {
           ) : (
             (() => {
               let filtered = allUsers;
-              if (userStatusFilter !== 'all') filtered = filtered.filter(u => (u.status || 'active') === userStatusFilter);
-              if (userRoleFilter !== 'all') filtered = filtered.filter(u => u.role === userRoleFilter);
+              if (userStatusFilters.length > 0) filtered = filtered.filter(u => userStatusFilters.includes(u.status || 'active'));
+              if (userRoleFilters.length > 0) filtered = filtered.filter(u => userRoleFilters.includes(u.role));
               if (userSearch.trim()) {
                 const q = userSearch.toLowerCase();
                 filtered = filtered.filter(u =>
