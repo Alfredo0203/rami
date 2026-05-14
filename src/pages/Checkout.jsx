@@ -229,7 +229,6 @@ export default function Checkout() {
 
         if (intentRes.data?.error) throw new Error(intentRes.data.error);
 
-        setPendingOrderId(order.id);
         setStripeClientSecret(intentRes.data.clientSecret);
         setShowStripeModal(true);
         return order;
