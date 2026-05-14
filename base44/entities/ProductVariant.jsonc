@@ -69,5 +69,38 @@
   "required": [
     "product_id",
     "name"
-  ]
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "$or": [
+        {
+          "user.role": "admin"
+        },
+        {
+          "user.role": "super_admin"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user.role": "admin"
+        },
+        {
+          "user.role": "super_admin"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user.role": "admin"
+        },
+        {
+          "user.role": "super_admin"
+        }
+      ]
+    }
+  }
 }

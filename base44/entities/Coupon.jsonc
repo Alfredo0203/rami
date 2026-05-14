@@ -85,5 +85,17 @@
     "code",
     "discount_type",
     "discount_value"
-  ]
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user.role": "admin"
+    },
+    "update": {
+      "user.role": "admin"
+    },
+    "delete": {
+      "user.role": "admin"
+    }
+  }
 }

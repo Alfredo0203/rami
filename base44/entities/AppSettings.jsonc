@@ -79,5 +79,17 @@
   },
   "required": [
     "key"
-  ]
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user.role": "admin"
+    },
+    "update": {
+      "user.role": "admin"
+    },
+    "delete": {
+      "user.role": "admin"
+    }
+  }
 }

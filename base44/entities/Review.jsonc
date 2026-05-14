@@ -52,5 +52,24 @@
   "required": [
     "product_id",
     "rating"
-  ]
+  ],
+  "rls": {
+    "create": {
+      "data.created_by": "{{user.email}}"
+    },
+    "read": {},
+    "update": {
+      "$or": [
+        {
+          "data.created_by": "{{user.email}}"
+        },
+        {
+          "user.role": "admin"
+        }
+      ]
+    },
+    "delete": {
+      "user.role": "admin"
+    }
+  }
 }
