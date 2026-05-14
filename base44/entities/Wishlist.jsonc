@@ -27,9 +27,7 @@
     "product_id"
   ],
   "rls": {
-    "create": {
-      "data.user_email": "{{user.email}}"
-    },
+    "create": {},
     "read": {
       "data.user_email": "{{user.email}}"
     },

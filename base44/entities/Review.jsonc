@@ -54,9 +54,7 @@
     "rating"
   ],
   "rls": {
-    "create": {
-      "data.created_by": "{{user.email}}"
-    },
+    "create": {},
     "read": {},
     "update": {
       "$or": [

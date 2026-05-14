@@ -144,6 +144,7 @@
     "status"
   ],
   "rls": {
+    "create": {},
     "read": {
       "$or": [
         {
@@ -151,14 +152,31 @@
         },
         {
           "user.role": "admin"
+        },
+        {
+          "user.role": "super_admin"
         }
       ]
     },
     "update": {
-      "user.role": "admin"
+      "$or": [
+        {
+          "user.role": "admin"
+        },
+        {
+          "user.role": "super_admin"
+        }
+      ]
     },
     "delete": {
-      "user.role": "admin"
+      "$or": [
+        {
+          "user.role": "admin"
+        },
+        {
+          "user.role": "super_admin"
+        }
+      ]
     }
   }
 }
