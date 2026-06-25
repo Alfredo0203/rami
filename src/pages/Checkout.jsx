@@ -9,7 +9,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import AddressForm from '@/components/addresses/AddressForm';
-import WompiWidget from '@/components/shop/WompiWidget';
 import StripePaymentModal from '@/components/shop/StripePaymentModal';
 
 export default function Checkout() {
@@ -25,7 +24,7 @@ export default function Checkout() {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [couponError, setCouponError] = useState('');
-  const [showWompiWidget, setShowWompiWidget] = useState(false);
+  const [wompiLoading, setWompiLoading] = useState(false);
   const [stripeClientSecret, setStripeClientSecret] = useState(null);
   const [stripePublishableKey, setStripePublishableKey] = useState(null);
   const [showStripeModal, setShowStripeModal] = useState(false);
@@ -187,13 +186,41 @@ export default function Checkout() {
     return { shippingAddress, cleanedCartItems };
   };
 
-  // Para Wompi: abrir el widget ANTES de crear la orden
-  const handleWompiClick = () => {
+  // Para Wompi: crear orden primero, luego generar enlace dinámico y redirigir
+  const handleWompiClick = async () => {
     if (!selectedAddressId) {
       toast.error('Selecciona una dirección de envío');
       return;
     }
-    setShowWompiWidget(true);
+    setWompiLoading(true);
+    try {
+      const { shippingAddress, cleanedCartItems } = buildOrderPayload();
+      const res = await base44.functions.invoke('placeOrder', {
+        cartItems: cleanedCartItems,
+        shippingAddress,
+        paymentMethod: 'wompi',
+        couponCode: appliedCoupon?.code,
+        skipCartClear: true,
+      });
+      if (res.data?.error) throw new Error(res.data.details?.join('\n') || res.data.error);
+      const order = res.data.order;
+      if (!order?.id) throw new Error('No se pudo crear la orden');
+
+      const linkRes = await base44.functions.invoke('createWompiPaymentLink', {
+        orderId: order.id,
+        amount: total,
+        orderNumber: order.order_number,
+      });
+      if (linkRes.data?.error) throw new Error(linkRes.data.error);
+      const url = linkRes.data?.urlEnlace;
+      if (!url) throw new Error('No se obtuvo enlace de pago');
+
+      // Redirigir al enlace de Wompi
+      window.location.href = url;
+    } catch (err) {
+      toast.error(err.message || 'Error al iniciar pago con Wompi');
+      setWompiLoading(false);
+    }
   };
 
   const handleStripeSuccess = async (paymentIntentId, orderId) => {
@@ -527,15 +554,6 @@ export default function Checkout() {
         />
       )}
 
-      {/* Wompi Widget Modal */}
-      {showWompiWidget && (
-        <WompiWidget
-          urlPago="https://s.wompi.sv/1339589VDv"
-          onClose={() => setShowWompiWidget(false)}
-          total={total.toFixed(2)}
-        />
-      )}
-
       {/* Place Order */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border px-4 py-3 safe-area-bottom">
         {paymentMethod === 'cash_on_delivery' && (
@@ -555,10 +573,10 @@ export default function Checkout() {
         )}
         <Button
            onClick={() => paymentMethod === 'wompi' ? handleWompiClick() : placeOrderMutation.mutate()}
-           disabled={placeOrderMutation.isPending || !selectedAddressId || !paymentMethod}
+           disabled={placeOrderMutation.isPending || wompiLoading || !selectedAddressId || !paymentMethod}
            className="w-full bg-primary text-primary-foreground font-bold h-12 rounded-full text-base max-w-lg mx-auto block"
          >
-           {placeOrderMutation.isPending ? (
+           {placeOrderMutation.isPending || wompiLoading ? (
              <Loader2 className="w-5 h-5 animate-spin" />
            ) : paymentMethod === 'credit_card' ? (
              '💳 Pagar con Tarjeta'

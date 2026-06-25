@@ -20,20 +20,14 @@ export default function OrderConfirmation() {
     enabled: !!orderId,
   });
 
-  // Si Stripe redirigió con payment=success, marcar la orden como pagada y limpiar carrito
+  // Si Stripe o Wompi redirigieron con payment=success, confirmar la orden
   React.useEffect(() => {
     if (paymentParam === 'success' && orderId && order && order.payment_status !== 'paid') {
-      // Marcar orden como pagada
-      base44.entities.Order.update(orderId, {
-        payment_status: 'paid',
-        status: 'processing',
-      }).catch(console.error);
-
-      // Limpiar el carrito del usuario ahora que el pago fue confirmado
-      base44.entities.CartItem.list().then(items => {
-        items.forEach(item => {
-          base44.entities.CartItem.delete(item.id).catch(() => {});
-        });
+      const method = urlParams.get('method') || 'stripe';
+      // Usar confirmOrder para manejar inventario, cupones, carrito y notificaciones
+      base44.functions.invoke('confirmOrder', {
+        orderId,
+        paymentTransactionId: method === 'wompi' ? `wompi-${orderId}` : undefined,
       }).catch(console.error);
     }
   }, [paymentParam, orderId, order]);
