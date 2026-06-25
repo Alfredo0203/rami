@@ -125,11 +125,9 @@ export default function VariantSelector({ variants, selected, onSelect, onSelect
   };
 
   const handleSelect = (attrKey, attrValue) => {
-    // Toggle: deselect if already selected
-    const currentValue = selectedMap[attrKey];
     const nextMap = {
       ...selectedMap,
-      [attrKey]: currentValue === attrValue ? '' : attrValue,
+      [attrKey]: attrValue,
     };
 
     setSelectedMap(nextMap);
