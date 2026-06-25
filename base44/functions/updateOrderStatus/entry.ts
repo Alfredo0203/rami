@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * updateOrderStatus — cambia el estado de una orden.
@@ -55,6 +55,33 @@ Deno.serve(async (req) => {
       timestamp: new Date().toISOString(),
       notes: `Estado actualizado a ${statusLabels[newStatus] || newStatus}`
     });
+
+    // Enviar email de notificación al cliente según el nuevo estado
+    const emailSubjects = {
+      processing: `Tu pedido #${order.order_number} está siendo procesado`,
+      shipped: `¡Tu pedido #${order.order_number} ha sido enviado! 📦`,
+      delivered: `¡Tu pedido #${order.order_number} fue entregado! ✅`,
+      cancelled: `Tu pedido #${order.order_number} ha sido cancelado`,
+    };
+
+    const emailBodies = {
+      processing: `Hola ${order.customer_name || 'cliente'},\n\nTu pedido #${order.order_number} está siendo procesado y pronto será enviado.\n\nTotal: $${Number(order.total).toFixed(2)}\n\nGracias por tu compra.\nEl equipo`,
+      shipped: `Hola ${order.customer_name || 'cliente'},\n\n¡Buenas noticias! Tu pedido #${order.order_number} ha sido enviado.${extraFields?.tracking_number ? `\n\nNúmero de seguimiento: ${extraFields.tracking_number}` : ''}${extraFields?.carrier ? `\nTransportista: ${extraFields.carrier}` : ''}\n\nPronto lo recibirás en:\n${order.shipping_address?.full_name || ''}\n${order.shipping_address?.street || ''}, ${order.shipping_address?.city || ''}\n\nGracias por tu compra.\nEl equipo`,
+      delivered: `Hola ${order.customer_name || 'cliente'},\n\n¡Tu pedido #${order.order_number} ha sido entregado! Esperamos que disfrutes tu compra.\n\nSi tienes alguna pregunta, no dudes en contactarnos.\n\nGracias,\nEl equipo`,
+      cancelled: `Hola ${order.customer_name || 'cliente'},\n\nTu pedido #${order.order_number} ha sido cancelado.\n\nSi tienes alguna pregunta sobre este proceso, contáctanos.\n\nEl equipo`,
+    };
+
+    if (emailSubjects[newStatus] && order.customer_email) {
+      try {
+        await base44.integrations.Core.SendEmail({
+          to: order.customer_email,
+          subject: emailSubjects[newStatus],
+          body: emailBodies[newStatus],
+        });
+      } catch (emailErr) {
+        console.error('Error enviando email de estado:', emailErr.message);
+      }
+    }
 
     return Response.json({ order: updated });
   } catch (error) {
