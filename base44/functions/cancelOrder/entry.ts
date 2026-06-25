@@ -97,6 +97,20 @@ Deno.serve(async (req) => {
         : 'Cancelado por cliente',
     });
 
+    // Email de notificación al cliente
+    try {
+      const refundMsg = refundId
+        ? `\n\nTu reembolso ha sido procesado y se reflejará en tu tarjeta en 5-10 días hábiles.`
+        : '';
+      await base44.integrations.Core.SendEmail({
+        to: order.customer_email,
+        subject: `Tu pedido #${order.order_number} ha sido cancelado`,
+        body: `Hola ${order.customer_name || 'cliente'},\n\nHemos confirmado la cancelación de tu pedido #${order.order_number} por un total de $${Number(order.total).toFixed(2)}.${refundMsg}\n\nSi tienes alguna pregunta, no dudes en contactarnos.\n\nEl equipo`,
+      });
+    } catch (emailErr) {
+      console.error('Error enviando email de cancelación:', emailErr.message);
+    }
+
     return Response.json({
       success: true,
       refunded: !!refundId,
