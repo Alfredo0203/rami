@@ -125,9 +125,10 @@ export default function VariantSelector({ variants, selected, onSelect, onSelect
   };
 
   const handleSelect = (attrKey, attrValue) => {
+    const currentValue = selectedMap[attrKey];
     const nextMap = {
       ...selectedMap,
-      [attrKey]: attrValue,
+      [attrKey]: currentValue === attrValue ? '' : attrValue,
     };
 
     setSelectedMap(nextMap);
