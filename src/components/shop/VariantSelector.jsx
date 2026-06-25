@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Check } from 'lucide-react';
 
 /**
@@ -38,14 +38,18 @@ export default function VariantSelector({ variants, selected, onSelect, onSelect
     return Array.from(keys);
   }, [variants]);
 
+  const userSelectedRef = useRef(false);
+
   const [selectedMap, setSelectedMap] = useState(() =>
     normalizeVariantToSelectionMap(selected)
   );
 
   useEffect(() => {
-    if (selected) {
+    // Solo sincronizar desde afuera si el usuario NO acaba de seleccionar
+    if (selected && !userSelectedRef.current) {
       setSelectedMap(normalizeVariantToSelectionMap(selected));
     }
+    userSelectedRef.current = false;
   }, [selected]);
 
   if (!variants || variants.length === 0) return null;
@@ -125,6 +129,7 @@ export default function VariantSelector({ variants, selected, onSelect, onSelect
   };
 
   const handleSelect = (attrKey, attrValue) => {
+    userSelectedRef.current = true;
     const currentValue = selectedMap[attrKey];
     const nextMap = {
       ...selectedMap,
