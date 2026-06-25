@@ -370,15 +370,8 @@ export default function ProductDetail() {
     ? Math.round((1 - effectivePrice / effectiveOriginalPrice) * 100)
     : 0;
 
-  // All attribute keys that exist across variants
-  const allAttrKeys = hasVariants
-    ? [...new Set(variants.flatMap(v => Array.isArray(v.attributes) ? v.attributes.map(a => a.key) : []))]
-    : [];
-  // User must select a value for every attribute key before adding to cart
-  const needsVariantSelection = hasVariants && (
-    !selectedVariant ||
-    allAttrKeys.some(key => !selectedAttrMap[key])
-  );
+  // User must select a variant before adding to cart
+  const needsVariantSelection = hasVariants && !selectedVariant;
 
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
 
