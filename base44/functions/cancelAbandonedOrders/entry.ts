@@ -39,6 +39,19 @@ Deno.serve(async (req) => {
           notes: 'Cancelada automáticamente: pago no completado en 30 minutos',
         });
 
+        // Email al cliente
+        if (order.customer_email) {
+          try {
+            await base44.integrations.Core.SendEmail({
+              to: order.customer_email,
+              subject: `Tu pedido #${order.order_number} fue cancelado`,
+              body: `Hola ${order.customer_name || 'cliente'},\n\nTu pedido #${order.order_number} fue cancelado automáticamente porque el pago no se completó dentro de los 30 minutos.\n\nSi deseas realizar tu compra, puedes volver a intentarlo en la tienda.\n\nEl equipo`,
+            });
+          } catch (emailErr) {
+            console.error(`Error enviando email para orden ${order.order_number}:`, emailErr.message);
+          }
+        }
+
         cancelled++;
         console.log(`Orden cancelada: ${order.order_number}`);
       } catch (e) {
