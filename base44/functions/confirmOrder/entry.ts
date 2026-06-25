@@ -173,6 +173,18 @@ RAmi.`,
       });
     } catch (_) {}
 
+    // Notificación al admin
+    try {
+      const itemsText = order.items.map(item =>
+        `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} - ${item.quantity}x $${Number(item.price).toFixed(2)}`
+      ).join('\n');
+      await base44.integrations.Core.SendEmail({
+        to: 'somosrami@gmail.com',
+        subject: `🛒 Nuevo pedido ${order.order_number} - $${Number(order.total).toFixed(2)}`,
+        body: `Nuevo pedido pagado con tarjeta.\n\nOrden: ${order.order_number}\nCliente: ${order.customer_name} (${order.customer_email})\nMétodo de pago: Tarjeta\nTotal: $${Number(order.total).toFixed(2)}\n\nProductos:\n${itemsText}\n\nDirección: ${order.shipping_address?.street}, ${order.shipping_address?.municipio}, ${order.shipping_address?.departamento}`,
+      });
+    } catch (_) {}
+
     return Response.json({ order: updatedOrder });
   } catch (error) {
     console.error('confirmOrder error:', error.message, error?.response?.status);
