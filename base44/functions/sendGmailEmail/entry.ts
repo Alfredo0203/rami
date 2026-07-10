@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
-    const { to, subject, body: textBody } = body;
+    const { to, subject, body: textBody, html } = body;
 
     if (!to || !subject) {
       return Response.json({ error: 'to y subject son requeridos' }, { status: 400 });
@@ -25,14 +25,17 @@ Deno.serve(async (req) => {
     const subjectEncoded = `=?utf-8?B?${toBase64(subject)}?=`;
     const fromEncoded = `=?utf-8?B?${toBase64(fromName)}?= <${fromEmail}>`;
 
+    const isHtml = !!html;
+    const contentType = isHtml ? 'text/html; charset=utf-8' : 'text/plain; charset=utf-8';
+    const emailContent = isHtml ? html : (textBody || '');
     const rawMessage =
       `From: ${fromEncoded}\r\n` +
       `To: ${to}\r\n` +
       `Subject: ${subjectEncoded}\r\n` +
-      `Content-Type: text/plain; charset=utf-8\r\n` +
+      `Content-Type: ${contentType}\r\n` +
       `MIME-Version: 1.0\r\n` +
       `\r\n` +
-      (textBody || '');
+      emailContent;
 
     const encodedMessage = toBase64Url(rawMessage);
 

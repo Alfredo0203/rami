@@ -99,13 +99,36 @@ Deno.serve(async (req) => {
 
     // Email de notificación al cliente
     try {
-      const refundMsg = refundId
-        ? `\n\nTu reembolso ha sido procesado y se reflejará en tu tarjeta en 5-10 días hábiles.`
+      const refundBlock = refundId
+        ? `<div style="background:#fef3c7;border-left:4px solid #f59e0b;border-radius:6px;padding:14px 16px;margin:20px 0;"><p style="margin:0;color:#92400e;font-size:14px;line-height:1.5;">💰 <strong>Reembolso procesado</strong><br>Tu reembolso ha sido procesado y se reflejará en tu tarjeta en 5-10 días hábiles.</p></div>`
         : '';
+      const customerName = order.customer_name || 'cliente';
+      const total = Number(order.total).toFixed(2);
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head><body style="margin:0;padding:0;background-color:#f4f4f5;font-family:'Inter',Arial,sans-serif;">
+<div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+<div style="background:linear-gradient(135deg,#3894EF,#1a6cc7);padding:28px 24px;text-align:center;"><h1 style="color:#ffffff;font-size:28px;font-weight:800;margin:0;letter-spacing:-0.5px;">RAmi</h1><p style="color:rgba(255,255,255,0.85);font-size:13px;margin:4px 0 0;">Tu tienda de confianza</p></div>
+<div style="padding:32px 24px;">
+<h2 style="color:#18181b;font-size:20px;font-weight:700;margin:0 0 16px;">Pedido cancelado</h2>
+<p style="color:#3f3f46;font-size:15px;line-height:1.6;margin:0 0 16px;">Hola ${customerName},</p>
+<p style="color:#3f3f46;font-size:15px;line-height:1.6;margin:0 0 16px;">Hemos confirmado la cancelación de tu pedido <strong>#${order.order_number}</strong> por un total de <strong>$${total}</strong>.</p>
+${refundBlock}
+<div style="background:#f4f4f5;border-radius:8px;padding:16px;margin:20px 0;">
+<p style="color:#71717a;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 8px;">Detalles del pedido</p>
+<p style="color:#18181b;font-size:14px;margin:0;">Orden: #${order.order_number}</p>
+<p style="color:#18181b;font-size:14px;margin:4px 0 0;">Total: $${total}</p>
+</div>
+<p style="color:#3f3f46;font-size:15px;line-height:1.6;margin:16px 0 0;">Si tienes alguna pregunta, no dudes en contactarnos.</p>
+</div>
+<div style="background:#f4f4f5;padding:24px;text-align:center;border-top:1px solid #e4e4e7;">
+<p style="color:#71717a;font-size:13px;margin:0 0 8px;">¿Necesitas ayuda? Escríbenos a <a href="mailto:somosrami@gmail.com" style="color:#3894EF;text-decoration:none;">somosrami@gmail.com</a></p>
+<p style="color:#a1a1aa;font-size:12px;margin:0;">© 2026 RAmi. Todos los derechos reservados.</p>
+</div>
+</div>
+</body></html>`;
       await base44.asServiceRole.functions.invoke('sendGmailEmail', {
         to: order.customer_email,
         subject: `Tu pedido #${order.order_number} ha sido cancelado`,
-        body: `Hola ${order.customer_name || 'cliente'},\n\nHemos confirmado la cancelación de tu pedido #${order.order_number} por un total de $${Number(order.total).toFixed(2)}.${refundMsg}\n\nSi tienes alguna pregunta, no dudes en contactarnos.\n\nEl equipo`,
+        html,
       });
     } catch (emailErr) {
       console.error('Error enviando email de cancelación:', emailErr.message);
