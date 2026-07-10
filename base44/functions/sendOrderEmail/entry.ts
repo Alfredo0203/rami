@@ -65,12 +65,11 @@ Deno.serve(async (req) => {
 ${headerBlock.replace('{{SUBTITLE}}', 'Tu tienda de confianza')}
 <div style="padding:32px 24px;">
 <div style="text-align:center;margin:0 0 24px;">
-<div style="width:56px;height:56px;background:#dcfce7;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px;line-height:56px;">✅</div>
 <h2 style="color:#18181b;font-size:20px;font-weight:700;margin:0 0 8px;">¡Gracias por tu compra!</h2>
 <p style="color:#71717a;font-size:14px;margin:0;">Orden #${order.order_number}</p>
 </div>
 <p style="color:#3f3f46;font-size:15px;line-height:1.6;margin:0 0 20px;">Hola ${customerName},</p>
-<p style="color:#3f3f46;font-size:15px;line-height:1.6;margin:0 0 20px;">Hemos recibido tu pago y tu pedido está siendo procesado. Pronto lo recibirás en la dirección indicada.</p>
+<p style="color:#3f3f46;font-size:15px;line-height:1.6;margin:0 0 20px;">Hemos recibido tu pedido. Pronto lo recibirás en la dirección indicada.</p>
 <div style="background:#f4f4f5;border-radius:8px;padding:16px;margin:20px 0;">
 <p style="color:#71717a;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 12px;">Productos</p>
 ${itemsRows}
