@@ -146,7 +146,7 @@ Deno.serve(async (req) => {
         `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} - ${item.quantity}x $${Number(item.price).toFixed(2)}`
       ).join('\n');
 
-      await base44.integrations.Core.SendEmail({
+      await base44.asServiceRole.functions.invoke('sendGmailEmail', {
         to: user?.email || order.customer_email,
         subject: `Confirmación de Pedido - Orden ${order.order_number}`,
         body: `Hola, ${order.customer_name || 'Estimado Cliente'}.
@@ -178,7 +178,7 @@ RAmi.`,
       const itemsText = order.items.map(item =>
         `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} - ${item.quantity}x $${Number(item.price).toFixed(2)}`
       ).join('\n');
-      await base44.integrations.Core.SendEmail({
+      await base44.asServiceRole.functions.invoke('sendGmailEmail', {
         to: 'somosrami@gmail.com',
         subject: `🛒 Nuevo pedido ${order.order_number} - $${Number(order.total).toFixed(2)}`,
         body: `Nuevo pedido pagado con tarjeta.\n\nOrden: ${order.order_number}\nCliente: ${order.customer_name} (${order.customer_email})\nMétodo de pago: Tarjeta\nTotal: $${Number(order.total).toFixed(2)}\n\nProductos:\n${itemsText}\n\nDirección: ${order.shipping_address?.street}, ${order.shipping_address?.municipio}, ${order.shipping_address?.departamento}`,

@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
 
     if (emailSubjects[newStatus] && order.customer_email) {
       try {
-        await base44.integrations.Core.SendEmail({
+        await base44.asServiceRole.functions.invoke('sendGmailEmail', {
           to: order.customer_email,
           subject: emailSubjects[newStatus],
           body: emailBodies[newStatus],

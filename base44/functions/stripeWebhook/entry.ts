@@ -114,13 +114,13 @@ Deno.serve(async (req) => {
         `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} - ${item.quantity}x $${Number(item.price).toFixed(2)}`
       ).join('\n');
 
-      await base44.integrations.Core.SendEmail({
+      await base44.asServiceRole.functions.invoke('sendGmailEmail', {
         to: order.customer_email,
         subject: `Confirmación de Pedido - Orden ${order.order_number}`,
         body: `Hola, ${order.customer_name || 'Estimado Cliente'}.\n\nGracias por tu compra. Tu pago fue recibido correctamente.\n\nOrden #${order.order_number}\n\n${itemsText}\n\nSubtotal: $${Number(order.subtotal).toFixed(2)}\nEnvío: $${Number(order.shipping_cost).toFixed(2)}\nTOTAL: $${Number(order.total).toFixed(2)}\n\nSaludos,\nRAmi.`,
       });
 
-      await base44.integrations.Core.SendEmail({
+      await base44.asServiceRole.functions.invoke('sendGmailEmail', {
         to: 'somosrami@gmail.com',
         subject: `🛒 Nuevo pedido ${order.order_number} - $${Number(order.total).toFixed(2)}`,
         body: `Pedido confirmado vía webhook.\n\nOrden: ${order.order_number}\nCliente: ${order.customer_name} (${order.customer_email})\nTotal: $${Number(order.total).toFixed(2)}\n\nProductos:\n${itemsText}`,
