@@ -140,50 +140,21 @@ Deno.serve(async (req) => {
       console.error('Error limpiando carrito:', cartErr);
     }
 
-    // 5. Enviar email de confirmación
+    // 5. Enviar email de confirmación al cliente
     try {
-      const itemsText = order.items.map(item =>
-        `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} - ${item.quantity}x $${Number(item.price).toFixed(2)}`
-      ).join('\n');
-
-      await base44.asServiceRole.functions.invoke('sendGmailEmail', {
-        to: user?.email || order.customer_email,
-        subject: `Confirmación de Pedido - Orden ${order.order_number}`,
-        body: `Hola, ${order.customer_name || 'Estimado Cliente'}.
-
-Gracias por tu compra. Tu pago fue recibido correctamente.
-
-═══════════════════════════════════
-Orden #${order.order_number}
-═══════════════════════════════════
-
-PRODUCTOS:
-${itemsText}
-
-Subtotal: $${Number(order.subtotal).toFixed(2)}
-${order.discount_amount > 0 ? `Descuento: -$${Number(order.discount_amount).toFixed(2)}\n` : ''}Envío: $${Number(order.shipping_cost).toFixed(2)}
-───────────────────────────────────
-TOTAL: $${Number(order.total).toFixed(2)}
-═══════════════════════════════════
-
-Puedes ver tu orden y descargar la factura en tu cuenta en la app.
-
-Saludos,
-RAmi.`,
+      await base44.asServiceRole.functions.invoke('sendOrderEmail', {
+        type: 'customer_confirmation',
+        order,
       });
-    } catch (_) {}
+    } catch (e) { console.error('Error email cliente:', e.message); }
 
     // Notificación al admin
     try {
-      const itemsText = order.items.map(item =>
-        `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} - ${item.quantity}x $${Number(item.price).toFixed(2)}`
-      ).join('\n');
-      await base44.asServiceRole.functions.invoke('sendGmailEmail', {
-        to: 'somosrami@gmail.com',
-        subject: `🛒 Nuevo pedido ${order.order_number} - $${Number(order.total).toFixed(2)}`,
-        body: `Nuevo pedido pagado con tarjeta.\n\nOrden: ${order.order_number}\nCliente: ${order.customer_name} (${order.customer_email})\nMétodo de pago: Tarjeta\nTotal: $${Number(order.total).toFixed(2)}\n\nProductos:\n${itemsText}\n\nDirección: ${order.shipping_address?.street}, ${order.shipping_address?.municipio}, ${order.shipping_address?.departamento}`,
+      await base44.asServiceRole.functions.invoke('sendOrderEmail', {
+        type: 'admin_new_order',
+        order,
       });
-    } catch (_) {}
+    } catch (e) { console.error('Error email admin:', e.message); }
 
     return Response.json({ order: updatedOrder });
   } catch (error) {

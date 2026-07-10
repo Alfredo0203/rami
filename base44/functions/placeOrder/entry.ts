@@ -249,27 +249,19 @@ Deno.serve(async (req) => {
 
       // Email al cliente
       try {
-        const itemsText = cartItems.map(item =>
-          `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} - ${item.quantity}x $${item.product_price.toFixed(2)}`
-        ).join('\n');
-        await base44.asServiceRole.functions.invoke('sendGmailEmail', {
-          to: user.email,
-          subject: `Confirmación de Pedido - Orden ${order.order_number}`,
-          body: `Hola, ${order.customer_name || 'Estimado Cliente'}.\n\nGracias por tu compra.\n\nOrden #${order.order_number}\n\n${itemsText}\n\nTotal: $${total.toFixed(2)}\n\nSaludos,\nRAmi.`,
+        await base44.asServiceRole.functions.invoke('sendOrderEmail', {
+          type: 'customer_confirmation',
+          order,
         });
-      } catch (_) {}
+      } catch (e) { console.error('Error email cliente:', e.message); }
 
       // Notificación al admin
       try {
-        const itemsText = cartItems.map(item =>
-          `• ${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} - ${item.quantity}x $${Number(item.product_price).toFixed(2)}`
-        ).join('\n');
-        await base44.asServiceRole.functions.invoke('sendGmailEmail', {
-          to: 'somosrami@gmail.com',
-          subject: `🛒 Nuevo pedido ${order.order_number} - $${total.toFixed(2)}`,
-          body: `Nuevo pedido recibido.\n\nOrden: ${order.order_number}\nCliente: ${order.customer_name} (${user.email})\nMétodo de pago: Efectivo\nTotal: $${total.toFixed(2)}\n\nProductos:\n${itemsText}\n\nDirección: ${shippingAddress.street}, ${shippingAddress.municipio}, ${shippingAddress.departamento}`,
+        await base44.asServiceRole.functions.invoke('sendOrderEmail', {
+          type: 'admin_new_order',
+          order,
         });
-      } catch (_) {}
+      } catch (e) { console.error('Error email admin:', e.message); }
     }
 
     return Response.json({ order });
