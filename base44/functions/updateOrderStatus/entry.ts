@@ -59,8 +59,8 @@ Deno.serve(async (req) => {
     // Enviar email de notificación al cliente según el nuevo estado
     const emailSubjects = {
       processing: `Tu pedido #${order.order_number} está siendo procesado`,
-      shipped: `¡Tu pedido #${order.order_number} ha sido enviado! 📦`,
-      delivered: `¡Tu pedido #${order.order_number} fue entregado! ✅`,
+      shipped: `Tu pedido #${order.order_number} ha sido enviado`,
+      delivered: `Tu pedido #${order.order_number} fue entregado`,
       cancelled: `Tu pedido #${order.order_number} ha sido cancelado`,
     };
 

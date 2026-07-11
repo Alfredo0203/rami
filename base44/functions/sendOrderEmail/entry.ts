@@ -45,6 +45,43 @@ Deno.serve(async (req) => {
 
     const shippingLabel = order.shipping_cost === 0 ? 'Gratis' : fmt(order.shipping_cost);
 
+    // Versiones en texto plano (multipart/alternative mejora deliverability y evita spam)
+    const itemsText = (order.items || []).map(item =>
+      `- ${item.product_name || ''}${item.variant_name ? ' (' + item.variant_name + ')' : ''} - ${fmt(item.price)} x${item.quantity || 1}`
+    ).join('\n');
+
+    const customerText = `RAmi - Confirmacion de Pedido
+
+Hola ${customerName},
+
+Hemos recibido tu pedido. Pronto lo recibiras en la direccion indicada.
+
+Orden: #${order.order_number}
+
+Productos:
+${itemsText}
+
+Subtotal: ${fmt(order.subtotal)}
+${order.discount_amount > 0 ? `Descuento: -${fmt(order.discount_amount)}\n` : ''}Envio: ${shippingLabel}
+Total: ${fmt(order.total)}
+
+Direccion de envio: ${addressStr || 'No especificada'}
+
+Puedes ver tu orden y descargar la factura desde tu cuenta en la app.`;
+
+    const adminText = `RAmi - Nuevo pedido recibido
+
+Orden: #${order.order_number}
+Cliente: ${customerName}
+Email: ${order.customer_email || ''}
+Metodo de pago: ${paymentLabel}
+Total: ${fmt(order.total)}
+
+Productos:
+${itemsText}
+
+Direccion de envio: ${addressStr || 'No especificada'}`;
+
     const headerBlock = `<div style="background:linear-gradient(135deg,#3894EF,#1a6cc7);padding:28px 24px;text-align:center;">
 <h1 style="color:#ffffff;font-size:28px;font-weight:800;margin:0;letter-spacing:-0.5px;">RAmi</h1>
 <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:4px 0 0;">{{SUBTITLE}}</p>
@@ -55,11 +92,12 @@ Deno.serve(async (req) => {
 <p style="color:#a1a1aa;font-size:12px;margin:0;">© 2026 RAmi. Todos los derechos reservados.</p>
 </div>`;
 
-    let to, subject, html;
+    let to, subject, html, text;
 
     if (type === 'customer_confirmation') {
       to = order.customer_email;
       subject = `Confirmación de Pedido - Orden ${order.order_number}`;
+      text = customerText;
       html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head><body style="margin:0;padding:0;background-color:#f4f4f5;font-family:'Inter',Arial,sans-serif;">
 <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
 ${headerBlock.replace('{{SUBTITLE}}', 'Tu tienda de confianza')}
@@ -91,7 +129,8 @@ ${footerBlock}
 </body></html>`;
     } else if (type === 'admin_new_order') {
       to = 'somosrami@gmail.com';
-      subject = `🛒 Nuevo pedido ${order.order_number} - ${fmt(order.total)}`;
+      subject = `Nuevo pedido ${order.order_number} - ${fmt(order.total)}`;
+      text = adminText;
       html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head><body style="margin:0;padding:0;background-color:#f4f4f5;font-family:'Inter',Arial,sans-serif;">
 <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
 ${headerBlock.replace('{{SUBTITLE}}', 'Nuevo pedido recibido')}
@@ -122,7 +161,7 @@ ${footerBlock}
       return Response.json({ error: 'Tipo de email no válido: ' + type }, { status: 400 });
     }
 
-    await base44.asServiceRole.functions.invoke('sendGmailEmail', { to, subject, html });
+    await base44.asServiceRole.functions.invoke('sendGmailEmail', { to, subject, html, text });
     return Response.json({ success: true });
   } catch (error) {
     console.error('sendOrderEmail error:', error.message);

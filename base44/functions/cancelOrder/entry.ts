@@ -125,10 +125,19 @@ ${refundBlock}
 </div>
 </div>
 </body></html>`;
+      const customerCancelText = `RAmi - Pedido cancelado
+
+Hola ${customerName},
+
+Hemos confirmado la cancelacion de tu pedido #${order.order_number} por un total de $${total}.${refundId ? '\n\nTu reembolso ha sido procesado y se reflejara en tu tarjeta en 5-10 dias habiles.' : ''}
+
+Si tienes alguna pregunta, no dudes en contactarnos a somosrami@gmail.com.`;
+
       await base44.asServiceRole.functions.invoke('sendGmailEmail', {
         to: order.customer_email,
         subject: `Tu pedido #${order.order_number} ha sido cancelado`,
         html,
+        text: customerCancelText,
       });
     } catch (emailErr) {
       console.error('Error enviando email de cancelación:', emailErr.message);
@@ -157,10 +166,23 @@ ${refundId ? `<tr><td style="padding:6px 0;color:#71717a;">Reembolso</td><td sty
 <div style="background:#f4f4f5;padding:24px;text-align:center;border-top:1px solid #e4e4e7;"><p style="color:#a1a1aa;font-size:12px;margin:0;">© 2026 RAmi. Todos los derechos reservados.</p></div>
 </div>
 </body></html>`;
+      const adminCancelText = `RAmi - Pedido cancelado por el cliente
+
+El cliente ${customerName} cancelo el pedido #${order.order_number} por $${total}.
+
+Orden: #${order.order_number}
+Cliente: ${customerName}
+Email: ${order.customer_email || ''}
+Metodo de pago: ${order.payment_method || 'N/A'}
+${refundId ? `Reembolso: Si (Stripe: ${refundId})\n` : ''}Total: $${total}
+
+Revisa los detalles en el panel de administracion.`;
+
       await base44.asServiceRole.functions.invoke('sendGmailEmail', {
         to: 'somosrami@gmail.com',
-        subject: `⚠️ Pedido cancelado #${order.order_number} - ${customerName}`,
+        subject: `Pedido cancelado #${order.order_number} - ${customerName}`,
         html: adminHtml,
+        text: adminCancelText,
       });
     } catch (adminEmailErr) {
       console.error('Error enviando email de cancelación al admin:', adminEmailErr.message);

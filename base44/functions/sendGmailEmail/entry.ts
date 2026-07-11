@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
-    const { to, subject, body: textBody, html } = body;
+    const { to, subject, body: textBody, html, text } = body;
 
     if (!to || !subject) {
       return Response.json({ error: 'to y subject son requeridos' }, { status: 400 });
@@ -26,16 +26,40 @@ Deno.serve(async (req) => {
     const fromEncoded = `=?utf-8?B?${toBase64(fromName)}?= <${fromEmail}>`;
 
     const isHtml = !!html;
-    const contentType = isHtml ? 'text/html; charset=utf-8' : 'text/plain; charset=utf-8';
-    const emailContent = isHtml ? html : (textBody || '');
-    const rawMessage =
-      `From: ${fromEncoded}\r\n` +
-      `To: ${to}\r\n` +
-      `Subject: ${subjectEncoded}\r\n` +
-      `Content-Type: ${contentType}\r\n` +
-      `MIME-Version: 1.0\r\n` +
-      `\r\n` +
-      emailContent;
+    const plainText = text || textBody || '';
+
+    let rawMessage;
+    if (isHtml && plainText) {
+      // multipart/alternative: texto plano + HTML — mejora deliverability y evita spam
+      const boundary = 'rami_' + Date.now() + '_' + Math.random().toString(36).substring(2);
+      rawMessage =
+        `From: ${fromEncoded}\r\n` +
+        `To: ${to}\r\n` +
+        `Subject: ${subjectEncoded}\r\n` +
+        `MIME-Version: 1.0\r\n` +
+        `Content-Type: multipart/alternative; boundary="${boundary}"\r\n` +
+        `\r\n` +
+        `--${boundary}\r\n` +
+        `Content-Type: text/plain; charset=utf-8\r\n` +
+        `\r\n` +
+        `${plainText}\r\n` +
+        `--${boundary}\r\n` +
+        `Content-Type: text/html; charset=utf-8\r\n` +
+        `\r\n` +
+        `${html}\r\n` +
+        `--${boundary}--\r\n`;
+    } else {
+      const contentType = isHtml ? 'text/html; charset=utf-8' : 'text/plain; charset=utf-8';
+      const emailContent = isHtml ? html : plainText;
+      rawMessage =
+        `From: ${fromEncoded}\r\n` +
+        `To: ${to}\r\n` +
+        `Subject: ${subjectEncoded}\r\n` +
+        `Content-Type: ${contentType}\r\n` +
+        `MIME-Version: 1.0\r\n` +
+        `\r\n` +
+        emailContent;
+    }
 
     const encodedMessage = toBase64Url(rawMessage);
 
