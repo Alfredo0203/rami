@@ -134,6 +134,38 @@ ${refundBlock}
       console.error('Error enviando email de cancelación:', emailErr.message);
     }
 
+    // Notificación al admin (somosrami@gmail.com)
+    try {
+      const customerName = order.customer_name || 'cliente';
+      const total = Number(order.total).toFixed(2);
+      const adminHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head><body style="margin:0;padding:0;background-color:#f4f4f5;font-family:'Inter',Arial,sans-serif;">
+<div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+<div style="background:linear-gradient(135deg,#3894EF,#1a6cc7);padding:28px 24px;text-align:center;"><h1 style="color:#ffffff;font-size:28px;font-weight:800;margin:0;letter-spacing:-0.5px;">RAmi</h1><p style="color:rgba(255,255,255,0.85);font-size:13px;margin:4px 0 0;">Pedido cancelado por el cliente</p></div>
+<div style="padding:32px 24px;">
+<h2 style="color:#18181b;font-size:20px;font-weight:700;margin:0 0 16px;">⚠️ Cancelación de pedido</h2>
+<div style="background:#fef3c7;border-left:4px solid #f59e0b;border-radius:6px;padding:14px 16px;margin:20px 0;"><p style="margin:0;color:#92400e;font-size:14px;line-height:1.5;">El cliente <strong>${customerName}</strong> canceló el pedido <strong>#${order.order_number}</strong> por <strong>$${total}</strong>.</p></div>
+<table style="width:100%;font-size:14px;color:#3f3f46;border-collapse:collapse;">
+<tr><td style="padding:6px 0;color:#71717a;">Orden</td><td style="text-align:right;padding:6px 0;color:#18181b;font-weight:600;">#${order.order_number}</td></tr>
+<tr><td style="padding:6px 0;color:#71717a;">Cliente</td><td style="text-align:right;padding:6px 0;color:#18181b;font-weight:600;">${customerName}</td></tr>
+<tr><td style="padding:6px 0;color:#71717a;">Email</td><td style="text-align:right;padding:6px 0;color:#18181b;">${order.customer_email || ''}</td></tr>
+<tr><td style="padding:6px 0;color:#71717a;">Método de pago</td><td style="text-align:right;padding:6px 0;color:#18181b;">${order.payment_method || 'N/A'}</td></tr>
+${refundId ? `<tr><td style="padding:6px 0;color:#71717a;">Reembolso</td><td style="text-align:right;padding:6px 0;color:#18181b;">Sí (Stripe: ${refundId})</td></tr>` : ''}
+<tr><td style="padding:10px 0 0;font-size:16px;font-weight:700;color:#18181b;border-top:1px solid #e4e4e7;">Total</td><td style="padding:10px 0 0;text-align:right;font-size:16px;font-weight:700;color:#3894EF;border-top:1px solid #e4e4e7;">$${total}</td></tr>
+</table>
+<p style="color:#71717a;font-size:13px;margin:16px 0 0;">Revisa los detalles en el panel de administración.</p>
+</div>
+<div style="background:#f4f4f5;padding:24px;text-align:center;border-top:1px solid #e4e4e7;"><p style="color:#a1a1aa;font-size:12px;margin:0;">© 2026 RAmi. Todos los derechos reservados.</p></div>
+</div>
+</body></html>`;
+      await base44.asServiceRole.functions.invoke('sendGmailEmail', {
+        to: 'somosrami@gmail.com',
+        subject: `⚠️ Pedido cancelado #${order.order_number} - ${customerName}`,
+        html: adminHtml,
+      });
+    } catch (adminEmailErr) {
+      console.error('Error enviando email de cancelación al admin:', adminEmailErr.message);
+    }
+
     return Response.json({
       success: true,
       refunded: !!refundId,
