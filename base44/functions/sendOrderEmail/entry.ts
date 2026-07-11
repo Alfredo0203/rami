@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
       `- ${item.product_name || ''}${item.variant_name ? ' (' + item.variant_name + ')' : ''} - ${fmt(item.price)} x${item.quantity || 1}`
     ).join('\n');
 
-    const customerText = `RAmi - Confirmacion de Pedido
+    const customerText = `Confirmacion de Pedido
 
 Hola ${customerName},
 
@@ -69,7 +69,7 @@ Direccion de envio: ${addressStr || 'No especificada'}
 
 Puedes ver tu orden y descargar la factura desde tu cuenta en la app.`;
 
-    const adminText = `RAmi - Nuevo pedido recibido
+    const adminText = `Nuevo pedido recibido
 
 Orden: #${order.order_number}
 Cliente: ${customerName}
@@ -82,14 +82,12 @@ ${itemsText}
 
 Direccion de envio: ${addressStr || 'No especificada'}`;
 
-    const headerBlock = `<div style="background:linear-gradient(135deg,#3894EF,#1a6cc7);padding:28px 24px;text-align:center;">
-<h1 style="color:#ffffff;font-size:28px;font-weight:800;margin:0;letter-spacing:-0.5px;">RAmi</h1>
-<p style="color:rgba(255,255,255,0.85);font-size:13px;margin:4px 0 0;">{{SUBTITLE}}</p>
+    const headerBlock = `<div style="background:linear-gradient(135deg,#3894EF,#1a6cc7);padding:20px 24px;text-align:center;">
+<h1 style="color:#ffffff;font-size:20px;font-weight:700;margin:0;">{{TITLE}}</h1>
 </div>`;
 
     const footerBlock = `<div style="background:#f4f4f5;padding:24px;text-align:center;border-top:1px solid #e4e4e7;">
-<p style="color:#71717a;font-size:13px;margin:0 0 8px;">¿Necesitas ayuda? Escríbenos a <a href="mailto:somosrami@gmail.com" style="color:#3894EF;text-decoration:none;">somosrami@gmail.com</a></p>
-<p style="color:#a1a1aa;font-size:12px;margin:0;">© 2026 RAmi. Todos los derechos reservados.</p>
+<p style="color:#71717a;font-size:13px;margin:0;">¿Necesitas ayuda? Escríbenos a <a href="mailto:somosrami@gmail.com" style="color:#3894EF;text-decoration:none;">somosrami@gmail.com</a></p>
 </div>`;
 
     let to, subject, html, text;
@@ -100,7 +98,7 @@ Direccion de envio: ${addressStr || 'No especificada'}`;
       text = customerText;
       html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head><body style="margin:0;padding:0;background-color:#f4f4f5;font-family:'Inter',Arial,sans-serif;">
 <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-${headerBlock.replace('{{SUBTITLE}}', 'Tu tienda de confianza')}
+${headerBlock.replace('{{TITLE}}', 'Confirmación de Pedido')}
 <div style="padding:32px 24px;">
 <div style="text-align:center;margin:0 0 24px;">
 <h2 style="color:#18181b;font-size:20px;font-weight:700;margin:0 0 8px;">¡Gracias por tu compra!</h2>
@@ -133,7 +131,7 @@ ${footerBlock}
       text = adminText;
       html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head><body style="margin:0;padding:0;background-color:#f4f4f5;font-family:'Inter',Arial,sans-serif;">
 <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-${headerBlock.replace('{{SUBTITLE}}', 'Nuevo pedido recibido')}
+${headerBlock.replace('{{TITLE}}', 'Nuevo Pedido')}
 <div style="padding:32px 24px;">
 <div style="background:#f4f4f5;border-radius:8px;padding:16px;margin:0 0 20px;">
 <p style="color:#71717a;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 8px;">Orden</p>
