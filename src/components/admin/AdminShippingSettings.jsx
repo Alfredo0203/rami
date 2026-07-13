@@ -27,23 +27,22 @@ export default function AdminShippingSettings() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const payload = {
-        key: 'global',
-        ...settings,
+      const patch = {
         shipping_cost: parseFloat(shippingCost) || 0,
         free_shipping_threshold: parseFloat(freeShippingThreshold) || 0,
         updated_at: new Date().toISOString(),
       };
       if (settings?.id) {
-        const updated = await base44.entities.AppSettings.update(settings.id, payload);
+        const updated = await base44.entities.AppSettings.update(settings.id, patch);
         setSettings(updated);
       } else {
-        const created = await base44.entities.AppSettings.create(payload);
+        const created = await base44.entities.AppSettings.create({ key: 'global', ...patch });
         setSettings(created);
       }
       toast.success('Configuración de envío guardada');
-    } catch {
-      toast.error('Error al guardar la configuración');
+    } catch (err) {
+      console.error('Shipping settings error:', err);
+      toast.error(err?.message || 'Error al guardar la configuración');
     } finally {
       setSaving(false);
     }
