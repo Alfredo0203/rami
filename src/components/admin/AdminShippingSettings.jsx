@@ -27,18 +27,11 @@ export default function AdminShippingSettings() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const patch = {
-        shipping_cost: parseFloat(shippingCost) || 0,
-        free_shipping_threshold: parseFloat(freeShippingThreshold) || 0,
-        updated_at: new Date().toISOString(),
-      };
-      if (settings?.id) {
-        const updated = await base44.entities.AppSettings.update(settings.id, patch);
-        setSettings(updated);
-      } else {
-        const created = await base44.entities.AppSettings.create({ key: 'global', ...patch });
-        setSettings(created);
-      }
+      const response = await base44.functions.invoke('saveShippingSettings', {
+        shipping_cost: shippingCost,
+        free_shipping_threshold: freeShippingThreshold,
+      });
+      setSettings(response.data.settings);
       toast.success('Configuración de envío guardada');
     } catch (err) {
       console.error('Shipping settings error:', err);
