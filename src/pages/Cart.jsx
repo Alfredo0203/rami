@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +13,17 @@ export default function Cart() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, isGuest } = useCurrentUser();
+
+  const [shippingCost, setShippingCost] = useState(0);
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(0);
+
+  useEffect(() => {
+    base44.entities.AppSettings.filter({ key: 'global' }).then(results => {
+      const s = results[0];
+      setShippingCost(s?.shipping_cost ?? 0);
+      setFreeShippingThreshold(s?.free_shipping_threshold ?? 0);
+    }).catch(() => {});
+  }, []);
 
   const isDeactivated = user?.status === 'deactivated';
 
@@ -98,7 +109,7 @@ export default function Cart() {
   });
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.product_price || 0) * (item.quantity || 0), 0);
-  const shipping = subtotal >= 15 ? 0 : 4.99;
+  const shipping = (shippingCost === 0 || (freeShippingThreshold > 0 && subtotal >= freeShippingThreshold)) ? 0 : shippingCost;
   const total = subtotal + shipping;
 
   return (
@@ -192,8 +203,8 @@ export default function Cart() {
                 {shipping === 0 ? 'GRATIS' : `$${shipping.toFixed(2)}`}
               </span>
             </div>
-            {shipping > 0 && (
-              <p className="text-[10px] text-primary">¡Envío gratis en pedidos mayores a $15!</p>
+            {shipping > 0 && freeShippingThreshold > 0 && (
+              <p className="text-[10px] text-primary">¡Envío gratis en pedidos mayores a ${freeShippingThreshold.toFixed(2)}!</p>
             )}
             <div className="border-t border-border pt-2.5 flex justify-between">
               <span className="text-foreground font-bold">Total</span>

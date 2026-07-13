@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import AdminShippingSettings from './AdminShippingSettings';
 
 export default function AdminStoresTab() {
   const queryClient = useQueryClient();
@@ -152,6 +153,8 @@ export default function AdminStoresTab() {
 
   return (
     <div className="space-y-3 mt-3 pb-6">
+      <AdminShippingSettings />
+
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">

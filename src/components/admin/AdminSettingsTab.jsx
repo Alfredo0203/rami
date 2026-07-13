@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard, Megaphone, MessageCircle, Shield, Image, Upload, Truck } from 'lucide-react';
+import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard, Megaphone, MessageCircle, Shield, Image, Upload } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -36,8 +36,6 @@ export default function AdminSettingsTab({ currentUser }) {
   const [saving, setSaving] = useState(false);
   const [whatsappPhone, setWhatsappPhone] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
-  const [shippingCost, setShippingCost] = useState('');
-  const [freeShippingThreshold, setFreeShippingThreshold] = useState('');
   
 
 
@@ -96,12 +94,6 @@ export default function AdminSettingsTab({ currentUser }) {
     }
     if (settings && logoUrl === '') {
       setLogoUrl(settings.logo_url ?? '');
-    }
-    if (settings && shippingCost === '') {
-      setShippingCost(String(settings.shipping_cost ?? 0));
-    }
-    if (settings && freeShippingThreshold === '') {
-      setFreeShippingThreshold(String(settings.free_shipping_threshold ?? 0));
     }
   }, [settings]);
 
@@ -384,54 +376,6 @@ export default function AdminSettingsTab({ currentUser }) {
              className="w-full mt-2"
            >
              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar logo'}
-           </Button>
-         </div>
-       </div>
-
-       {/* Shipping */}
-       <div className="bg-card rounded-xl p-4 shadow-sm">
-         <div className="flex items-center gap-2 mb-3">
-           <Truck className="w-4 h-4 text-primary" />
-           <p className="text-sm font-semibold text-foreground">Configuración de Envío</p>
-         </div>
-         <p className="text-xs text-muted-foreground mb-3">Define el costo de envío y a partir de qué monto es gratis.</p>
-         <div className="space-y-3">
-           <div>
-             <Label className="text-xs">Costo de envío ($)</Label>
-             <Input
-               type="number"
-               min="0"
-               step="0.01"
-               value={shippingCost}
-               onChange={e => setShippingCost(e.target.value)}
-               placeholder="0.00"
-               className="h-9 text-sm mt-1"
-             />
-             <p className="text-[10px] text-muted-foreground mt-1">Si es 0, el envío es siempre gratis.</p>
-           </div>
-           <div>
-             <Label className="text-xs">Envío gratis a partir de ($)</Label>
-             <Input
-               type="number"
-               min="0"
-               step="0.01"
-               value={freeShippingThreshold}
-               onChange={e => setFreeShippingThreshold(e.target.value)}
-               placeholder="0.00"
-               className="h-9 text-sm mt-1"
-             />
-             <p className="text-[10px] text-muted-foreground mt-1">Si es 0, no aplica envío gratis por monto.</p>
-           </div>
-           <Button
-             size="sm"
-             onClick={() => saveSettings({
-               shipping_cost: parseFloat(shippingCost) || 0,
-               free_shipping_threshold: parseFloat(freeShippingThreshold) || 0,
-             })}
-             disabled={saving}
-             className="w-full mt-1"
-           >
-             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar configuración de envío'}
            </Button>
          </div>
        </div>
