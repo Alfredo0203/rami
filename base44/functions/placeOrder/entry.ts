@@ -53,7 +53,19 @@ Deno.serve(async (req) => {
 
     // ── 2. Calcular totales ───────────────────────────────────────────
     const subtotal = cartItems.reduce((sum, item) => sum + (item.product_price || 0) * (item.quantity || 0), 0);
-    const shipping = subtotal >= 15 ? 0 : 4.99;
+
+    // Obtener configuración de envío desde AppSettings
+    let shippingCostCfg = 0;
+    let freeShippingThresholdCfg = 0;
+    try {
+      const settings = await base44.asServiceRole.entities.AppSettings.filter({ key: 'global' });
+      if (settings[0]) {
+        shippingCostCfg = settings[0].shipping_cost ?? 0;
+        freeShippingThresholdCfg = settings[0].free_shipping_threshold ?? 0;
+      }
+    } catch (e) { console.error('Error fetching settings:', e); }
+
+    const shipping = (shippingCostCfg === 0 || (freeShippingThresholdCfg > 0 && subtotal >= freeShippingThresholdCfg)) ? 0 : shippingCostCfg;
 
     let discountAmount = 0;
     let appliedCoupon = null;

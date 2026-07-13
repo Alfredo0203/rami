@@ -30,6 +30,8 @@ export default function Checkout() {
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState(null);
   const [requestingReactivation, setRequestingReactivation] = useState(false);
+  const [shippingCost, setShippingCost] = useState(0);
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(0);
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -41,6 +43,8 @@ export default function Checkout() {
       const methods = s?.allowed_payment_methods?.length ? s.allowed_payment_methods : ['credit_card'];
       setAllowedPaymentMethods(methods);
       setPaymentMethod(methods[0]);
+      setShippingCost(s?.shipping_cost ?? 0);
+      setFreeShippingThreshold(s?.free_shipping_threshold ?? 0);
     }).catch(() => {});
   }, []);
 
@@ -64,7 +68,7 @@ export default function Checkout() {
   }, [addresses, selectedAddressId]);
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.product_price || 0) * (item.quantity || 0), 0);
-  const shipping = subtotal >= 15 ? 0 : 4.99;
+  const shipping = (shippingCost === 0 || (freeShippingThreshold > 0 && subtotal >= freeShippingThreshold)) ? 0 : shippingCost;
   let discount = 0;
   if (appliedCoupon) {
     if (appliedCoupon.discount_type === 'percentage') {
@@ -531,7 +535,12 @@ export default function Checkout() {
               </div>
             )}
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Envío</span>
+              <div>
+                <span className="text-muted-foreground">Envío</span>
+                {shipping > 0 && freeShippingThreshold > 0 && (
+                  <span className="block text-[10px] text-muted-foreground">Gratis desde ${freeShippingThreshold.toFixed(2)}</span>
+                )}
+              </div>
               <span className={shipping === 0 ? 'text-success' : 'text-foreground'}>{shipping === 0 ? 'GRATIS' : `$${shipping.toFixed(2)}`}</span>
             </div>
             <div className="flex justify-between text-base font-bold pt-2 border-t border-border">

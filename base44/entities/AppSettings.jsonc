@@ -67,6 +67,16 @@
       "default": "+50370000000",
       "description": "WhatsApp phone number for support (format: +503XXXXXXXX)"
     },
+    "shipping_cost": {
+      "type": "number",
+      "default": 0,
+      "description": "Costo de envio (0 = envio gratis siempre)"
+    },
+    "free_shipping_threshold": {
+      "type": "number",
+      "default": 0,
+      "description": "Monto minimo del subtotal para que el envio sea gratis (0 = sin umbral)"
+    },
     "updated_by": {
       "type": "string",
       "description": "Email of admin who last updated"
