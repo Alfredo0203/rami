@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import BottomNav from '../components/shop/BottomNav';
 import OrderStatusBadge from '../components/shop/OrderStatusBadge';
-import { Package, ChevronRight, Loader2, AlertTriangle } from 'lucide-react';
+import { Package, ChevronRight, Loader2, AlertTriangle, Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatDateSV } from '@/lib/dateUtils';
 import { motion } from 'framer-motion';
@@ -21,6 +21,17 @@ export default function Orders() {
   const [userEmail, setUserEmail] = useState(null);
   const [userStatus, setUserStatus] = useState(null);
   const [requestingReactivation, setRequestingReactivation] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const STATUS_OPTIONS = [
+    { value: 'all', label: 'Todos' },
+    { value: 'pending', label: 'Pendientes' },
+    { value: 'processing', label: 'Procesando' },
+    { value: 'shipped', label: 'Enviados' },
+    { value: 'delivered', label: 'Entregados' },
+    { value: 'cancelled', label: 'Cancelados' },
+  ];
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -62,10 +73,53 @@ export default function Orders() {
 
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
 
+  const filteredOrders = statusFilter === 'all' ? orders : orders.filter(o => o.status === statusFilter);
+  const activeFilterCount = statusFilter !== 'all' ? 1 : 0;
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 safe-area-top">
-        <h1 className="text-lg font-bold text-foreground">{t('orders_title')}</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-bold text-foreground">{t('orders_title')}</h1>
+          {orders.length > 0 && (
+            <button
+              onClick={() => setShowFilters(s => !s)}
+              className={`relative w-9 h-9 flex items-center justify-center rounded-full transition-colors ${showFilters || activeFilterCount > 0 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground'}`}
+            >
+              <Filter className="w-4 h-4" />
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          )}
+        </div>
+        {showFilters && (
+          <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-2 pt-1 -mx-1 px-1">
+            {STATUS_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => { setStatusFilter(opt.value); }}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
+                  statusFilter === opt.value
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-secondary text-muted-foreground'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+            {activeFilterCount > 0 && (
+              <button
+                onClick={() => setStatusFilter('all')}
+                className="shrink-0 p-1.5 rounded-full bg-destructive/10 text-destructive"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {userStatus === 'deactivated' && (
@@ -100,9 +154,25 @@ export default function Orders() {
           <p className="text-foreground font-semibold text-lg mb-1">{t('orders_empty_title')}</p>
           <p className="text-muted-foreground text-sm">{t('orders_empty_subtitle')}</p>
         </div>
+      ) : filteredOrders.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 px-4">
+          <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mb-3">
+            <Filter className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <p className="text-foreground font-semibold mb-1">No hay pedidos con este filtro</p>
+          <p className="text-muted-foreground text-sm mb-4">Prueba con otro estado</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setStatusFilter('all')}
+            className="rounded-full"
+          >
+            Ver todos los pedidos
+          </Button>
+        </div>
       ) : (
         <div className="px-4 py-3 space-y-3">
-          {orders.map((order, i) => (
+          {filteredOrders.map((order, i) => (
             <motion.div
               key={order.id}
               initial={{ opacity: 0, y: 10 }}
