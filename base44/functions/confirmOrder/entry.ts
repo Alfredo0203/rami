@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { notifyCustomer } from '../../shared/pushNotifications.ts';
 
 /**
  * confirmOrder — llama después del pago exitoso (Stripe o Wompi).
@@ -155,6 +156,19 @@ Deno.serve(async (req) => {
         order,
       });
     } catch (e) { console.error('Error email admin:', e.message); }
+
+    // Notificación push al cliente: pago confirmado
+    if (order.customer_email) {
+      try {
+        await notifyCustomer(
+          base44,
+          order.customer_email,
+          '¡Pago confirmado!',
+          `Tu pedido #${order.order_number} fue confirmado y está siendo procesado.`,
+          '/Orders'
+        );
+      } catch (e) { console.error('Error push cliente:', e?.message || e); }
+    }
 
     return Response.json({ order: updatedOrder });
   } catch (error) {

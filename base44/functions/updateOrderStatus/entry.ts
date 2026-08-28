@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { notifyCustomer } from '../../shared/pushNotifications.ts';
 
 /**
  * updateOrderStatus — cambia el estado de una orden.
@@ -80,6 +81,33 @@ Deno.serve(async (req) => {
         });
       } catch (emailErr) {
         console.error('Error enviando email de estado:', emailErr.message);
+      }
+    }
+
+    // Notificación push al cliente sobre el cambio de estado
+    const pushTitles = {
+      processing: 'Tu pedido está siendo procesado',
+      shipped: 'Tu pedido ha sido enviado',
+      delivered: 'Tu pedido fue entregado',
+      cancelled: 'Tu pedido ha sido cancelado',
+    };
+    const pushContents = {
+      processing: `Hola, tu pedido #${order.order_number} está siendo procesado y pronto será enviado.`,
+      shipped: `¡Tu pedido #${order.order_number} ha sido enviado!${extraFields?.tracking_number ? ` Seguimiento: ${extraFields.tracking_number}` : ''}`,
+      delivered: `¡Tu pedido #${order.order_number} ha sido entregado! Disfruta tu compra.`,
+      cancelled: `Tu pedido #${order.order_number} ha sido cancelado.`,
+    };
+    if (pushTitles[newStatus] && order.customer_email) {
+      try {
+        await notifyCustomer(
+          base44,
+          order.customer_email,
+          pushTitles[newStatus],
+          pushContents[newStatus],
+          '/Orders'
+        );
+      } catch (pushErr) {
+        console.error('Error enviando push de estado:', pushErr?.message || pushErr);
       }
     }
 

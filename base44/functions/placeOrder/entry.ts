@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { notifyAdmins } from '../../shared/pushNotifications.ts';
 
 /**
  * placeOrder — valida stock, crea la orden y descuenta inventario.
@@ -193,6 +194,16 @@ Deno.serve(async (req) => {
      } catch (historyErr) {
        console.error('Error creating history record:', historyErr);
      }
+
+     // Notificación push al admin: nueva orden recibida
+     try {
+      await notifyAdmins(
+        base44,
+        'Nueva orden recibida',
+        `Orden #${order.order_number} • $${Number(order.total).toFixed(2)} • ${paymentMethod === 'cash_on_delivery' ? 'Contra entrega' : 'Pago en línea'}`,
+        '/Admin'
+      );
+     } catch (e) { console.error('Push admin error:', e?.message || e); }
 
     // ── 4. Para pagos en línea (credit_card, wompi), el stock/cupón/carrito
     //     se confirman en confirmOrder tras el pago exitoso.
