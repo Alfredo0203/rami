@@ -566,7 +566,7 @@ export default function Checkout() {
       )}
 
       {/* Place Order */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border px-4 pt-3 pb-4 safe-area-bottom">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border px-4 pt-3 pb-6 safe-area-bottom">
         {paymentMethod === 'cash_on_delivery' && (
           <p className="text-xs text-muted-foreground text-center mb-2">
             💵 Pagarás <span className="font-semibold text-foreground">${total.toFixed(2)}</span> en efectivo al recibir tu pedido
