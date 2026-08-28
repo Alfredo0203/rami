@@ -364,7 +364,7 @@ export default function Checkout() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-36">
+    <div className="min-h-screen bg-background pb-28">
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 py-3 flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="w-11 h-11 flex items-center justify-center bg-secondary rounded-full shrink-0 touch-manipulation active:scale-95 transition-transform">
           <ArrowLeft className="w-5 h-5 text-foreground pointer-events-none" />
@@ -566,32 +566,30 @@ export default function Checkout() {
       )}
 
       {/* Place Order */}
-      <div className="fixed bottom-3 left-0 right-0 z-50 px-4">
-        <div className="bg-card/95 backdrop-blur-lg border border-border rounded-2xl px-4 py-3 max-w-lg mx-auto safe-area-bottom">
-          {paymentMethod === 'cash_on_delivery' && (
-            <p className="text-xs text-muted-foreground text-center mb-2">
-              💵 Pagarás <span className="font-semibold text-foreground">${total.toFixed(2)}</span> en efectivo al recibir tu pedido
-            </p>
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border px-4 pt-3 pb-4 safe-area-bottom">
+        {paymentMethod === 'cash_on_delivery' && (
+          <p className="text-xs text-muted-foreground text-center mb-2">
+            💵 Pagarás <span className="font-semibold text-foreground">${total.toFixed(2)}</span> en efectivo al recibir tu pedido
+          </p>
+        )}
+        {paymentMethod === 'wompi' && (
+          <p className="text-xs text-muted-foreground text-center mb-2">
+            🔒 Pago seguro · Cifrado SSL
+          </p>
+        )}
+        <Button
+          onClick={() => paymentMethod === 'wompi' ? handleWompiClick() : placeOrderMutation.mutate()}
+          disabled={placeOrderMutation.isPending || wompiLoading || !selectedAddressId || !paymentMethod}
+          className="w-full bg-primary text-primary-foreground font-bold h-11 rounded-full text-base max-w-lg mx-auto block"
+        >
+          {placeOrderMutation.isPending || wompiLoading ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : paymentMethod === 'wompi' ? (
+            '💳 Pagar con Tarjeta'
+          ) : (
+            'Finalizar Compra'
           )}
-          {paymentMethod === 'wompi' && (
-            <p className="text-xs text-muted-foreground text-center mb-2">
-              🔒 Pago seguro · Cifrado SSL
-            </p>
-          )}
-          <Button
-            onClick={() => paymentMethod === 'wompi' ? handleWompiClick() : placeOrderMutation.mutate()}
-            disabled={placeOrderMutation.isPending || wompiLoading || !selectedAddressId || !paymentMethod}
-            className="w-full bg-primary text-primary-foreground font-bold h-11 rounded-full text-base"
-          >
-            {placeOrderMutation.isPending || wompiLoading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : paymentMethod === 'wompi' ? (
-              '💳 Pagar con Tarjeta'
-            ) : (
-              'Finalizar Compra'
-            )}
-          </Button>
-        </div>
+        </Button>
       </div>
     </div>
   );
