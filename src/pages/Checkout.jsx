@@ -366,7 +366,7 @@ export default function Checkout() {
   return (
     <div className="min-h-screen bg-background pb-28">
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 py-3 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="w-11 h-11 flex items-center justify-center bg-secondary rounded-full shrink-0 touch-manipulation active:scale-95 transition-transform">
+        <button onClick={() => navigate(createPageUrl('Cart'))} className="w-11 h-11 flex items-center justify-center bg-secondary rounded-full shrink-0 relative z-10 touch-manipulation active:scale-95 transition-transform">
           <ArrowLeft className="w-5 h-5 text-foreground pointer-events-none" />
         </button>
         <h1 className="text-lg font-bold text-foreground">Finalizar Compra</h1>
