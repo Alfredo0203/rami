@@ -399,8 +399,8 @@ export default function ProductDetail() {
 
       {/* Top bar */}
       <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg flex items-center justify-between px-4 safe-area-top">
-        <button onClick={handleBack} className="p-2 bg-secondary rounded-full">
-          <ArrowLeft className="w-5 h-5 text-foreground" />
+        <button onClick={handleBack} className="p-2 bg-secondary rounded-full touch-manipulation">
+          <ArrowLeft className="w-5 h-5 text-foreground pointer-events-none" />
         </button>
         <div className="flex gap-2">
           <ProductShareButton product={product} productUrl={productUrl} />
@@ -408,13 +408,13 @@ export default function ProductDetail() {
             <button
               onClick={() => toggleWishlistMutation.mutate()}
               disabled={toggleWishlistMutation.isPending}
-              className="p-2 bg-secondary rounded-full disabled:opacity-50"
+              className="p-2 bg-secondary rounded-full disabled:opacity-50 touch-manipulation"
             >
-              <Heart className={`w-5 h-5 transition-colors ${isWishlisted ? 'fill-sale text-sale' : 'text-foreground'}`} />
+              <Heart className={`w-5 h-5 transition-colors ${isWishlisted ? 'fill-sale text-sale' : 'text-foreground'} pointer-events-none`} />
             </button>
           )}
-          <button onClick={() => navigate(createPageUrl('Cart'))} className="p-2 bg-secondary rounded-full relative">
-            <ShoppingCart className="w-5 h-5 text-foreground" />
+          <button onClick={() => navigate(createPageUrl('Cart'))} className="p-2 bg-secondary rounded-full relative touch-manipulation">
+            <ShoppingCart className="w-5 h-5 text-foreground pointer-events-none" />
             {cartCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[9px] font-bold rounded-full flex items-center justify-center">
                 {cartCount}

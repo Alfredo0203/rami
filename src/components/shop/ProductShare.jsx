@@ -27,10 +27,10 @@ export default function ProductShareButton({ product, productUrl }) {
   return (
     <button
       onClick={handleShare}
-      className="p-2 bg-secondary rounded-full"
+      className="p-2 bg-secondary rounded-full touch-manipulation"
       title="Compartir"
     >
-      <Share2 className="w-5 h-5 text-foreground" />
+      <Share2 className="w-5 h-5 text-foreground pointer-events-none" />
     </button>
   );
 }
