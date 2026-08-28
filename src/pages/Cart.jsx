@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import CartItemCard from '../components/shop/CartItemCard';
-import { ArrowLeft, ShoppingBag, Loader2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, Loader2, AlertTriangle, CheckCircle2, Circle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AnimatePresence } from 'framer-motion';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -16,6 +16,7 @@ export default function Cart() {
 
   const [shippingCost, setShippingCost] = useState(0);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(0);
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   useEffect(() => {
     base44.entities.AppSettings.filter({ key: 'global' }).then(results => {
@@ -32,6 +33,33 @@ export default function Cart() {
     queryFn: () => isGuest || !user?.email ? [] : base44.entities.CartItem.filter({ created_by: user.email }),
     enabled: !isGuest && !!user?.email,
   });
+
+  // Inicializar todos los items como seleccionados cuando carga el carrito
+  useEffect(() => {
+    if (cartItems.length > 0 && selectedIds.size === 0) {
+      setSelectedIds(new Set(cartItems.map(i => i.id)));
+    }
+  }, [cartItems.length]);
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === cartItems.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(cartItems.map(i => i.id)));
+    }
+  };
+
+  const selectedItems = useMemo(() => cartItems.filter(i => selectedIds.has(i.id)), [cartItems, selectedIds]);
+  const allSelected = cartItems.length > 0 && selectedIds.size === cartItems.length;
 
   const updateQtyMutation = useMutation({
     mutationFn: async ({ item, newQty }) => {
@@ -103,12 +131,12 @@ export default function Cart() {
     return map;
   }, [cartItems, catalogData, variantsData]);
 
-  const hasStockIssues = cartItems.some(item => {
+  const hasStockIssues = selectedItems.some(item => {
     const info = stockInfoMap[item.id];
     return info && info.available !== Infinity && item.quantity > info.available;
   });
 
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.product_price || 0) * (item.quantity || 0), 0);
+  const subtotal = selectedItems.reduce((sum, item) => sum + (item.product_price || 0) * (item.quantity || 0), 0);
   const shipping = (shippingCost === 0 || (freeShippingThreshold > 0 && subtotal >= freeShippingThreshold)) ? 0 : shippingCost;
   const total = subtotal + shipping;
 
@@ -178,11 +206,20 @@ export default function Cart() {
                 <p className="text-xs text-destructive font-medium">Algunos productos tienen menos stock del que pediste. Ajusta las cantidades antes de continuar.</p>
               </div>
             )}
+            <button
+              onClick={toggleSelectAll}
+              className="flex items-center gap-2 text-sm text-primary font-medium py-1"
+            >
+              {allSelected ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5 text-muted-foreground" />}
+              {allSelected ? 'Deseleccionar todo' : 'Seleccionar todo'}
+            </button>
             <AnimatePresence>
               {cartItems.map(item => (
                 <CartItemCard
                   key={item.id}
                   item={item}
+                  selected={selectedIds.has(item.id)}
+                  onToggleSelect={() => toggleSelect(item.id)}
                   onUpdateQty={(item, newQty) => updateQtyMutation.mutate({ item, newQty })}
                   onRemove={(item) => removeMutation.mutate(item)}
                   stockInfo={stockInfoMap[item.id]}
@@ -218,11 +255,11 @@ export default function Cart() {
       {cartItems.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border px-4 py-3 safe-area-bottom">
           <Button
-            onClick={() => navigate(createPageUrl('Checkout'))}
-            disabled={hasStockIssues}
+            onClick={() => navigate(createPageUrl('Checkout'), { state: { selectedItemIds: [...selectedIds] } })}
+            disabled={hasStockIssues || selectedIds.size === 0}
             className="w-full bg-primary text-primary-foreground font-bold h-12 rounded-full text-base max-w-lg mx-auto block disabled:opacity-50"
           >
-            Ir a pagar · ${total.toFixed(2)}
+            {selectedIds.size === 0 ? 'Selecciona productos' : `Ir a pagar ${selectedIds.size} · ${total.toFixed(2)}`}
           </Button>
         </div>
       )}

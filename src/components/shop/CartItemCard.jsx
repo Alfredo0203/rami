@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Minus, Plus, Trash2, AlertTriangle } from 'lucide-react';
+import { Minus, Plus, Trash2, AlertTriangle, CheckCircle2, Circle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
-export default function CartItemCard({ item, onUpdateQty, onRemove, stockInfo }) {
+export default function CartItemCard({ item, selected, onToggleSelect, onUpdateQty, onRemove, stockInfo }) {
   const navigate = useNavigate();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -32,8 +32,13 @@ export default function CartItemCard({ item, onUpdateQty, onRemove, stockInfo })
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 20 }}
-      className="bg-card rounded-xl p-3 flex gap-3 shadow-sm"
+      className={`bg-card rounded-xl p-3 flex gap-2 shadow-sm transition-all ${selected ? 'ring-1 ring-primary' : 'opacity-90'}`}
     >
+      <button onClick={onToggleSelect} className="flex-shrink-0 self-center p-1 focus:outline-none">
+        {selected
+          ? <CheckCircle2 className="w-6 h-6 text-primary" />
+          : <Circle className="w-6 h-6 text-muted-foreground" />}
+      </button>
       <button onClick={goToProduct} className="flex-shrink-0 focus:outline-none">
         <img
           src={item.product_image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200'}

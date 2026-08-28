@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { ArrowLeft, MapPin, CreditCard, Banknote, Loader2, Plus, Ticket, Shield, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import StripePaymentModal from '@/components/shop/StripePaymentModal';
 
 export default function Checkout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [userStatus, setUserStatus] = useState(null);
@@ -51,11 +52,19 @@ export default function Checkout() {
     }).catch(() => {});
   }, []);
 
-  const { data: cartItems = [] } = useQuery({
+  const { data: rawCartItems = [] } = useQuery({
     queryKey: ['cart', user?.email],
     queryFn: () => !user?.email ? [] : base44.entities.CartItem.filter({ created_by: user.email }),
     enabled: !!user?.email,
   });
+
+  // Filtrar solo los items seleccionados en el carrito (si vienen IDs desde Cart)
+  const selectedItemIds = location.state?.selectedItemIds;
+  const cartItems = useMemo(() => {
+    if (!selectedItemIds || !Array.isArray(selectedItemIds)) return rawCartItems;
+    const idSet = new Set(selectedItemIds);
+    return rawCartItems.filter(i => idSet.has(i.id));
+  }, [rawCartItems, selectedItemIds]);
 
   const { data: addresses = [], isLoading: loadingAddresses } = useQuery({
     queryKey: ['addresses', user?.email],
