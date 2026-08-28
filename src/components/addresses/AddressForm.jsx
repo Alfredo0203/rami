@@ -2,10 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MapPin, Navigation } from 'lucide-react';
 import { getDepartments, getMunicipalities } from '@/lib/territorial';
+import { toast } from 'sonner';
 
 const COUNTRY_CODE = 'SV';
+
+// Reverse geocode GPS coordinates using OpenStreetMap Nominatim (free, no API key)
+async function reverseGeocode(lat, lon) {
+  const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
+  const res = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+  if (!res.ok) throw new Error('No se pudo obtener la dirección');
+  const data = await res.json();
+  return data?.address || {};
+}
+
+// Match a string to a list of known names (case-insensitive, trimmed)
+function matchName(value, names) {
+  if (!value) return '';
+  const v = value.trim().toLowerCase();
+  return names.find(n => n.toLowerCase() === v) || '';
+}
 
 const EMPTY_FORM = {
   label: 'Casa',
@@ -82,11 +99,65 @@ function SelectField({ value, onChange, disabled, placeholder, options }) {
 export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
   const [form, setForm] = useState({ ...EMPTY_FORM, ...initial });
   const [errors, setErrors] = useState({});
+  const [locating, setLocating] = useState(false);
 
   const departments = getDepartments(COUNTRY_CODE);
+  const departmentNames = departments.map(d => d.name);
   const municipalities = form.departamento
     ? getMunicipalities(COUNTRY_CODE, form.departamento)
     : [];
+
+  // GPS: get coordinates and reverse-geocode to fill the address fields
+  const handleUseLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Tu dispositivo no soporta GPS');
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const addr = await reverseGeocode(latitude, longitude);
+
+          // Match departamento to known SV list
+          const matchedDept = matchName(addr.state, departmentNames);
+          let matchedMuni = '';
+          if (matchedDept) {
+            const muniNames = getMunicipalities(COUNTRY_CODE, matchedDept);
+            matchedMuni = matchName(addr.city || addr.town || addr.village || addr.county, muniNames);
+          }
+
+          setForm(f => ({
+            ...f,
+            departamento: matchedDept || f.departamento,
+            municipio: matchedMuni || f.municipio,
+            colonia: addr.suburb || addr.neighbourhood || addr.hamlet || addr.quarter || f.colonia,
+            street: addr.road || addr.pedestrian || addr.footway || f.street,
+            house_number: addr.house_number || f.house_number,
+            reference: [
+              addr.neighbourhood && addr.neighbourhood !== (addr.suburb || '') ? addr.neighbourhood : '',
+              addr.city && addr.city !== matchedMuni ? addr.city : '',
+            ].filter(Boolean).join(', ') || f.reference,
+          }));
+          setErrors({});
+          toast.success('Ubicación detectada. Revisa los campos antes de guardar.');
+        } catch (err) {
+          toast.error(err.message || 'Error al obtener tu dirección');
+        } finally {
+          setLocating(false);
+        }
+      },
+      (err) => {
+        setLocating(false);
+        const msg = err.code === 1
+          ? 'Permiso de ubicación denegado. Actívalo en tu navegador.'
+          : 'No se pudo obtener tu ubicación. Inténtalo de nuevo.';
+        toast.error(msg);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
 
   // Reset municipio when departamento changes
   useEffect(() => {
@@ -111,6 +182,26 @@ export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
       <Field label="País">
         <Input value="El Salvador" disabled className="h-9 text-sm bg-muted" />
       </Field>
+
+      {/* Usar mi ubicación (GPS) */}
+      <button
+        type="button"
+        onClick={handleUseLocation}
+        disabled={locating}
+        className="w-full flex items-center justify-center gap-2 h-10 rounded-lg border border-primary/30 bg-primary/5 text-primary text-sm font-medium active:scale-95 transition-transform touch-manipulation disabled:opacity-60"
+      >
+        {locating ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Detectando ubicación...
+          </>
+        ) : (
+          <>
+            <Navigation className="w-4 h-4" />
+            Usar mi ubicación (GPS)
+          </>
+        )}
+      </button>
 
       {/* Nombre + Apellido */}
       <div className="grid grid-cols-2 gap-3">
