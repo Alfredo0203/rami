@@ -16,6 +16,22 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'orderId y amount son requeridos' }, { status: 400 });
     }
 
+    // Buscar la orden para obtener los items y construir la descripción de la compra
+    let descripcionProducto = `Orden ${orderNumber || orderId}`;
+    let urlImagenProducto = '';
+    try {
+      const order = await base44.asServiceRole.entities.Order.get(orderId);
+      if (order && order.items && order.items.length > 0) {
+        const itemsText = order.items
+          .map((item) => `${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''} x${item.quantity} - $${(item.price * item.quantity).toFixed(2)}`)
+          .join(', ');
+        descripcionProducto = itemsText.substring(0, 450);
+        urlImagenProducto = order.items[0]?.product_image || '';
+      }
+    } catch (e) {
+      console.warn('No se pudo obtener la orden para descripción:', e.message);
+    }
+
     const clientId = Deno.env.get('WOMPI_CLIENT_ID');
     const clientSecret = Deno.env.get('WOMPI_CLIENT_SECRET');
     const appId = Deno.env.get('BASE44_APP_ID');
@@ -61,6 +77,10 @@ Deno.serve(async (req) => {
         identificadorEnlaceComercio: `ORDER-${orderId}`,
         monto: Number(amount),
         nombreProducto: `Orden ${orderNumber || orderId}`,
+        infoProducto: {
+          descripcionProducto: descripcionProducto,
+          urlImagenProducto: urlImagenProducto || undefined,
+        },
         formaPago: {
           permitirTarjetaCreditoDebido: true,
           permitirPagoConPuntoAgricola: false,
