@@ -17,7 +17,7 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [userStatus, setUserStatus] = useState(null);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
-  const [allowedPaymentMethods, setAllowedPaymentMethods] = useState(['credit_card']);
+  const [allowedPaymentMethods, setAllowedPaymentMethods] = useState(['wompi']);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [user, setUser] = useState(null);
   const [couponCode, setCouponCode] = useState('');
@@ -40,9 +40,12 @@ export default function Checkout() {
     }).catch(() => {});
     base44.entities.AppSettings.filter({ key: 'global' }).then(results => {
       const s = results[0];
-      const methods = s?.allowed_payment_methods?.length ? s.allowed_payment_methods : ['credit_card'];
-      setAllowedPaymentMethods(methods);
-      setPaymentMethod(methods[0]);
+      const rawMethods = s?.allowed_payment_methods?.length ? s.allowed_payment_methods : ['wompi'];
+      // Ocultar Stripe (credit_card) por ahora — usar Wompi como tarjeta
+      const methods = rawMethods.filter(m => m !== 'credit_card');
+      const finalMethods = methods.length ? methods : ['wompi'];
+      setAllowedPaymentMethods(finalMethods);
+      setPaymentMethod(finalMethods[0]);
       setShippingCost(s?.shipping_cost ?? 0);
       setFreeShippingThreshold(s?.free_shipping_threshold ?? 0);
     }).catch(() => {});
@@ -446,8 +449,7 @@ export default function Checkout() {
           </div>
           <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-2">
             {[
-              { value: 'credit_card', icon: CreditCard, label: 'Tarjeta de Crédito / Débito' },
-              { value: 'wompi', icon: Shield, label: 'Wompi', description: 'Pago seguro en línea con Wompi' },
+              { value: 'wompi', icon: CreditCard, label: 'Tarjeta de Crédito / Débito', description: 'Pago seguro en línea' },
               { value: 'cash_on_delivery', icon: Banknote, label: 'Efectivo', description: 'Pagas en efectivo al recibir tu pedido' },
             ].filter(m => allowedPaymentMethods.includes(m.value)).map(method => {
               const Icon = method.icon;
@@ -570,14 +572,9 @@ export default function Checkout() {
             💵 Pagarás <span className="font-semibold text-foreground">${total.toFixed(2)}</span> en efectivo al recibir tu pedido
           </p>
         )}
-        {paymentMethod === 'credit_card' && (
-          <p className="text-xs text-muted-foreground text-center mb-2">
-            🔒 Pago seguro · Cifrado SSL · Estándar PCI DSS
-          </p>
-        )}
         {paymentMethod === 'wompi' && (
           <p className="text-xs text-muted-foreground text-center mb-2">
-            🔒 Pago seguro procesado por <span className="font-semibold text-foreground">Wompi</span>
+            🔒 Pago seguro · Cifrado SSL
           </p>
         )}
         <Button
@@ -587,10 +584,8 @@ export default function Checkout() {
          >
            {placeOrderMutation.isPending || wompiLoading ? (
              <Loader2 className="w-5 h-5 animate-spin" />
-           ) : paymentMethod === 'credit_card' ? (
-             '💳 Pagar con Tarjeta'
            ) : paymentMethod === 'wompi' ? (
-             '🛡️ Pagar con Wompi'
+             '💳 Pagar con Tarjeta'
            ) : (
              'Finalizar Compra'
            )}
