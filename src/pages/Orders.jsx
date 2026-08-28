@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import BottomNav from '../components/shop/BottomNav';
 import OrderStatusBadge from '../components/shop/OrderStatusBadge';
-import { Package, ChevronRight, Loader2, AlertTriangle, Filter, X } from 'lucide-react';
+import { Package, ChevronRight, Loader2, AlertTriangle, Filter, X, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatDateSV } from '@/lib/dateUtils';
 import { motion } from 'framer-motion';
@@ -81,19 +81,32 @@ export default function Orders() {
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 safe-area-top">
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-bold text-foreground">{t('orders_title')}</h1>
-          {orders.length > 0 && (
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowFilters(s => !s)}
-              className={`relative w-9 h-9 flex items-center justify-center rounded-full transition-colors ${showFilters || activeFilterCount > 0 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground'}`}
+              onClick={() => navigate(createPageUrl('Cart'))}
+              className="relative w-9 h-9 flex items-center justify-center rounded-full bg-secondary text-foreground active:scale-95 transition-transform"
             >
-              <Filter className="w-4 h-4" />
-              {activeFilterCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full flex items-center justify-center">
-                  {activeFilterCount}
+              <ShoppingCart className="w-4 h-4" />
+              {cartCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[9px] font-bold rounded-full flex items-center justify-center">
+                  {cartCount}
                 </span>
               )}
             </button>
-          )}
+            {orders.length > 0 && (
+              <button
+                onClick={() => setShowFilters(s => !s)}
+                className={`relative w-9 h-9 flex items-center justify-center rounded-full transition-colors ${showFilters || activeFilterCount > 0 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground'}`}
+              >
+                <Filter className="w-4 h-4" />
+                {activeFilterCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full flex items-center justify-center">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+            )}
+          </div>
         </div>
         {showFilters && (
           <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-2 pt-1 -mx-1 px-1">
