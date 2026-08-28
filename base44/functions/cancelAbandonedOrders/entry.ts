@@ -11,15 +11,17 @@ Deno.serve(async (req) => {
 
     const cutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString(); // hace 30 min
 
-    // Obtener órdenes pendientes de pago de TARJETA solamente
+    // Obtener todas las órdenes pendientes de pago (tarjeta, wompi, paypal, etc.)
     // Efectivo (cash_on_delivery) nunca debe cancelarse automáticamente
     const pendingOrders = await base44.asServiceRole.entities.Order.filter({
       payment_status: 'pending_payment',
       status: 'pending',
-      payment_method: 'credit_card',
     });
 
-    const abandoned = pendingOrders.filter(o => o.created_date < cutoff);
+    const abandoned = pendingOrders.filter(o =>
+      o.created_date < cutoff &&
+      o.payment_method !== 'cash_on_delivery'
+    );
 
     let cancelled = 0;
     for (const order of abandoned) {

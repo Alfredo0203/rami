@@ -38,9 +38,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: `No se puede cancelar un pedido en estado "${order.status}"` }, { status: 409 });
     }
 
-    const isOnlinePayment = order.payment_method === 'credit_card' || order.payment_method === 'paypal';
+    const isOnlinePayment = ['credit_card', 'paypal', 'wompi'].includes(order.payment_method);
 
-    // Para pagos con tarjeta: verificar ventana de 24 horas
+    // Para pagos en línea (tarjeta, paypal, wompi): verificar ventana de 24 horas
     if (isOnlinePayment) {
       const orderDate = new Date(order.created_date);
       const now = new Date();
@@ -52,27 +52,35 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Reembolso automático via Stripe si el pago fue procesado
+    // Reembolso: Stripe para credit_card/paypal; manual para Wompi (sin API de reembolso)
     let refundId = null;
-    if (isOnlinePayment && order.payment_status === 'paid' && order.payment_transaction_id) {
-      const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
-      try {
-        const refund = await stripe.refunds.create({
-          payment_intent: order.payment_transaction_id,
-          reason: 'requested_by_customer',
-          metadata: {
-            order_id: orderId,
-            order_number: order.order_number,
-            base44_app_id: Deno.env.get('BASE44_APP_ID'),
-          }
-        });
-        refundId = refund.id;
-        console.log(`Reembolso creado: ${refundId} para orden ${order.order_number}`);
-      } catch (stripeErr) {
-        console.error('Error creando reembolso en Stripe:', stripeErr.message);
-        return Response.json({
-          error: 'No se pudo procesar el reembolso. Contacta soporte.'
-        }, { status: 502 });
+    let manualRefundNeeded = false;
+
+    if (order.payment_status === 'paid') {
+      if (order.payment_method === 'wompi') {
+        // Wompi no tiene API de reembolso — marcar para reembolso manual
+        manualRefundNeeded = true;
+        console.log(`Orden ${order.order_number}: reembolso Wompi manual requerido (tx: ${order.payment_transaction_id})`);
+      } else if (isOnlinePayment && order.payment_transaction_id) {
+        const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
+        try {
+          const refund = await stripe.refunds.create({
+            payment_intent: order.payment_transaction_id,
+            reason: 'requested_by_customer',
+            metadata: {
+              order_id: orderId,
+              order_number: order.order_number,
+              base44_app_id: Deno.env.get('BASE44_APP_ID'),
+            }
+          });
+          refundId = refund.id;
+          console.log(`Reembolso creado: ${refundId} para orden ${order.order_number}`);
+        } catch (stripeErr) {
+          console.error('Error creando reembolso en Stripe:', stripeErr.message);
+          return Response.json({
+            error: 'No se pudo procesar el reembolso. Contacta soporte.'
+          }, { status: 502 });
+        }
       }
     }
 
@@ -80,9 +88,14 @@ Deno.serve(async (req) => {
     // para evitar doble restauración.
 
     // Actualizar orden
+    const internalNotes = refundId
+      ? `Reembolso Stripe: ${refundId}`
+      : manualRefundNeeded
+        ? `REEMBOLSO WOMPI PENDIENTE — procesar manualmente en panel Wompi (tx: ${order.payment_transaction_id || 'N/A'})`
+        : undefined;
     const updateData = {
       status: 'cancelled',
-      ...(refundId ? { internal_notes: `Reembolso Stripe: ${refundId}` } : {}),
+      ...(internalNotes ? { internal_notes: internalNotes } : {}),
     };
     await base44.asServiceRole.entities.Order.update(orderId, updateData);
 
@@ -93,15 +106,19 @@ Deno.serve(async (req) => {
       status: 'cancelled',
       timestamp: new Date().toISOString(),
       notes: refundId
-        ? `Cancelado por cliente. Reembolso procesado: ${refundId}`
-        : 'Cancelado por cliente',
+        ? `Cancelado por cliente. Reembolso Stripe procesado: ${refundId}`
+        : manualRefundNeeded
+          ? `Cancelado por cliente. Reembolso Wompi pendiente (manual).`
+          : 'Cancelado por cliente',
     });
 
     // Email de notificación al cliente
     try {
       const refundBlock = refundId
         ? `<div style="background:#fef3c7;border-left:4px solid #f59e0b;border-radius:6px;padding:14px 16px;margin:20px 0;"><p style="margin:0;color:#92400e;font-size:14px;line-height:1.5;"><strong>Reembolso procesado</strong><br>Tu reembolso ha sido procesado y se reflejará en tu tarjeta en 5-10 días hábiles.</p></div>`
-        : '';
+        : manualRefundNeeded
+          ? `<div style="background:#fef3c7;border-left:4px solid #f59e0b;border-radius:6px;padding:14px 16px;margin:20px 0;"><p style="margin:0;color:#92400e;font-size:14px;line-height:1.5;"><strong>Reembolso en proceso</strong><br>Tu reembolso está siendo procesado manualmente y se reflejará en tu cuenta en los próximos días hábiles.</p></div>`
+          : '';
       const customerName = order.customer_name || 'cliente';
       const total = Number(order.total).toFixed(2);
       const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head><body style="margin:0;padding:0;background-color:#f4f4f5;font-family:'Inter',Arial,sans-serif;">
@@ -129,7 +146,7 @@ ${refundBlock}
 
 Hola ${customerName},
 
-Hemos confirmado la cancelacion de tu pedido #${order.order_number} por un total de $${total}.${refundId ? '\n\nTu reembolso ha sido procesado y se reflejara en tu tarjeta en 5-10 dias habiles.' : ''}
+Hemos confirmado la cancelacion de tu pedido #${order.order_number} por un total de $${total}.${refundId ? '\n\nTu reembolso ha sido procesado y se reflejara en tu tarjeta en 5-10 dias habiles.' : manualRefundNeeded ? '\n\nTu reembolso esta siendo procesado manualmente y se reflejara en tu cuenta en los proximos dias habiles.' : ''}
 
 Si tienes alguna pregunta, no dudes en contactarnos a somosrami@gmail.com.`;
 
@@ -158,7 +175,7 @@ Si tienes alguna pregunta, no dudes en contactarnos a somosrami@gmail.com.`;
 <tr><td style="padding:6px 0;color:#71717a;">Cliente</td><td style="text-align:right;padding:6px 0;color:#18181b;font-weight:600;">${customerName}</td></tr>
 <tr><td style="padding:6px 0;color:#71717a;">Email</td><td style="text-align:right;padding:6px 0;color:#18181b;">${order.customer_email || ''}</td></tr>
 <tr><td style="padding:6px 0;color:#71717a;">Método de pago</td><td style="text-align:right;padding:6px 0;color:#18181b;">${order.payment_method || 'N/A'}</td></tr>
-${refundId ? `<tr><td style="padding:6px 0;color:#71717a;">Reembolso</td><td style="text-align:right;padding:6px 0;color:#18181b;">Sí (Stripe: ${refundId})</td></tr>` : ''}
+${refundId ? `<tr><td style="padding:6px 0;color:#71717a;">Reembolso</td><td style="text-align:right;padding:6px 0;color:#18181b;">Sí (Stripe: ${refundId})</td></tr>` : manualRefundNeeded ? `<tr><td style="padding:6px 0;color:#71717a;">Reembolso</td><td style="text-align:right;padding:6px 0;color:#dc2626;font-weight:600;">PENDIENTE MANUAL (Wompi)</td></tr>` : ''}
 <tr><td style="padding:10px 0 0;font-size:16px;font-weight:700;color:#18181b;border-top:1px solid #e4e4e7;">Total</td><td style="padding:10px 0 0;text-align:right;font-size:16px;font-weight:700;color:#3894EF;border-top:1px solid #e4e4e7;">$${total}</td></tr>
 </table>
 <p style="color:#71717a;font-size:13px;margin:16px 0 0;">Revisa los detalles en el panel de administración.</p>
@@ -174,7 +191,7 @@ Orden: #${order.order_number}
 Cliente: ${customerName}
 Email: ${order.customer_email || ''}
 Metodo de pago: ${order.payment_method || 'N/A'}
-${refundId ? `Reembolso: Si (Stripe: ${refundId})\n` : ''}Total: $${total}
+${refundId ? `Reembolso: Si (Stripe: ${refundId})\n` : manualRefundNeeded ? `Reembolso: PENDIENTE MANUAL (Wompi tx: ${order.payment_transaction_id || 'N/A'})\n` : ''}Total: $${total}
 
 Revisa los detalles en el panel de administracion.`;
 
@@ -191,6 +208,7 @@ Revisa los detalles en el panel de administracion.`;
     return Response.json({
       success: true,
       refunded: !!refundId,
+      manual_refund_pending: manualRefundNeeded,
       refund_id: refundId,
     });
   } catch (error) {

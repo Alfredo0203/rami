@@ -72,6 +72,7 @@
         "credit_card",
         "paypal",
         "apple_pay",
+        "wompi",
         "cash_on_delivery"
       ],
       "default": "credit_card"
@@ -88,7 +89,7 @@
     },
     "payment_transaction_id": {
       "type": "string",
-      "description": "Transaction ID from the payment gateway (e.g. Stripe charge ID)"
+      "description": "Transaction ID from the payment gateway (e.g. Stripe charge ID, Wompi transaction ID)"
     },
     "shipping_address": {
       "type": "object",
