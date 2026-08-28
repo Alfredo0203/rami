@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import BottomNav from '../components/shop/BottomNav';
 import OrderStatusBadge from '../components/shop/OrderStatusBadge';
@@ -67,8 +67,9 @@ export default function Orders() {
   }, [queryClient, userEmail]);
 
   const { data: cartItems = [] } = useQuery({
-    queryKey: ['cart'],
-    queryFn: () => base44.entities.CartItem.list(),
+    queryKey: ['cart', userEmail],
+    queryFn: () => base44.entities.CartItem.filter({ created_by: userEmail }),
+    enabled: !!userEmail,
   });
 
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
@@ -82,17 +83,17 @@ export default function Orders() {
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-bold text-foreground">{t('orders_title')}</h1>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => navigate(createPageUrl('Cart'))}
-              className="relative w-9 h-9 flex items-center justify-center rounded-full bg-secondary text-foreground active:scale-95 transition-transform"
+            <Link
+              to={createPageUrl('Cart')}
+              className="relative p-2.5 bg-secondary rounded-full active:scale-95 transition-transform"
             >
-              <ShoppingCart className="w-4 h-4" />
+              <ShoppingCart className="w-5 h-5 text-foreground" />
               {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[9px] font-bold rounded-full flex items-center justify-center">
-                  {cartCount}
+                <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}
-            </button>
+            </Link>
             {orders.length > 0 && (
               <button
                 onClick={() => setShowFilters(s => !s)}
