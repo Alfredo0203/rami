@@ -398,8 +398,8 @@ export default function ProductDetail() {
       )}
 
       {/* Top bar */}
-      <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg flex items-center justify-between px-4 safe-area-top">
-        <button onClick={handleBack} className="p-2 bg-secondary rounded-full touch-manipulation">
+      <div className="sticky top-0 z-[60] bg-card/80 backdrop-blur-lg flex items-center justify-between px-4 safe-area-top">
+        <button onClick={handleBack} className="w-11 h-11 flex items-center justify-center bg-secondary rounded-full shrink-0 relative z-10 touch-manipulation active:scale-95 transition-transform">
           <ArrowLeft className="w-5 h-5 text-foreground pointer-events-none" />
         </button>
         <div className="flex gap-2">
@@ -408,12 +408,12 @@ export default function ProductDetail() {
             <button
               onClick={() => toggleWishlistMutation.mutate()}
               disabled={toggleWishlistMutation.isPending}
-              className="p-2 bg-secondary rounded-full disabled:opacity-50 touch-manipulation"
+              className="w-11 h-11 flex items-center justify-center bg-secondary rounded-full shrink-0 relative z-10 disabled:opacity-50 touch-manipulation active:scale-95 transition-transform"
             >
               <Heart className={`w-5 h-5 transition-colors ${isWishlisted ? 'fill-sale text-sale' : 'text-foreground'} pointer-events-none`} />
             </button>
           )}
-          <button onClick={() => navigate(createPageUrl('Cart'))} className="p-2 bg-secondary rounded-full relative touch-manipulation">
+          <button onClick={() => navigate(createPageUrl('Cart'))} className="w-11 h-11 flex items-center justify-center bg-secondary rounded-full shrink-0 relative z-10 touch-manipulation active:scale-95 transition-transform">
             <ShoppingCart className="w-5 h-5 text-foreground pointer-events-none" />
             {cartCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[9px] font-bold rounded-full flex items-center justify-center">
