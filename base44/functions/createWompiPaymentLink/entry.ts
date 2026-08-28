@@ -61,6 +61,13 @@ Deno.serve(async (req) => {
         identificadorEnlaceComercio: `ORDER-${orderId}`,
         monto: Number(amount),
         nombreProducto: `Orden ${orderNumber || orderId}`,
+        formaPago: {
+          permitirTarjetaCreditoDebido: true,
+          permitirPagoConPuntoAgricola: false,
+          permitirPagoEnCuotasAgricola: false,
+          permitirPagoEnBitcoin: false,
+          permitePagoQuickPay: false,
+        },
         configuracion: {
           urlRedirect: redirectUrl,
           urlRetorno: returnUrl,
