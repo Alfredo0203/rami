@@ -129,12 +129,19 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 4. Limpiar carrito
+    // 4. Limpiar carrito — solo los items que fueron parte de esta orden
     try {
       if (user?.email) {
         const cartItems = await base44.asServiceRole.entities.CartItem.filter({ created_by: user.email });
-        for (const ci of cartItems) {
-          await base44.asServiceRole.entities.CartItem.delete(ci.id);
+        for (const orderItem of order.items) {
+          // Buscar el cart item que coincide con product_id y variant_id
+          const matching = cartItems.find(ci =>
+            ci.product_id === orderItem.product_id &&
+            (ci.variant_id || null) === (orderItem.variant_id || null)
+          );
+          if (matching) {
+            await base44.asServiceRole.entities.CartItem.delete(matching.id);
+          }
         }
       }
     } catch (cartErr) {

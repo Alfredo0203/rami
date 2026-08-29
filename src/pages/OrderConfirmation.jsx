@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { CheckCircle2, Package, ArrowRight, Loader2 } from 'lucide-react';
@@ -13,6 +13,7 @@ export default function OrderConfirmation() {
   const orderId = urlParams.get('id');
   const paymentParam = urlParams.get('payment');
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', orderId],
@@ -28,7 +29,14 @@ export default function OrderConfirmation() {
       base44.functions.invoke('confirmOrder', {
         orderId,
         paymentTransactionId: method === 'wompi' ? `wompi-${orderId}` : undefined,
-      }).catch(console.error);
+      })
+        .then(() => {
+          // Invalidar cache del carrito para que se refleje la limpieza
+          queryClient.invalidateQueries({ queryKey: ['cart'] });
+          queryClient.invalidateQueries({ queryKey: ['orders'] });
+          queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
+        })
+        .catch(console.error);
     }
   }, [paymentParam, orderId, order]);
 
