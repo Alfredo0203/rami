@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
         nombreProducto: `Orden ${orderNumber || orderId}`,
         infoProducto: {
           descripcionProducto: descripcionProducto,
-          urlImagenProducto: urlImagenProducto || undefined,
+          ...(urlImagenProducto && urlImagenProducto.startsWith('http') ? { urlImagenProducto } : {}),
         },
         formaPago: {
           permitirTarjetaCreditoDebido: true,
