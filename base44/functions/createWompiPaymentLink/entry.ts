@@ -61,8 +61,8 @@ Deno.serve(async (req) => {
     const tokenData = await tokenRes.json();
     const accessToken = tokenData.access_token;
 
-    // Construir URL de retorno/redirect
-    const appUrl = `https://${appId}.base44.app`;
+    // Construir URL de retorno/redirect — usar la URL publicada de la app
+    const appUrl = 'https://fractal-nova-cart-shop.base44.app';
     const redirectUrl = `${appUrl}/OrderConfirmation?id=${orderId}&payment=success&method=wompi`;
     const returnUrl = `${appUrl}/Checkout`;
 
