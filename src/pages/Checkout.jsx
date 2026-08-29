@@ -373,7 +373,7 @@ export default function Checkout() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 py-3 flex items-center gap-3">
         <button onClick={() => navigate(createPageUrl('Cart'))} className="w-11 h-11 flex items-center justify-center bg-secondary rounded-full shrink-0 relative z-10 touch-manipulation active:scale-95 transition-transform">
           <ArrowLeft className="w-5 h-5 text-foreground pointer-events-none" />
@@ -575,7 +575,7 @@ export default function Checkout() {
       )}
 
       {/* Place Order */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border px-4 pt-3 pb-6 safe-area-bottom">
+      <div className="sticky bottom-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border px-4 pt-3 pb-6 safe-area-bottom mt-4">
         {paymentMethod === 'cash_on_delivery' && (
           <p className="text-xs text-muted-foreground text-center mb-2">
             💵 Pagarás <span className="font-semibold text-foreground">${total.toFixed(2)}</span> en efectivo al recibir tu pedido
