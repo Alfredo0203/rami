@@ -65,6 +65,7 @@ Deno.serve(async (req) => {
     const appUrl = 'https://fractal-nova-cart-shop.base44.app';
     const redirectUrl = `${appUrl}/OrderConfirmation?id=${orderId}&payment=success&method=wompi`;
     const returnUrl = `${appUrl}/OrderConfirmation?id=${orderId}&payment=success&method=wompi`;
+    console.log('Wompi redirect URLs:', { redirectUrl, returnUrl });
 
     // 2. Crear enlace de pago
     const linkRes = await fetch('https://api.wompi.sv/EnlacePago', {
