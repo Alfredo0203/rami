@@ -17,6 +17,7 @@ import InventoryDashboard from './pages/InventoryDashboard';
 import SellerDashboard from './pages/SellerDashboard';
 import Recommendations from './pages/Recommendations';
 import Reactivate from './pages/Reactivate';
+import DataDeletion from './pages/DataDeletion';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -80,6 +81,7 @@ const AuthenticatedApp = () => {
       <Route path="/Policies" element={<Policies />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/reactivate" element={<Reactivate />} />
+      <Route path="/data-deletion" element={<DataDeletion />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
