@@ -13,6 +13,7 @@ import { useTranslation } from '../components/i18n/useTranslation';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { localLogout } from '@/lib/authRedirect';
 import { useScrollRestoration } from '../components/useScrollRestoration';
 
 export default function Home() {
@@ -128,7 +129,7 @@ export default function Home() {
           </Button>
         )}
         <button
-          onClick={() => base44.auth.logout()}
+          onClick={() => localLogout('/')}
           className="mt-2 text-sm text-destructive underline"
         >
           {t('sign_out')}

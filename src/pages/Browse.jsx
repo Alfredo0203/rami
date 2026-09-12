@@ -7,6 +7,7 @@ import BottomNav from '../components/shop/BottomNav';
 import SearchHeaderWithHistory from '../components/shop/SearchHeaderWithHistory';
 import { SlidersHorizontal, X, Loader2, Star, Tag, Package, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { localLogout } from '@/lib/authRedirect';
 import RecommendationsModal from '../components/shop/RecommendationsModal';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -260,7 +261,7 @@ export default function Browse() {
           </Button>
         )}
         <button
-          onClick={() => base44.auth.logout()}
+          onClick={() => localLogout('/')}
           className="mt-2 text-sm text-destructive underline"
         >
           {t('sign_out')}

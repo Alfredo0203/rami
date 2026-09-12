@@ -14,7 +14,7 @@ import { useTranslation } from '../components/i18n/useTranslation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import SupportChatModal from '../components/support/SupportChatModal';
-import { getAuthRedirectUrl } from '@/lib/authRedirect';
+import { localLogout } from '@/lib/authRedirect';
 
 const ROLE_LABELS = { user: 'Cliente', admin: 'Admin', super_admin: 'Propietario' };
 const STATUS_STYLES = {
@@ -63,7 +63,7 @@ export default function Account() {
     queryClient.setQueryData(['currentUser'], null);
     queryClient.invalidateQueries({ queryKey: ['cart'] });
     // Logout without redirect — user stays as guest
-    base44.auth.logout(getAuthRedirectUrl('/'));
+    localLogout('/');
     toast('Cerraste tu sesión. Podés seguir explorando como invitado.', {
       duration: 4000,
     });
@@ -150,7 +150,7 @@ export default function Account() {
         </div>
         <div className="px-4 -mt-5 space-y-3">
           <Button
-            onClick={() => base44.auth.redirectToLogin(getAuthRedirectUrl('/'))}
+            onClick={() => navigate('/Login?from=/')}
             className="w-full h-12 bg-primary text-primary-foreground font-bold rounded-full text-base shadow-lg"
           >
             <LogIn className="w-5 h-5 mr-2" />

@@ -36,3 +36,20 @@ export function getAuthRedirectUrl(path = '/') {
     return path;
   }
 }
+
+/**
+ * Logs out locally by clearing the token from localStorage and reloading.
+ * Avoids the platform's server-side logout redirect which can get stuck
+ * on the web page in native app WebViews.
+ */
+export function localLogout(redirectPath = '/') {
+  if (typeof window !== 'undefined') {
+    try {
+      window.localStorage.removeItem('base44_access_token');
+      window.localStorage.removeItem('token');
+    } catch (e) {
+      console.error('Failed to clear token:', e);
+    }
+    window.location.href = redirectPath;
+  }
+}
