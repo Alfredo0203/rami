@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
 import { useTranslation } from './i18n/useTranslation';
 import { Wrench, ShieldOff, RefreshCw } from 'lucide-react';
+import { getAuthRedirectUrl } from '@/lib/authRedirect';
 
 const SUPER_ADMIN_ROLES = ['super_admin', 'owner'];
 const ADMIN_ROLES = ['admin', 'super_admin', 'owner'];
@@ -111,7 +112,7 @@ export default function DevModeGuard({ children }) {
           const currentPath = location.pathname;
           const isGuestAllowed = GUEST_ALLOWED_PATHS.some(p => currentPath.startsWith(p));
           if (!isGuestAllowed) {
-            base44.auth.redirectToLogin(window.location.href);
+            base44.auth.redirectToLogin(getAuthRedirectUrl(location.pathname));
             return;
           }
         }
@@ -164,7 +165,7 @@ export default function DevModeGuard({ children }) {
           </div>
         )}
         <button
-          onClick={() => base44.auth.logout('/')}
+          onClick={() => base44.auth.logout(getAuthRedirectUrl('/'))}
           className="text-xs text-muted-foreground underline underline-offset-2"
         >
           Cerrar sesión

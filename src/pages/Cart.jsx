@@ -8,6 +8,7 @@ import { ArrowLeft, ShoppingBag, Loader2, AlertTriangle, CheckCircle2, Circle } 
 import { Button } from '@/components/ui/button';
 import { AnimatePresence } from 'framer-motion';
 import { useCurrentUser } from '@/lib/useCurrentUser';
+import { getAuthRedirectUrl } from '@/lib/authRedirect';
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -173,7 +174,7 @@ export default function Cart() {
           <p className="text-foreground font-semibold text-lg mb-1">Inicia sesión para ver tu carrito</p>
           <p className="text-muted-foreground text-sm mb-6 text-center">Necesitas una cuenta para guardar productos y realizar pedidos</p>
           <Button
-            onClick={() => base44.auth.redirectToLogin('/Cart')}
+            onClick={() => base44.auth.redirectToLogin(getAuthRedirectUrl('/Cart'))}
             className="bg-primary text-primary-foreground rounded-full px-8"
           >
             Iniciar sesión
