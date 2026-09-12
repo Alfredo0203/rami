@@ -85,7 +85,7 @@ export default function Login() {
   };
 
   const handleGoogleLogin = () => {
-    const returnUrl = window.location.origin + (from.startsWith('/') ? from : '/');
+    const returnUrl = from.startsWith('/') ? from : '/';
     base44.auth.loginWithProvider('google', returnUrl);
   };
 

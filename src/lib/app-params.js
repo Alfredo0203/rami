@@ -12,11 +12,24 @@ const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl =
 	}
 	const storageKey = `base44_${toSnakeCase(paramName)}`;
 	const urlParams = new URLSearchParams(window.location.search);
-	const searchParam = urlParams.get(paramName);
+	let searchParam = urlParams.get(paramName);
+
+	// Also check hash fragment (some OAuth flows use #access_token=xxx)
+	let hashParams = null;
+	if (!searchParam && window.location.hash) {
+		hashParams = new URLSearchParams(window.location.hash.substring(1));
+		searchParam = hashParams.get(paramName);
+	}
+
 	if (removeFromUrl) {
 		urlParams.delete(paramName);
+		let newHash = window.location.hash;
+		if (hashParams && searchParam) {
+			hashParams.delete(paramName);
+			newHash = hashParams.toString() ? `#${hashParams.toString()}` : '';
+		}
 		const newUrl = `${window.location.pathname}${urlParams.toString() ? `?${urlParams.toString()}` : ""
-			}${window.location.hash}`;
+			}${newHash}`;
 		window.history.replaceState({}, document.title, newUrl);
 	}
 	if (searchParam) {

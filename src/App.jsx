@@ -33,6 +33,32 @@ const AuthenticatedApp = () => {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    // Recover token from URL or localStorage if the client doesn't have it
+    // (handles OAuth redirect callbacks where the token may not have been picked up)
+    const recoverToken = () => {
+      if (base44.auth.hasToken()) return;
+      // Check URL for access_token (query or hash)
+      const urlParams = new URLSearchParams(window.location.search);
+      let token = urlParams.get('access_token');
+      if (!token && window.location.hash) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        token = hashParams.get('access_token');
+      }
+      // Check localStorage as fallback
+      if (!token) {
+        token = localStorage.getItem('base44_access_token') || localStorage.getItem('token');
+      }
+      if (token) {
+        base44.setToken(token);
+        // Clean URL
+        urlParams.delete('access_token');
+        const newUrl = `${window.location.pathname}${urlParams.toString() ? `?${urlParams.toString()}` : ''}${window.location.hash || ''}`;
+        window.history.replaceState({}, document.title, newUrl);
+      }
+    };
+
+    recoverToken();
+
     // Only check if user is "not_registered" — guests are allowed
     base44.auth.me()
       .then(() => setChecking(false))
