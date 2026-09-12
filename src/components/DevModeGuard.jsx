@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
 import { useTranslation } from './i18n/useTranslation';
 import { Wrench, ShieldOff, RefreshCw } from 'lucide-react';
-import { localLogout } from '@/lib/authRedirect';
+import { localLogout, getAuthRedirectUrl } from '@/lib/authRedirect';
 
 const SUPER_ADMIN_ROLES = ['super_admin', 'owner'];
 const ADMIN_ROLES = ['admin', 'super_admin', 'owner'];
@@ -112,7 +112,7 @@ export default function DevModeGuard({ children }) {
           const currentPath = location.pathname;
           const isGuestAllowed = GUEST_ALLOWED_PATHS.some(p => currentPath.startsWith(p));
           if (!isGuestAllowed) {
-            navigate('/Login?from=' + encodeURIComponent(location.pathname));
+            base44.auth.redirectToLogin(getAuthRedirectUrl(location.pathname));
             return;
           }
         }

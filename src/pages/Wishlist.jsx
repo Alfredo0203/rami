@@ -7,6 +7,7 @@ import { ArrowLeft, Heart, ShoppingCart, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useCurrentUser } from '@/lib/useCurrentUser';
+import { getAuthRedirectUrl } from '@/lib/authRedirect';
 
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -42,7 +43,7 @@ export default function Wishlist() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-8">
         <Heart className="w-16 h-16 text-muted-foreground/30" />
         <p className="text-muted-foreground text-center">Inicia sesión para ver tus favoritos</p>
-        <Button onClick={() => navigate('/Login?from=' + encodeURIComponent(window.location.pathname))} className="rounded-full">
+        <Button onClick={() => base44.auth.redirectToLogin(getAuthRedirectUrl(window.location.pathname))} className="rounded-full">
           Iniciar sesión
         </Button>
       </div>

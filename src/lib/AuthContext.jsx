@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
+import { getAuthRedirectUrl } from '@/lib/authRedirect';
 import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
 
 const AuthContext = createContext();
@@ -125,7 +126,7 @@ export const AuthProvider = ({ children }) => {
 
   const navigateToLogin = () => {
     // Redirect to login and return to Home (not the current page) after login
-    base44.auth.redirectToLogin(window.location.origin + '/');
+    base44.auth.redirectToLogin(getAuthRedirectUrl('/'));
   };
 
   return (
