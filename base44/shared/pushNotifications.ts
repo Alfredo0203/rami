@@ -6,7 +6,7 @@
  * la llamada falla silenciosamente (no rompe el flujo).
  */
 
-const APP_URL = 'https://fractal-nova-cart-shop.base44.app';
+const APP_URL = 'https://rami-shop.com';
 
 /** Notifica a todos los admins (role admin y super_admin) */
 export async function notifyAdmins(

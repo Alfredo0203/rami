@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
     const accessToken = tokenData.access_token;
 
     // Construir URL de retorno/redirect — usar la URL publicada de la app
-    const appUrl = 'https://fractal-nova-cart-shop.base44.app';
+    const appUrl = 'https://rami-shop.com';
     const redirectUrl = `${appUrl}/OrderConfirmation?id=${orderId}&payment=success&method=wompi`;
     const returnUrl = `${appUrl}/OrderConfirmation?id=${orderId}&payment=success&method=wompi`;
     console.log('Wompi redirect URLs:', { redirectUrl, returnUrl });
