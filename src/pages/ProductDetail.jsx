@@ -13,7 +13,6 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import VariantSelector from '@/components/shop/VariantSelector';
 import RelatedProducts from '@/components/shop/RelatedProducts';
 import { useSEO } from '@/hooks/useSEO';
-import { getAuthRedirectUrl } from '@/lib/authRedirect';
 
 import ProductShareButton from '@/components/shop/ProductShare';
 import StoreModal from '@/components/shop/StoreModal';
@@ -628,7 +627,7 @@ export default function ProductDetail() {
             </button>
           </div>
           <Button
-            onClick={() => isGuest ? base44.auth.redirectToLogin(getAuthRedirectUrl(window.location.pathname)) : addToCartMutation.mutate()}
+            onClick={() => isGuest ? navigate('/Login?from=' + encodeURIComponent(window.location.pathname)) : addToCartMutation.mutate()}
             disabled={addToCartMutation.isPending || (!isGuest && !inStock) || needsVariantSelection}
             className="flex-1 bg-primary text-primary-foreground font-bold h-12 rounded-full text-base"
           >
