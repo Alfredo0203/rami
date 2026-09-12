@@ -7,6 +7,19 @@ import { Label } from '@/components/ui/label';
 import { ArrowLeft, Loader2, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
+// Detect if running inside a native app WebView (Google blocks OAuth in embedded WebViews)
+const isNativeWebView = () => {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  // Android WebView: has "wv" or "WebView" but not standalone Chrome
+  const isAndroid = /Android/i.test(ua);
+  const isAndroidWv = isAndroid && (/; wv\)/i.test(ua) || (/Version\/\d/i.test(ua) && !/Chrome\/\d/i.test(ua)));
+  // iOS WebView: has "iPhone/iPad" but not "Safari" (Safari = external browser)
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+  const isIOSWv = isIOS && !/Safari\/\d/i.test(ua);
+  return isAndroidWv || isIOSWv;
+};
+
 export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -86,6 +99,22 @@ export default function Login() {
 
   const handleGoogleLogin = () => {
     const returnUrl = from.startsWith('/') ? from : '/';
+    
+    if (isNativeWebView()) {
+      // In native app WebView: Google blocks OAuth in embedded WebViews.
+      // Open the OAuth flow in the device's external browser instead.
+      const redirectUrl = window.location.origin + returnUrl;
+      const config = base44.getConfig();
+      const loginUrl = `${window.location.origin}/api/apps/auth/login?app_id=${config.appId}&from_url=${encodeURIComponent(redirectUrl)}`;
+      // Try window.open — native wrappers typically intercept this to open external browser
+      const popup = window.open(loginUrl, '_blank');
+      if (!popup) {
+        // Popup blocked — try direct navigation as fallback
+        window.location.href = loginUrl;
+      }
+      return;
+    }
+    
     base44.auth.loginWithProvider('google', returnUrl);
   };
 
