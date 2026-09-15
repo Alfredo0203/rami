@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLocation, useNavigationType } from 'react-router-dom';
 import DevModeGuard from './components/DevModeGuard';
@@ -9,6 +9,26 @@ let prevTabIdx = 0;
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const navType = useNavigationType();
+  const isHome = location.pathname === '/';
+
+  // Back-to-exit on Home: push a sentinel entry so the native back button
+  // fires popstate. When the sentinel is popped (user pressed back on Home),
+  // go back one more step to let the WebView's native handler exit the app.
+  useEffect(() => {
+    if (!isHome) return;
+    if (window.history.state?.exitSentinel) return;
+
+    window.history.pushState({ exitSentinel: true }, '');
+
+    const handlePopState = () => {
+      if (window.location.pathname === '/' && !window.history.state?.exitSentinel) {
+        window.history.go(-1);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isHome]);
 
   const tabIdx = TAB_PAGES.indexOf(currentPageName);
   const isTab = tabIdx >= 0;
