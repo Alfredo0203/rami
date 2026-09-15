@@ -2,6 +2,7 @@ import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLocation, useNavigationType } from 'react-router-dom';
 import DevModeGuard from './components/DevModeGuard';
+import { useBackExitConfirm } from './components/useBackExitConfirm';
 
 const TAB_PAGES = ['Home', 'Browse', 'Orders', 'Account'];
 let prevTabIdx = 0;
@@ -9,6 +10,7 @@ let prevTabIdx = 0;
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const navType = useNavigationType();
+  useBackExitConfirm();
 
   const tabIdx = TAB_PAGES.indexOf(currentPageName);
   const isTab = tabIdx >= 0;

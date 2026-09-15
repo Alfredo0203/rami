@@ -5,7 +5,6 @@ import { toast } from 'sonner';
 
 const HOME_PATH = createPageUrl('Home');
 
-// Detects browser language for toast message
 function getExitMessage() {
   const lang = (navigator.languages?.[0] || navigator.language || 'en').toLowerCase();
   if (lang.startsWith('es')) return 'Presiona atrás de nuevo para salir';
@@ -13,37 +12,45 @@ function getExitMessage() {
   return 'Press back again to exit';
 }
 
+/**
+ * Global back-button handler for native Android WebView.
+ *
+ * - On inner pages: lets React Router handle back navigation naturally
+ *   (the WebView's back button triggers popstate, Router navigates back).
+ * - On Home: first back press shows a toast and pushes a new history entry
+ *   to prevent the app from exiting; second press within 2s exits.
+ *
+ * No sentinel is pushed on mount — that was what broke back navigation
+ * from inner pages back to Home.
+ */
 export function useBackExitConfirm() {
   const location = useLocation();
   const isHome = location.pathname === HOME_PATH || location.pathname === '/';
+  const isHomeRef = useRef(isHome);
+  isHomeRef.current = isHome;
   const backPressedOnce = useRef(false);
   const resetTimer = useRef(null);
 
   useEffect(() => {
-    if (!isHome) return;
-
-    // Push sentinel so first back gives us a popstate event
-    window.history.pushState({ exitGuard: true }, '');
-
     const handlePopState = () => {
+      if (!isHomeRef.current) return;
+
       if (backPressedOnce.current) {
-        // Second press within 2s — exit
         clearTimeout(resetTimer.current);
         if (window.navigator?.app?.exitApp) {
           window.navigator.app.exitApp();
         } else {
           try { window.close(); } catch (_) {}
-          setTimeout(() => { window.location.href = 'about:blank'; }, 100);
         }
         return;
       }
 
-      // First press — show toast and re-push sentinel
+      // First back press on Home — push a new entry so the WebView
+      // doesn't exit, and show the confirmation toast.
+      window.history.pushState(null, '');
       backPressedOnce.current = true;
-      window.history.pushState({ exitGuard: true }, '');
       toast(getExitMessage(), { duration: 2000 });
 
-      // Reset after 2s
       resetTimer.current = setTimeout(() => {
         backPressedOnce.current = false;
       }, 2000);
@@ -55,5 +62,5 @@ export function useBackExitConfirm() {
       clearTimeout(resetTimer.current);
       backPressedOnce.current = false;
     };
-  }, [isHome]);
+  }, []);
 }
