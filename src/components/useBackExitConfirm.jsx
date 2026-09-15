@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
 
@@ -15,17 +15,18 @@ function getExitMessage() {
 
 export function useBackExitConfirm() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isHome = location.pathname === HOME_PATH || location.pathname === '/';
   const backPressedOnce = useRef(false);
   const resetTimer = useRef(null);
 
   useEffect(() => {
-    if (!isHome) return;
+    if (isHome) {
+      // Push sentinel so first back gives us a popstate event
+      window.history.pushState({ exitGuard: true }, '');
+    }
 
-    // Push sentinel so first back gives us a popstate event
-    window.history.pushState({ exitGuard: true }, '');
-
-    const handlePopState = () => {
+    const handleHomeBack = () => {
       if (backPressedOnce.current) {
         // Second press within 2s — exit
         clearTimeout(resetTimer.current);
@@ -49,11 +50,37 @@ export function useBackExitConfirm() {
       }, 2000);
     };
 
+    // popstate: browser/WebView already navigated back; just handle Home exit toast
+    const handlePopState = () => {
+      if (isHome) {
+        handleHomeBack();
+      }
+      // On non-Home pages, popstate means we already went back — React Router handles navigation
+    };
+
+    // backbutton: Cordova/Capacitor native event — default is prevented, so navigate manually
+    const handleBackButton = (e) => {
+      if (e?.preventDefault) e.preventDefault();
+      if (isHome) {
+        handleHomeBack();
+      } else {
+        // On non-Home pages, navigate back in history or to Home
+        if (window.history.length > 1) {
+          window.history.back();
+        } else {
+          navigate('/');
+        }
+      }
+    };
+
     window.addEventListener('popstate', handlePopState);
+    document.addEventListener('backbutton', handleBackButton, false);
+
     return () => {
       window.removeEventListener('popstate', handlePopState);
+      document.removeEventListener('backbutton', handleBackButton, false);
       clearTimeout(resetTimer.current);
       backPressedOnce.current = false;
     };
-  }, [isHome]);
+  }, [isHome, navigate]);
 }

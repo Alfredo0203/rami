@@ -8,7 +8,7 @@ import PromoBanner from '../components/shop/PromoBanner';
 import ProductCard from '../components/shop/ProductCard';
 import BottomNav from '../components/shop/BottomNav';
 import InfiniteScroll from '../components/shop/InfiniteScroll';
-import { useBackExitConfirm } from '../components/useBackExitConfirm';
+
 import { useTranslation } from '../components/i18n/useTranslation';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,6 @@ export default function Home() {
   const [userCheckDone, setUserCheckDone] = useState(false);
   const [displayedCount, setDisplayedCount] = useState(12);
   const ITEMS_PER_LOAD = 8;
-  useBackExitConfirm();
 
   useEffect(() => {
     base44.auth.me()
