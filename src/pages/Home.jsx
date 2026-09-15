@@ -14,6 +14,7 @@ import { AlertTriangle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { localLogout } from '@/lib/authRedirect';
+import { useBackExitConfirm } from '../components/useBackExitConfirm';
 import { useScrollRestoration } from '../components/useScrollRestoration';
 
 export default function Home() {
@@ -25,6 +26,7 @@ export default function Home() {
   const [userCheckDone, setUserCheckDone] = useState(false);
   const [displayedCount, setDisplayedCount] = useState(12);
   const ITEMS_PER_LOAD = 8;
+  useBackExitConfirm();
 
   useEffect(() => {
     base44.auth.me()
