@@ -6,11 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { formatDateSV } from '@/lib/dateUtils';
 import { toast } from 'sonner';
+import { Eye } from 'lucide-react';
 
 // Estados desde los que NO se puede cancelar
 const NON_CANCELLABLE = ['delivered', 'cancelled'];
 
-export default function AdminOrderCard({ order }) {
+export default function AdminOrderCard({ order, onViewDetails }) {
   const queryClient = useQueryClient();
 
   const updateMutation = useMutation({
@@ -50,7 +51,16 @@ export default function AdminOrderCard({ order }) {
             {order.created_date ? formatDateSV(order.created_date) : ''} · {order.customer_name || order.customer_email}
           </p>
         </div>
-        <span className="text-sm font-extrabold text-primary">${order.total?.toFixed(2)}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-extrabold text-primary">${order.total?.toFixed(2)}</span>
+          <button
+            onClick={onViewDetails}
+            className="p-1.5 bg-primary/10 rounded-lg"
+            title="Ver detalles"
+          >
+            <Eye className="w-4 h-4 text-primary" />
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-2 overflow-x-auto hide-scrollbar">

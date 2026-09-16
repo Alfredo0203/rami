@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import AdminProductForm from '../components/admin/AdminProductForm';
 import AdminOrderCard from '../components/admin/AdminOrderCard';
+import AdminOrderDetailModal from '../components/admin/AdminOrderDetailModal';
 import AdminUserCard from '../components/admin/AdminUserCard';
 import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, Trash2, Loader2, Eye, EyeOff, Users, Settings, MessageSquare, LayoutGrid, BarChart3, Ticket, Search, AlertTriangle, History, Store, ChevronDown, ChevronUp, SlidersHorizontal, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -44,6 +45,7 @@ export default function Admin() {
   const [userSearch, setUserSearch] = useState('');
   const [userStatusFilters, setUserStatusFilters] = useState([]);
   const [userRoleFilters, setUserRoleFilters] = useState([]);
+  const [detailOrder, setDetailOrder] = useState(null);
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -572,7 +574,7 @@ export default function Admin() {
                     <span className="font-semibold text-foreground">{filteredOrders.length}</span> pedido{filteredOrders.length !== 1 ? 's' : ''}
                     {filteredOrders.length !== orders.length && ` de ${orders.length}`}
                   </p>
-                  {filteredOrders.map(order => <AdminOrderCard key={order.id} order={order} />)}
+                  {filteredOrders.map(order => <AdminOrderCard key={order.id} order={order} onViewDetails={() => setDetailOrder(order)} />)}
                 </div>
               );
             })()
@@ -753,6 +755,12 @@ export default function Admin() {
           onOpenChange={(open) => { if (!open) setHistoryProduct(null); }}
         />
       )}
+
+      <AdminOrderDetailModal
+        order={detailOrder}
+        open={!!detailOrder}
+        onOpenChange={(open) => { if (!open) setDetailOrder(null); }}
+      />
 
       <AlertDialog open={!!deletingProductId} onOpenChange={(open) => { if (!open) setDeletingProductId(null); }}>
         <AlertDialogContent>
