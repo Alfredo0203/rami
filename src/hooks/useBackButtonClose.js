@@ -1,4 +1,36 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+
+/**
+ * Lightweight hook that ONLY intercepts the back button to close an overlay.
+ * Does NOT handle scroll locking (Radix/vaul already do that).
+ * Used by shared UI components (Sheet, Dialog, Drawer, AlertDialog) for global
+ * back-button-to-close behavior across all pages.
+ *
+ * @param {boolean} isOpen - Whether the overlay is open
+ * @param {Function} onClose - Callback to close the overlay
+ */
+export function useBackButtonOverlay(isOpen, onClose) {
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    window.history.pushState({ overlay: true }, '');
+
+    const handlePopState = () => {
+      onCloseRef.current();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      if (window.history.state?.overlay) {
+        window.history.back();
+      }
+    };
+  }, [isOpen]);
+}
 
 /**
  * Hook that:
