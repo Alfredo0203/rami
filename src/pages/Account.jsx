@@ -70,8 +70,9 @@ export default function Account() {
   };
 
   const { data: cartItems = [] } = useQuery({
-    queryKey: ['cart'],
-    queryFn: () => base44.entities.CartItem.list(),
+    queryKey: ['cart', user?.email],
+    queryFn: () => !user?.email ? [] : base44.entities.CartItem.filter({ created_by: user.email }),
+    enabled: !!user?.email,
   });
 
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);

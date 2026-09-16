@@ -62,8 +62,9 @@ export default function Browse() {
   const categories = catalogData?.categories || [];
 
   const { data: cartItems = [] } = useQuery({
-    queryKey: ['cart'],
-    queryFn: () => base44.entities.CartItem.list().catch(() => []),
+    queryKey: ['cart', currentUser?.email],
+    queryFn: () => !currentUser?.email ? [] : base44.entities.CartItem.filter({ created_by: currentUser.email }).catch(() => []),
+    enabled: !!currentUser,
   });
 
   const maxPrice = useMemo(() => {
