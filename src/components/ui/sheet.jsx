@@ -5,8 +5,12 @@ import { cva } from "class-variance-authority";
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useBackButtonOverlay } from "@/hooks/useBackButtonClose"
 
-const Sheet = SheetPrimitive.Root
+const Sheet = ({ open, onOpenChange, ...props }) => {
+  useBackButtonOverlay(open, () => onOpenChange?.(false));
+  return <SheetPrimitive.Root open={open} onOpenChange={onOpenChange} {...props} />;
+}
 
 const SheetTrigger = SheetPrimitive.Trigger
 
