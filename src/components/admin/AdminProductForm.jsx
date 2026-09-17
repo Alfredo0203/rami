@@ -54,15 +54,28 @@ export default function AdminProductForm({ product, categories, onClose }) {
       toast.success(isEditing ? '¡Producto actualizado!' : '¡Producto creado!');
       onClose();
     },
+    onError: (err) => {
+      const msg = err?.response?.data?.detail || err?.message || 'No se pudo guardar el producto';
+      toast.error(msg);
+    },
   });
 
   const handleSubmit = () => {
+    if (!form.name.trim()) {
+      toast.error('El nombre del producto es obligatorio');
+      return;
+    }
+    if (!form.price || parseFloat(form.price) <= 0) {
+      toast.error('El precio debe ser mayor a 0');
+      return;
+    }
     const data = {
       ...form,
       price: parseFloat(form.price) || 0,
       original_price: parseFloat(form.original_price) || 0,
       stock: parseInt(form.stock) || 0,
       tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
+      store_id: form.store_id || null,
     };
     saveMutation.mutate(data);
   };
@@ -71,9 +84,14 @@ export default function AdminProductForm({ product, categories, onClose }) {
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    setForm(prev => ({ ...prev, images: [...prev.images, file_url] }));
-    setUploading(false);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+      setForm(prev => ({ ...prev, images: [...prev.images, file_url] }));
+    } catch (err) {
+      toast.error('No se pudo subir la imagen');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const removeImage = (idx) => {
@@ -135,10 +153,10 @@ export default function AdminProductForm({ product, categories, onClose }) {
 
         <div>
           <Label className="text-xs">Tienda (opcional)</Label>
-          <Select value={form.store_id} onValueChange={v => setForm({...form, store_id: v})}>
+          <Select value={form.store_id || 'none'} onValueChange={v => setForm({...form, store_id: v === 'none' ? null : v})}>
             <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Sin tienda" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value={null}>Sin tienda</SelectItem>
+              <SelectItem value="none">Sin tienda</SelectItem>
               {stores.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
             </SelectContent>
           </Select>
