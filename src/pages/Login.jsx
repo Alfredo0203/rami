@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import { appParams } from '@/lib/app-params';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -86,10 +87,13 @@ export default function Login() {
 
   const handleGoogleLogin = () => {
     const returnUrl = from.startsWith('/') ? from : '/';
-    // Use the SDK's loginWithProvider — it handles both iframe (popup) and
-    // full-page redirect, and uses window.location.origin for the return URL
-    // so the platform always redirects back to the correct origin.
-    base44.auth.loginWithProvider('google', returnUrl);
+    // Full-page redirect using window.location.origin as the return URL.
+    // This is more reliable than the SDK's popup flow (which can be blocked
+    // inside iframes) and ensures the platform redirects back to the correct
+    // origin with the access token in the URL.
+    const redirectUrl = new URL(returnUrl, window.location.origin).toString();
+    const authUrl = `/api/apps/auth/login?app_id=${appParams.appId}&from_url=${encodeURIComponent(redirectUrl)}`;
+    window.location.href = authUrl;
   };
 
   const handleForgotPassword = async (e) => {
