@@ -61,7 +61,17 @@ const AuthenticatedApp = () => {
 
     // Only check if user is "not_registered" — guests are allowed
     base44.auth.me()
-      .then(() => setChecking(false))
+      .then(() => {
+        // If authenticated and on /Login, redirect to home (handles OAuth
+        // callbacks that return to /Login instead of /)
+        if (window.location.pathname === '/Login') {
+          const urlParams = new URLSearchParams(window.location.search);
+          const from = urlParams.get('from') || '/';
+          window.location.href = from.startsWith('/') ? from : '/';
+          return;
+        }
+        setChecking(false);
+      })
       .catch((err) => {
         if (err?.message?.includes('not registered')) {
           setAuthError({ type: 'user_not_registered' });

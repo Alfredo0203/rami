@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { appParams } from '@/lib/app-params';
+import { getAuthRedirectUrl } from '@/lib/authRedirect';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -84,12 +86,23 @@ export default function Login() {
     }
   };
 
+  // If the user lands on /Login with a valid token (e.g. after OAuth redirect
+  // came back to /Login instead of /), redirect them to the target page.
+  useEffect(() => {
+    base44.auth.isAuthenticated().then((isAuth) => {
+      if (isAuth) redirectAfterAuth();
+    });
+  }, []);
+
   const handleGoogleLogin = () => {
     const returnUrl = from.startsWith('/') ? from : '/';
-    // Use the SDK's loginWithProvider — it handles both iframe (popup) and
-    // full-page redirect, and uses window.location.origin for the return URL
-    // so the platform always redirects back to the correct origin.
-    base44.auth.loginWithProvider('google', returnUrl);
+    // Full-page redirect with the platform-known base URL — in the native
+    // WebView, window.location.origin can be a non-http scheme that the
+    // platform cannot redirect back to, so we use getAuthRedirectUrl which
+    // prefers appParams.appBaseUrl.
+    const fullRedirectUrl = getAuthRedirectUrl(returnUrl);
+    const authUrl = `/api/apps/auth/login?app_id=${appParams.appId}&from_url=${encodeURIComponent(fullRedirectUrl)}`;
+    window.location.href = authUrl;
   };
 
   const handleForgotPassword = async (e) => {
