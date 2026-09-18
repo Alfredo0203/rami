@@ -1,3 +1,5 @@
+import { appParams } from '@/lib/app-params';
+
 /**
  * Builds a redirect URL for base44.auth.redirectToLogin().
  *
@@ -12,20 +14,26 @@
  * platform knows about) when available, falling back to window.location.origin
  * for standard http(s) origins.
  */
-// Custom domain connected to this app — used as the OAuth redirect base so the
-// platform accepts the from_url when custom Google OAuth is enabled.
-// (rami-shop.base44.app is rejected with "invalid redirect domain" when custom
-// OAuth is configured; the authorized custom domain must be used instead.)
-const CUSTOM_DOMAIN = 'https://rami-shop.com';
-
 export function getAuthRedirectUrl(path = '/') {
-  // Always use the custom domain for OAuth redirects — it's the authorized
-  // domain in Google Cloud Console and the connected domain in Base44.
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const isHttpOrigin = origin.startsWith('http://') || origin.startsWith('https://');
+
+  // Prefer the platform-known base URL so the login page can always redirect back
+  const base = appParams.appBaseUrl || (isHttpOrigin ? origin : '');
+
+  if (base) {
+    try {
+      return new URL(path, base).toString();
+    } catch {
+      // fall through
+    }
+  }
+
+  // Last resort: use current origin
   try {
-    return new URL(cleanPath, CUSTOM_DOMAIN).toString();
+    return new URL(path, origin).toString();
   } catch {
-    return `${CUSTOM_DOMAIN}${cleanPath}`;
+    return path;
   }
 }
 
