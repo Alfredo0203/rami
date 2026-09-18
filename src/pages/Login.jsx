@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { appParams } from '@/lib/app-params';
-import { getAuthRedirectUrl } from '@/lib/authRedirect';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -88,18 +86,10 @@ export default function Login() {
 
   const handleGoogleLogin = () => {
     const returnUrl = from.startsWith('/') ? from : '/';
-    // Build a proper https redirect URL — in the native WebView,
-    // window.location.origin can be file:// or an iframe origin, which
-    // would make the platform unable to redirect back after OAuth.
-    const fullRedirectUrl = getAuthRedirectUrl(returnUrl);
-    // Bypass the SDK's loginWithProvider and do a full-page redirect directly.
-    // The SDK uses a popup flow (window.open + postMessage) when it detects an
-    // iframe, but in the native WebView the popup opens in the external browser
-    // and postMessage can never deliver the token back — the user stays stuck
-    // on the login page.  A full-page redirect lets the WebView navigate through
-    // the OAuth flow and back with the token in the URL.
-    const authUrl = `/api/apps/auth/login?app_id=${appParams.appId}&from_url=${encodeURIComponent(fullRedirectUrl)}`;
-    window.location.href = authUrl;
+    // Use the SDK's loginWithProvider — it handles both iframe (popup) and
+    // full-page redirect, and uses window.location.origin for the return URL
+    // so the platform always redirects back to the correct origin.
+    base44.auth.loginWithProvider('google', returnUrl);
   };
 
   const handleForgotPassword = async (e) => {
