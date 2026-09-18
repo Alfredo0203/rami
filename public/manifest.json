@@ -4,8 +4,9 @@
   "description": "RAmi, tu tienda de confianza en El Salvador. Compra fácil y seguro.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f7f7f7",
+  "background_color": "#3994ef",
   "theme_color": "#3994ef",
+  "orientation": "portrait",
   "lang": "es",
   "icons": []
 }
