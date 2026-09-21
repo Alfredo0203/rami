@@ -39,6 +39,9 @@ const EMPTY_FORM = {
   country: 'El Salvador',
 };
 
+// house_number is optional — some addresses have no house number
+const OPTIONAL_FIELDS = ['house_number', 'reference'];
+
 // Helpers
 function formatPhone(raw) {
   return raw.replace(/\D/g, '').slice(0, 8);
@@ -62,8 +65,6 @@ function validate(form) {
     e.colonia = 'La colonia / residencial / barrio es requerida';
   if (!form.street.trim())
     e.street = 'La calle / pasaje / avenida es requerida';
-  if (!form.house_number.trim())
-    e.house_number = 'El número de casa es requerido';
   return e;
 }
 
@@ -363,8 +364,8 @@ export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
         />
       </Field>
 
-      {/* Número de casa */}
-      <Field label="Número de casa" error={errors.house_number}>
+      {/* Número de casa (opcional) */}
+      <Field label="Número de casa" optional error={errors.house_number}>
         <Input
           value={form.house_number}
           onChange={e => set('house_number', e.target.value)}
