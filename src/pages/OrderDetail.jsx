@@ -6,9 +6,12 @@ import { goBack } from '@/lib/navigation';
 import { createPageUrl } from '@/utils';
 import OrderStatusBadge from '../components/shop/OrderStatusBadge';
 import OrderStatusTimeline from '../components/shop/OrderStatusTimeline';
-import { ArrowLeft, MapPin, CreditCard, Package, Truck, CheckCircle2, Clock, Loader2, RotateCcw, XCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Package, Truck, CheckCircle2, Clock, Loader2, RotateCcw, XCircle, AlertCircle } from 'lucide-react';
 import { formatDateTimeSV } from '@/lib/dateUtils';
 import InvoicePDF from '../components/shop/InvoicePDF';
+import WompiWidget from '../components/shop/WompiWidget';
+import { appParams } from '@/lib/app-params';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
@@ -32,6 +35,8 @@ export default function OrderDetail() {
   const queryClient = useQueryClient();
   const [reordering, setReordering] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const [wompiUrl, setWompiUrl] = useState(null);
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', orderId],
@@ -96,6 +101,36 @@ export default function OrderDetail() {
     setCancelling(false);
   };
 
+  const isPendingPayment = order.payment_status === 'pending_payment' && order.status === 'pending';
+  const isWompiOrder = order.payment_method === 'wompi';
+
+  const handlePayNow = async () => {
+    if (!order) return;
+    setPaying(true);
+    try {
+      const baseUrl = appParams.appBaseUrl || window.location.origin;
+      const linkRes = await base44.functions.invoke('createWompiPaymentLink', {
+        orderId: order.id,
+        amount: order.total,
+        orderNumber: order.order_number,
+        appBaseUrl: baseUrl,
+      });
+      if (linkRes.data?.error) throw new Error(linkRes.data.error);
+      const url = linkRes.data?.urlEnlace;
+      if (!url) throw new Error('No se obtuvo enlace de pago');
+      setWompiUrl(url);
+    } catch (err) {
+      toast.error(err.message || 'Error al generar enlace de pago');
+    } finally {
+      setPaying(false);
+    }
+  };
+
+  const handleWompiClose = () => {
+    setWompiUrl(null);
+    queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+  };
+
   const handleReorder = async () => {
     setReordering(true);
     const existingCart = await base44.entities.CartItem.list();
@@ -132,6 +167,31 @@ export default function OrderDetail() {
         </div>
         <div className="ml-auto"><OrderStatusBadge status={order.status} /></div>
       </div>
+
+      {/* Pending payment banner */}
+      {isPendingPayment && isWompiOrder && (
+        <div className="px-4 pt-4">
+          <div className="bg-warning/10 border border-warning/30 rounded-xl p-4 space-y-3">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-warning">Pago pendiente</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Tu pedido fue creado pero el pago no se ha completado. Paga ahora para confirmarlo.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handlePayNow}
+              disabled={paying}
+              className="w-full flex items-center justify-center gap-2 h-12 bg-primary text-primary-foreground rounded-xl font-semibold text-sm disabled:opacity-60 transition-opacity"
+            >
+              {paying ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+              {paying ? 'Generando enlace…' : 'Pagar ahora'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Reorder & PDF buttons */}
       <div className="px-4 pt-4 space-y-3">
@@ -293,12 +353,28 @@ export default function OrderDetail() {
             <CreditCard className="w-4 h-4 text-primary" />
             <h2 className="text-sm font-bold text-foreground">Pago</h2>
           </div>
-          <p className="text-sm text-foreground">
-            {order.payment_method === 'credit_card' && 'Tarjeta de Crédito'}
-            {order.payment_method === 'cash_on_delivery' && 'Efectivo'}
-            {order.payment_method === 'paypal' && 'PayPal'}
-            {order.payment_method === 'apple_pay' && 'Apple Pay'}
-          </p>
+          <div className="flex justify-between text-sm mb-1">
+            <span className="text-muted-foreground">Método</span>
+            <span className="text-foreground">
+              {order.payment_method === 'credit_card' && 'Tarjeta de Crédito'}
+              {order.payment_method === 'cash_on_delivery' && 'Efectivo'}
+              {order.payment_method === 'wompi' && 'Tarjeta (Wompi)'}
+              {order.payment_method === 'paypal' && 'PayPal'}
+              {order.payment_method === 'apple_pay' && 'Apple Pay'}
+            </span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Estado del pago</span>
+            <span className={`font-medium ${
+              order.payment_status === 'paid' ? 'text-success' :
+              order.payment_status === 'failed' ? 'text-destructive' :
+              'text-warning'
+            }`}>
+              {order.payment_status === 'paid' && '✓ Pagado'}
+              {order.payment_status === 'pending_payment' && '⏳ Pendiente'}
+              {order.payment_status === 'failed' && '✗ Fallido'}
+            </span>
+          </div>
         </div>
 
         {/* Status history */}
@@ -306,6 +382,10 @@ export default function OrderDetail() {
            <OrderStatusTimeline orderId={orderId} />
          </div>
       </div>
+      {/* Wompi payment widget */}
+      {wompiUrl && (
+        <WompiWidget urlPago={wompiUrl} onClose={handleWompiClose} />
+      )}
     </div>
   );
 }

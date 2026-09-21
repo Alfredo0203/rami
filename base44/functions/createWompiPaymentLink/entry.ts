@@ -92,6 +92,7 @@ Deno.serve(async (req) => {
         configuracion: {
           urlRedirect: redirectUrl,
           urlRetorno: returnUrl,
+          urlWebhook: 'https://fractal-nova-cart-shop.base44.app/functions/wompiWebhook',
           esMontoEditable: false,
           notificarTransaccionCliente: true,
           emailsNotificacion: 'somosrami@gmail.com',

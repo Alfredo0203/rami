@@ -197,7 +197,14 @@ export default function Orders() {
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-muted-foreground font-medium">{order.order_number}</span>
-                <OrderStatusBadge status={order.status} />
+                <div className="flex items-center gap-1.5">
+                  {order.payment_status === 'pending_payment' && order.status === 'pending' && (
+                    <span className="text-[10px] font-bold text-warning bg-warning/10 px-2 py-0.5 rounded-full">
+                      Pago pendiente
+                    </span>
+                  )}
+                  <OrderStatusBadge status={order.status} />
+                </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-2">
