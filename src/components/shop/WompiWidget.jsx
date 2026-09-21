@@ -134,7 +134,7 @@ export default function WompiWidget({ urlPago, onClose, total, loading, orderId,
             </div>
           </div>
         ) : (
-          <div className="overflow-y-auto flex-1 p-2" ref={containerRef} />
+          <div className="overflow-y-auto flex-1 p-2 min-h-[420px] wompi-container" ref={containerRef} />
         )}
       </div>
     </div>

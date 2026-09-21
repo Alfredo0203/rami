@@ -162,3 +162,18 @@ html {
 .animate-pulse-sale {
   animation: pulse-sale 2s ease-in-out infinite;
 }
+
+/* Wompi widget responsivo */
+.wompi-container {
+  width: 100%;
+}
+.wompi-container .wompi_button_widget,
+.wompi-container [class*="wompi"] {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+.wompi-container iframe {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 400px !important;
+}
