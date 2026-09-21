@@ -68,15 +68,12 @@ export default function AdminPoliciesTab() {
 
   const handleSave = (policy) => {
     const draft = getDraft(policy);
-    if (!draft.title?.trim()) {
-      toast.error('El título es obligatorio');
-      return;
-    }
     if (!draft.content?.trim()) {
       toast.error('El contenido es obligatorio');
       return;
     }
-    saveMutation.mutate({ id: policy.id, data: draft });
+    const { title, ...updateData } = draft;
+    saveMutation.mutate({ id: policy.id, data: updateData });
   };
 
   const handleAdd = () => {
