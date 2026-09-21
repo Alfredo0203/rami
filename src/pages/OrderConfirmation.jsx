@@ -7,6 +7,8 @@ import { CheckCircle2, Package, ArrowRight, Loader2, Clock, CreditCard } from 'l
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import InvoicePDF from '@/components/shop/InvoicePDF';
+import WompiWidget from '@/components/shop/WompiWidget';
+import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
 
 export default function OrderConfirmation() {
@@ -16,6 +18,7 @@ export default function OrderConfirmation() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [retrying, setRetrying] = useState(false);
+  const [wompiUrl, setWompiUrl] = useState(null);
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', orderId],
@@ -48,17 +51,20 @@ export default function OrderConfirmation() {
     if (!order) return;
     setRetrying(true);
     try {
+      const baseUrl = appParams.appBaseUrl || window.location.origin;
       const linkRes = await base44.functions.invoke('createWompiPaymentLink', {
         orderId: order.id,
         amount: order.total,
         orderNumber: order.order_number,
+        appBaseUrl: baseUrl,
       });
       if (linkRes.data?.error) throw new Error(linkRes.data.error);
       const url = linkRes.data?.urlEnlace;
       if (!url) throw new Error('No se obtuvo enlace de pago');
-      window.location.href = url;
+      setWompiUrl(url);
     } catch (err) {
       toast.error(err.message || 'Error al reintentar pago');
+    } finally {
       setRetrying(false);
     }
   };
@@ -147,6 +153,10 @@ export default function OrderConfirmation() {
             Ver Mis Pedidos
           </Button>
         </motion.div>
+
+        {wompiUrl && (
+          <WompiWidget urlPago={wompiUrl} onClose={() => setWompiUrl(null)} />
+        )}
       </div>
     );
   }

@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { notifyCustomer } from '../../shared/pushNotifications.ts';
+import { notifyCustomer, notifyAdmins } from '../../shared/pushNotifications.ts';
 
 /**
  * confirmOrder — llama después del pago exitoso (Stripe o Wompi).
@@ -176,6 +176,16 @@ Deno.serve(async (req) => {
         );
       } catch (e) { console.error('Error push cliente:', e?.message || e); }
     }
+
+    // Notificación push al admin: nueva orden recibida (pago confirmado)
+    try {
+      await notifyAdmins(
+        base44,
+        'Nueva orden recibida',
+        `Orden #${order.order_number} • $${Number(order.total).toFixed(2)} • Pago confirmado`,
+        '/Admin'
+      );
+    } catch (e) { console.error('Push admin error:', e?.message || e); }
 
     return Response.json({ order: updatedOrder });
   } catch (error) {

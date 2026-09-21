@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import AddressForm from '@/components/addresses/AddressForm';
 import StripePaymentModal from '@/components/shop/StripePaymentModal';
+import WompiWidget from '@/components/shop/WompiWidget';
+import { appParams } from '@/lib/app-params';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -26,6 +28,8 @@ export default function Checkout() {
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [couponError, setCouponError] = useState('');
   const [wompiLoading, setWompiLoading] = useState(false);
+  const [wompiUrl, setWompiUrl] = useState(null);
+  const [pendingWompiOrderId, setPendingWompiOrderId] = useState(null);
   const [stripeClientSecret, setStripeClientSecret] = useState(null);
   const [stripePublishableKey, setStripePublishableKey] = useState(null);
   const [showStripeModal, setShowStripeModal] = useState(false);
@@ -202,7 +206,7 @@ export default function Checkout() {
     return { shippingAddress, cleanedCartItems };
   };
 
-  // Para Wompi: crear orden primero, luego generar enlace dinámico y redirigir
+  // Para Wompi: crear orden primero, luego generar enlace y mostrar widget embebido
   const handleWompiClick = async () => {
     if (!selectedAddressId) {
       toast.error('Selecciona una dirección de envío');
@@ -222,20 +226,37 @@ export default function Checkout() {
       const order = res.data.order;
       if (!order?.id) throw new Error('No se pudo crear la orden');
 
+      setPendingWompiOrderId(order.id);
+
+      const baseUrl = appParams.appBaseUrl || window.location.origin;
+
       const linkRes = await base44.functions.invoke('createWompiPaymentLink', {
         orderId: order.id,
         amount: total,
         orderNumber: order.order_number,
+        appBaseUrl: baseUrl,
       });
       if (linkRes.data?.error) throw new Error(linkRes.data.error);
       const url = linkRes.data?.urlEnlace;
       if (!url) throw new Error('No se obtuvo enlace de pago');
 
-      // Redirigir al enlace de Wompi
-      window.location.href = url;
+      // Mostrar el widget de Wompi embebido dentro de la app (sin salir al navegador)
+      setWompiUrl(url);
     } catch (err) {
       toast.error(err.message || 'Error al iniciar pago con Wompi');
+      setPendingWompiOrderId(null);
+    } finally {
       setWompiLoading(false);
+    }
+  };
+
+  const handleWompiClose = () => {
+    setWompiUrl(null);
+    if (pendingWompiOrderId) {
+      const orderId = pendingWompiOrderId;
+      setPendingWompiOrderId(null);
+      toast.info('Pago pendiente. Puedes completarlo más tarde.');
+      navigate(createPageUrl('OrderConfirmation') + `?id=${orderId}&payment=pending`);
     }
   };
 
@@ -572,6 +593,11 @@ export default function Checkout() {
           onSuccess={handleStripeSuccess}
           onClose={() => setShowStripeModal(false)}
         />
+      )}
+
+      {/* Wompi Payment Widget (embebido) */}
+      {wompiUrl && (
+        <WompiWidget urlPago={wompiUrl} onClose={handleWompiClose} />
       )}
 
       {/* Place Order */}

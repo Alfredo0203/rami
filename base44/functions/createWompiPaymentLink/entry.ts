@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 });
 
-    const { orderId, amount, orderNumber } = await req.json();
+    const { orderId, amount, orderNumber, appBaseUrl } = await req.json();
 
     if (!orderId || !amount) {
       return Response.json({ error: 'orderId y amount son requeridos' }, { status: 400 });
@@ -61,8 +61,9 @@ Deno.serve(async (req) => {
     const tokenData = await tokenRes.json();
     const accessToken = tokenData.access_token;
 
-    // Construir URL de retorno/redirect — usar la URL publicada de la app
-    const appUrl = 'https://rami-shop.com';
+    // Construir URL de retorno/redirect — usar la URL base de la app pasada desde el frontend
+    // (appBaseUrl), con fallback al origin del request, y finalmente a la URL publicada
+    const appUrl = appBaseUrl || req.headers.get('origin') || 'https://fractal-nova-cart-shop.base44.app';
     const redirectUrl = `${appUrl}/OrderConfirmation?id=${orderId}&payment=success&method=wompi`;
     const returnUrl = `${appUrl}/OrderConfirmation?id=${orderId}&payment=success&method=wompi`;
     console.log('Wompi redirect URLs:', { redirectUrl, returnUrl });

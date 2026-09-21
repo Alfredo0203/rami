@@ -195,17 +195,7 @@ Deno.serve(async (req) => {
        console.error('Error creating history record:', historyErr);
      }
 
-     // Notificación push al admin: nueva orden recibida
-     try {
-      await notifyAdmins(
-        base44,
-        'Nueva orden recibida',
-        `Orden #${order.order_number} • $${Number(order.total).toFixed(2)} • ${paymentMethod === 'cash_on_delivery' ? 'Contra entrega' : 'Pago en línea'}`,
-        '/Admin'
-      );
-     } catch (e) { console.error('Push admin error:', e?.message || e); }
-
-    // ── 4. Para pagos en línea (credit_card, wompi), el stock/cupón/carrito
+     // ── 4. Para pagos en línea (credit_card, wompi), el stock/cupón/carrito
     //     se confirman en confirmOrder tras el pago exitoso.
     //     Para contra entrega, confirmar aquí directamente.
     if (paymentMethod === 'cash_on_delivery') {
@@ -285,6 +275,17 @@ Deno.serve(async (req) => {
           order,
         });
       } catch (e) { console.error('Error email admin:', e.message); }
+
+      // Notificación push al admin: nueva orden recibida (solo para contra entrega,
+      // porque para pagos en línea el push se envía en confirmOrder tras el pago)
+      try {
+        await notifyAdmins(
+          base44,
+          'Nueva orden recibida',
+          `Orden #${order.order_number} • $${Number(order.total).toFixed(2)} • Contra entrega`,
+          '/Admin'
+        );
+      } catch (e) { console.error('Push admin error:', e?.message || e); }
     }
 
     return Response.json({ order });
