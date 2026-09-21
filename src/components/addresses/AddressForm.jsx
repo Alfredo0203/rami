@@ -135,26 +135,10 @@ export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
     toast.success('Ubicación detectada. Revisa los campos antes de guardar.');
   };
 
-  const handleUseLocation = async () => {
+  const handleUseLocation = () => {
     if (!navigator.geolocation) {
       toast.error('Tu dispositivo no soporta GPS');
       return;
-    }
-
-    // Verificar el estado del permiso antes de intentar
-    if (navigator.permissions) {
-      try {
-        const perm = await navigator.permissions.query({ name: 'geolocation' });
-        if (perm.state === 'denied') {
-          toast.error(
-            'Bloqueaste el acceso a tu ubicación. Para usar el GPS, ve a la configuración de tu navegador o dispositivo y permite el acceso a la ubicación para esta app.',
-            { duration: 8000 }
-          );
-          return;
-        }
-      } catch {
-        // Algunos navegadores no soportan permissions.query para geolocation, continuar
-      }
     }
 
     setLocating(true);
@@ -164,7 +148,7 @@ export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
       let msg;
       switch (err.code) {
         case 1:
-          msg = 'Permiso de ubicación denegado. Para usar el GPS, ve a la configuración de tu navegador o dispositivo y permite el acceso a la ubicación para esta app.';
+          msg = 'Permiso de ubicación denegado. Toca el botón nuevamente para solicitar acceso, o activa la ubicación en la configuración de tu dispositivo.';
           break;
         case 2:
           msg = 'No se pudo determinar tu ubicación. Verifica que el GPS esté activado e intenta de nuevo.';
@@ -178,7 +162,8 @@ export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
       toast.error(msg, { duration: 6000 });
     };
 
-    // Primer intento: alta precisión con timeout largo
+    // Siempre intentar — en la app nativa, esto puede volver a mostrar
+    // el diálogo de permiso del sistema operativo aunque se haya denegado antes
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
