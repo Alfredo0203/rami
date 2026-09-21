@@ -101,7 +101,14 @@ function SelectField({ value, onChange, disabled, placeholder, options }) {
 }
 
 export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
-  const [form, setForm] = useState({ ...EMPTY_FORM, ...initial });
+  const [form, setForm] = useState(() => {
+    const data = { ...EMPTY_FORM, ...initial };
+    // Strip the "+503 " prefix from saved phone so the form shows just the 8 digits
+    if (data.phone) {
+      data.phone = data.phone.replace(/^\+503\s?/, '').replace(/\D/g, '').slice(0, 8);
+    }
+    return data;
+  });
   const [errors, setErrors] = useState({});
   const [locating, setLocating] = useState(false);
 
