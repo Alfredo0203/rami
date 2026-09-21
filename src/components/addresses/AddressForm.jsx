@@ -287,7 +287,7 @@ export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
       <Field label="Departamento" error={errors.departamento}>
         <SelectField
           value={form.departamento}
-          onChange={e => set('departamento', e.target.value)}
+          onChange={val => set('departamento', val)}
           placeholder="— Selecciona un departamento —"
           options={departments.map(d => d.name)}
         />
@@ -297,7 +297,7 @@ export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
       <Field label="Municipio" error={errors.municipio}>
         <SelectField
           value={form.municipio}
-          onChange={e => set('municipio', e.target.value)}
+          onChange={val => set('municipio', val)}
           disabled={!form.departamento}
           placeholder={form.departamento ? '— Selecciona un municipio —' : '— Primero selecciona departamento —'}
           options={municipalities}
