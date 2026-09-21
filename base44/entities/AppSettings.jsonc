@@ -77,6 +77,11 @@
       "default": 0,
       "description": "Monto minimo del subtotal para que el envio sea gratis (0 = sin umbral)"
     },
+    "minimum_order_amount": {
+      "type": "number",
+      "default": 0,
+      "description": "Monto minimo del subtotal para poder checkout (0 = sin minimo)"
+    },
     "updated_by": {
       "type": "string",
       "description": "Email of admin who last updated"

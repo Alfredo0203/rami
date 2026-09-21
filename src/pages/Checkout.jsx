@@ -37,6 +37,7 @@ export default function Checkout() {
   const [requestingReactivation, setRequestingReactivation] = useState(false);
   const [shippingCost, setShippingCost] = useState(0);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(0);
+  const [minimumOrderAmount, setMinimumOrderAmount] = useState(0);
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -52,8 +53,11 @@ export default function Checkout() {
       setPaymentMethod(finalMethods[0]);
       setShippingCost(s?.shipping_cost ?? 0);
       setFreeShippingThreshold(s?.free_shipping_threshold ?? 0);
+      setMinimumOrderAmount(s?.minimum_order_amount ?? 0);
     }).catch(() => {});
   }, []);
+
+  const belowMinimum = minimumOrderAmount > 0 && subtotal < minimumOrderAmount;
 
   const { data: rawCartItems = [] } = useQuery({
     queryKey: ['cart', user?.email],
@@ -618,23 +622,30 @@ export default function Checkout() {
 
       {/* Place Order */}
       <div className="sticky bottom-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border px-4 pt-3 pb-6 safe-area-bottom mt-4">
-        {paymentMethod === 'cash_on_delivery' && (
+        {belowMinimum && (
+          <p className="text-xs text-primary text-center mb-2 font-medium">
+            Te faltan <span className="font-bold">${(minimumOrderAmount - subtotal).toFixed(2)}</span> para alcanzar el mínimo de compra de ${minimumOrderAmount.toFixed(2)}
+          </p>
+        )}
+        {paymentMethod === 'cash_on_delivery' && !belowMinimum && (
           <p className="text-xs text-muted-foreground text-center mb-2">
             💵 Pagarás <span className="font-semibold text-foreground">${total.toFixed(2)}</span> en efectivo al recibir tu pedido
           </p>
         )}
-        {paymentMethod === 'wompi' && (
+        {paymentMethod === 'wompi' && !belowMinimum && (
           <p className="text-xs text-muted-foreground text-center mb-2">
             🔒 Pago seguro · Cifrado SSL
           </p>
         )}
         <Button
           onClick={() => paymentMethod === 'wompi' ? handleWompiClick() : placeOrderMutation.mutate()}
-          disabled={placeOrderMutation.isPending || wompiLoading || !selectedAddressId || !paymentMethod}
+          disabled={placeOrderMutation.isPending || wompiLoading || !selectedAddressId || !paymentMethod || belowMinimum}
           className="w-full bg-primary text-primary-foreground font-bold h-11 rounded-full text-base max-w-lg mx-auto block"
         >
           {placeOrderMutation.isPending || wompiLoading ? (
             <Loader2 className="w-5 h-5 animate-spin" />
+          ) : belowMinimum ? (
+            `Faltan $${(minimumOrderAmount - subtotal).toFixed(2)} para el mínimo`
           ) : paymentMethod === 'wompi' ? (
             '💳 Pagar con Tarjeta'
           ) : (

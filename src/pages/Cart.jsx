@@ -18,6 +18,7 @@ export default function Cart() {
 
   const [shippingCost, setShippingCost] = useState(0);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(0);
+  const [minimumOrderAmount, setMinimumOrderAmount] = useState(0);
   const [selectedIds, setSelectedIds] = useState(new Set());
 
   useEffect(() => {
@@ -25,6 +26,7 @@ export default function Cart() {
       const s = results[0];
       setShippingCost(s?.shipping_cost ?? 0);
       setFreeShippingThreshold(s?.free_shipping_threshold ?? 0);
+      setMinimumOrderAmount(s?.minimum_order_amount ?? 0);
     }).catch(() => {});
   }, []);
 
@@ -142,6 +144,9 @@ export default function Cart() {
   const shipping = (shippingCost === 0 || (freeShippingThreshold > 0 && subtotal >= freeShippingThreshold)) ? 0 : shippingCost;
   const total = subtotal + shipping;
 
+  const belowMinimum = minimumOrderAmount > 0 && subtotal < minimumOrderAmount;
+  const remainingForMinimum = belowMinimum ? minimumOrderAmount - subtotal : 0;
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
@@ -252,15 +257,25 @@ export default function Cart() {
         </>
       )}
 
+      {/* Minimum order notice (Temu-style) */}
+      {cartItems.length > 0 && belowMinimum && (
+        <div className="mx-4 mt-4 bg-primary/10 border border-primary/20 rounded-xl p-3 flex items-center gap-2">
+          <ShoppingBag className="w-4 h-4 text-primary shrink-0" />
+          <p className="text-xs text-primary font-medium">
+            Te faltan <span className="font-bold">${remainingForMinimum.toFixed(2)}</span> para alcanzar el mínimo de compra de ${minimumOrderAmount.toFixed(2)}
+          </p>
+        </div>
+      )}
+
       {/* Checkout button */}
       {cartItems.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border px-4 py-3 safe-area-bottom">
           <Button
             onClick={() => navigate(createPageUrl('Checkout'), { state: { selectedItemIds: [...selectedIds] } })}
-            disabled={hasStockIssues || selectedIds.size === 0}
+            disabled={hasStockIssues || selectedIds.size === 0 || belowMinimum}
             className="w-full bg-primary text-primary-foreground font-bold h-12 rounded-full text-base max-w-lg mx-auto block disabled:opacity-50"
           >
-            {selectedIds.size === 0 ? 'Selecciona productos' : `Ir a pagar · ${total.toFixed(2)}`}
+            {selectedIds.size === 0 ? 'Selecciona productos' : belowMinimum ? `Faltan $${remainingForMinimum.toFixed(2)} para el mínimo` : `Ir a pagar · ${total.toFixed(2)}`}
           </Button>
         </div>
       )}

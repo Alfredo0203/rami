@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard, Megaphone, MessageCircle, Shield, Image, Upload } from 'lucide-react';
+import { Loader2, Wrench, CreditCard, Banknote, LayoutDashboard, Megaphone, MessageCircle, Shield, Image, Upload, ShoppingBag } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -36,6 +36,7 @@ export default function AdminSettingsTab({ currentUser }) {
   const [saving, setSaving] = useState(false);
   const [whatsappPhone, setWhatsappPhone] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
+  const [minimumOrderAmount, setMinimumOrderAmount] = useState('0');
   
 
 
@@ -94,6 +95,9 @@ export default function AdminSettingsTab({ currentUser }) {
     }
     if (settings && logoUrl === '') {
       setLogoUrl(settings.logo_url ?? '');
+    }
+    if (settings && minimumOrderAmount === '0') {
+      setMinimumOrderAmount(String(settings.minimum_order_amount ?? 0));
     }
   }, [settings]);
 
@@ -376,6 +380,36 @@ export default function AdminSettingsTab({ currentUser }) {
              className="w-full mt-2"
            >
              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar logo'}
+           </Button>
+         </div>
+       </div>
+
+       {/* Minimum Order Amount */}
+       <div className="bg-card rounded-xl p-4 shadow-sm">
+         <div className="flex items-center gap-2 mb-3">
+           <ShoppingBag className="w-4 h-4 text-primary" />
+           <p className="text-sm font-semibold text-foreground">Mínimo de Compra</p>
+         </div>
+         <p className="text-xs text-muted-foreground mb-3">Monto mínimo del subtotal para que el cliente pueda finalizar la compra (0 = sin mínimo).</p>
+         <div className="space-y-2">
+           <Label htmlFor="minimum-order" className="text-xs">Monto mínimo (USD)</Label>
+           <Input
+             id="minimum-order"
+             type="number"
+             min="0"
+             step="1"
+             value={minimumOrderAmount}
+             onChange={e => setMinimumOrderAmount(e.target.value)}
+             placeholder="0"
+             className="h-9 text-sm"
+           />
+           <Button
+             size="sm"
+             onClick={() => saveSettings({ minimum_order_amount: parseFloat(minimumOrderAmount) || 0 })}
+             disabled={saving}
+             className="w-full mt-2"
+           >
+             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar mínimo'}
            </Button>
          </div>
        </div>
