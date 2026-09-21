@@ -57,8 +57,6 @@ export default function Checkout() {
     }).catch(() => {});
   }, []);
 
-  const belowMinimum = minimumOrderAmount > 0 && subtotal < minimumOrderAmount;
-
   const { data: rawCartItems = [] } = useQuery({
     queryKey: ['cart', user?.email],
     queryFn: () => !user?.email ? [] : base44.entities.CartItem.filter({ created_by: user.email }),
@@ -100,6 +98,7 @@ export default function Checkout() {
     }
   }
   const total = Math.max(0, subtotal - discount + shipping);
+  const belowMinimum = minimumOrderAmount > 0 && subtotal < minimumOrderAmount;
 
   const saveAddressMutation = useMutation({
     mutationFn: (data) => base44.entities.Address.create(data),
