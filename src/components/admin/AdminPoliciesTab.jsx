@@ -176,14 +176,11 @@ export default function AdminPoliciesTab() {
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        if (confirm('¿Eliminar esta sección? Esta acción no se puede deshacer.')) {
-                          deleteMutation.mutate(policy.id);
-                          setExpandedId(null);
-                        }
+                        setDrafts(prev => { const next = { ...prev }; delete next[policy.id]; return next; });
+                        setExpandedId(null);
                       }}
-                      className="border-destructive text-destructive hover:bg-destructive/10"
                     >
-                      <Trash2 className="w-3.5 h-3.5 mr-1" /> Eliminar
+                      Cancelar
                     </Button>
                   </div>
                 </div>
