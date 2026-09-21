@@ -150,7 +150,6 @@ export default function Cart() {
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <h1 className="text-lg font-bold text-foreground">Mi Carrito</h1>
-        <span className="text-sm text-muted-foreground">({cartItems.length})</span>
       </div>
 
       {isDeactivated ? (
@@ -261,7 +260,7 @@ export default function Cart() {
             disabled={hasStockIssues || selectedIds.size === 0}
             className="w-full bg-primary text-primary-foreground font-bold h-12 rounded-full text-base max-w-lg mx-auto block disabled:opacity-50"
           >
-            {selectedIds.size === 0 ? 'Selecciona productos' : `Ir a pagar ${selectedIds.size} · ${total.toFixed(2)}`}
+            {selectedIds.size === 0 ? 'Selecciona productos' : `Ir a pagar · ${total.toFixed(2)}`}
           </Button>
         </div>
       )}

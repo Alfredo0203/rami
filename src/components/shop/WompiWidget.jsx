@@ -1,25 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X } from 'lucide-react';
+import { X, CreditCard, Loader2, Shield } from 'lucide-react';
 import { useBackButtonOverlay } from '@/hooks/useBackButtonClose';
 
 /**
- * Renderiza el widget de cobro de Wompi inline dentro de la app.
- * El script de Wompi ya está cargado en index.html.
- * Se usa un div con clase wompi_button_widget y data-render="widget"
- * para que Wompi inyecte el formulario de pago directamente.
+ * Modal de pago con tarjeta (sin branding del proveedor).
+ * Muestra "Pagar con Tarjeta" + el total mientras se prepara el widget,
+ * luego inyecta el formulario de pago en el contenedor.
  */
-export default function WompiWidget({ urlPago, onClose }) {
-  useBackButtonOverlay(!!urlPago, onClose);
+export default function WompiWidget({ urlPago, onClose, total, loading }) {
+  useBackButtonOverlay(true, onClose);
   const containerRef = useRef(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current || !urlPago) return;
 
-    // Limpiar contenido previo
     containerRef.current.innerHTML = '';
 
-    // Crear el div que Wompi necesita
     const div = document.createElement('div');
     div.className = 'wompi_button_widget';
     div.setAttribute('data-url-pago', urlPago);
@@ -27,15 +24,12 @@ export default function WompiWidget({ urlPago, onClose }) {
     div.setAttribute('data-cubrir-ancho', 'true');
     containerRef.current.appendChild(div);
 
-    // Intentar inicializar el widget de Wompi
-    // El script expone window.WompiPagos o se auto-inicializa vía MutationObserver
     const tryInit = () => {
       if (window.WompiPagos && typeof window.WompiPagos.init === 'function') {
         window.WompiPagos.init();
         setReady(true);
         return true;
       }
-      // Algunos builds exponen window.wompi
       if (window.wompi && typeof window.wompi.init === 'function') {
         window.wompi.init();
         setReady(true);
@@ -45,10 +39,8 @@ export default function WompiWidget({ urlPago, onClose }) {
     };
 
     if (!tryInit()) {
-      // Si el script aún no terminó de inicializarse, recargar el script
       const existingScript = document.querySelector('script[src*="wompi.pagos.js"]');
       if (existingScript) {
-        // Forzar re-ejecución clonando el script
         const newScript = document.createElement('script');
         newScript.src = existingScript.src;
         newScript.onload = () => {
@@ -71,13 +63,16 @@ export default function WompiWidget({ urlPago, onClose }) {
   return (
     <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4">
       <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[92vh] flex flex-col">
-        {/* Header */}
+        {/* Header — sin branding del proveedor */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-[#6C3CE1] rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-bold">W</span>
+            <div className="w-7 h-7 bg-primary rounded-full flex items-center justify-center">
+              <CreditCard className="w-4 h-4 text-white" />
             </div>
-            <span className="font-semibold text-gray-800 text-sm">Pagar con Wompi</span>
+            <div>
+              <span className="font-semibold text-gray-800 text-sm block">Pagar con Tarjeta</span>
+              {total && <span className="text-xs text-gray-500">Total: ${total}</span>}
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -88,8 +83,19 @@ export default function WompiWidget({ urlPago, onClose }) {
           </button>
         </div>
 
-        {/* Widget container — Wompi inyecta aquí */}
-        <div className="overflow-y-auto flex-1 p-2" ref={containerRef} />
+        {/* Contenido: spinner mientras carga, widget cuando esté listo */}
+        {loading || !urlPago ? (
+          <div className="flex flex-col items-center justify-center py-20 px-4">
+            <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
+            <p className="text-sm text-gray-500">Preparando tu pago seguro...</p>
+            <div className="flex items-center gap-1 mt-2 text-xs text-gray-400">
+              <Shield className="w-3 h-3" />
+              <span>Pago cifrado SSL</span>
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-y-auto flex-1 p-2" ref={containerRef} />
+        )}
       </div>
     </div>
   );

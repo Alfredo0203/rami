@@ -29,6 +29,7 @@ export default function Checkout() {
   const [couponError, setCouponError] = useState('');
   const [wompiLoading, setWompiLoading] = useState(false);
   const [wompiUrl, setWompiUrl] = useState(null);
+  const [wompiModalOpen, setWompiModalOpen] = useState(false);
   const [pendingWompiOrderId, setPendingWompiOrderId] = useState(null);
   const [stripeClientSecret, setStripeClientSecret] = useState(null);
   const [stripePublishableKey, setStripePublishableKey] = useState(null);
@@ -212,6 +213,9 @@ export default function Checkout() {
       toast.error('Selecciona una dirección de envío');
       return;
     }
+    // Abrir el modal inmediatamente con estado de carga — no esperar a que terminen las llamadas
+    setWompiModalOpen(true);
+    setWompiUrl(null);
     setWompiLoading(true);
     try {
       const { shippingAddress, cleanedCartItems } = buildOrderPayload();
@@ -240,10 +244,10 @@ export default function Checkout() {
       const url = linkRes.data?.urlEnlace;
       if (!url) throw new Error('No se obtuvo enlace de pago');
 
-      // Mostrar el widget de Wompi embebido dentro de la app (sin salir al navegador)
       setWompiUrl(url);
     } catch (err) {
-      toast.error(err.message || 'Error al iniciar pago con Wompi');
+      toast.error(err.message || 'Error al iniciar pago con tarjeta');
+      setWompiModalOpen(false);
       setPendingWompiOrderId(null);
     } finally {
       setWompiLoading(false);
@@ -251,6 +255,7 @@ export default function Checkout() {
   };
 
   const handleWompiClose = () => {
+    setWompiModalOpen(false);
     setWompiUrl(null);
     if (pendingWompiOrderId) {
       setPendingWompiOrderId(null);
@@ -593,9 +598,14 @@ export default function Checkout() {
         />
       )}
 
-      {/* Wompi Payment Widget (embebido) */}
-      {wompiUrl && (
-        <WompiWidget urlPago={wompiUrl} onClose={handleWompiClose} />
+      {/* Modal de pago con tarjeta (embebido) */}
+      {wompiModalOpen && (
+        <WompiWidget
+          urlPago={wompiUrl}
+          onClose={handleWompiClose}
+          total={total.toFixed(2)}
+          loading={!wompiUrl}
+        />
       )}
 
       {/* Place Order */}
