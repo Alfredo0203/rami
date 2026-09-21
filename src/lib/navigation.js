@@ -16,6 +16,8 @@ export function goBack(navigate, fallback = '/') {
   if (_navDepth > 0) {
     navigate(-1);
   } else {
-    navigate(fallback);
+    // Use REPLACE so we don't add a new history entry — otherwise the user
+    // could bounce between the fallback page and the current page forever.
+    navigate(fallback, { replace: true });
   }
 }

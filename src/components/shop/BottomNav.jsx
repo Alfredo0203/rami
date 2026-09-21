@@ -35,6 +35,7 @@ export default function BottomNav({ cartCount = 0 }) {
              <Link
                key={page || path}
                to={url}
+               replace
                className={`flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl transition-all ${
                  isActive ? 'text-primary' : 'text-muted-foreground'
                }`}
