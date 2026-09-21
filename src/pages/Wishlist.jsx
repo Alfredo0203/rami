@@ -42,7 +42,7 @@ export default function Wishlist() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-8">
         <Heart className="w-16 h-16 text-muted-foreground/30" />
         <p className="text-muted-foreground text-center">Inicia sesión para ver tus favoritos</p>
-        <Button onClick={() => navigate('/Login?from=' + encodeURIComponent(window.location.pathname))} className="rounded-full">
+        <Button onClick={() => navigate('/Login?from=' + encodeURIComponent(window.location.pathname + window.location.search))} className="rounded-full">
           Iniciar sesión
         </Button>
       </div>

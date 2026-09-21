@@ -627,7 +627,7 @@ export default function ProductDetail() {
             </button>
           </div>
           <Button
-            onClick={() => isGuest ? navigate('/Login?from=' + encodeURIComponent(window.location.pathname)) : addToCartMutation.mutate()}
+            onClick={() => isGuest ? navigate('/Login?from=' + encodeURIComponent(window.location.pathname + window.location.search)) : addToCartMutation.mutate()}
             disabled={addToCartMutation.isPending || (!isGuest && !inStock) || needsVariantSelection}
             className="flex-1 bg-primary text-primary-foreground font-bold h-12 rounded-full text-base"
           >

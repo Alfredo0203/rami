@@ -112,7 +112,7 @@ export default function DevModeGuard({ children }) {
           const currentPath = location.pathname;
           const isGuestAllowed = GUEST_ALLOWED_PATHS.some(p => currentPath.startsWith(p));
           if (!isGuestAllowed) {
-            navigate('/Login?from=' + encodeURIComponent(location.pathname));
+            navigate('/Login?from=' + encodeURIComponent(location.pathname + location.search));
             return;
           }
         }
