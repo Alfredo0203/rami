@@ -23,25 +23,25 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <div style={{ overflowX: 'clip' }}>
-      <AnimatePresence mode="popLayout" initial={false} custom={dir}>
-        <motion.div
-          key={location.pathname + location.search}
-          custom={dir}
-          variants={{
-            initial: (d) => ({ x: `${d * 100}%`, opacity: 0 }),
-            animate: { x: 0, opacity: 1 },
-            exit: (d) => ({ x: `${d * -30}%`, opacity: 0 }),
-          }}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-        >
-          <DevModeGuard>
+      <DevModeGuard>
+        <AnimatePresence mode="popLayout" initial={false} custom={dir}>
+          <motion.div
+            key={location.pathname + location.search}
+            custom={dir}
+            variants={{
+              initial: (d) => ({ x: `${d * 100}%`, opacity: 0 }),
+              animate: { x: 0, opacity: 1 },
+              exit: (d) => ({ x: `${d * -30}%`, opacity: 0 }),
+            }}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
             {children}
-          </DevModeGuard>
-        </motion.div>
-      </AnimatePresence>
+          </motion.div>
+        </AnimatePresence>
+      </DevModeGuard>
     </div>
   );
 }

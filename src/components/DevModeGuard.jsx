@@ -33,6 +33,9 @@ export default function DevModeGuard({ children }) {
   useEffect(() => {
     let cancelled = false;
     async function check() {
+      // Reset previous block state so the new page renders immediately
+      setBlocked(false);
+      setDeactivatedUser(null);
       try {
         const [user, settings] = await Promise.all([
           base44.auth.me().catch(() => null),
