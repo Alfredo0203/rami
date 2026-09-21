@@ -95,11 +95,11 @@ export default function Addresses() {
           )}
         </AnimatePresence>
 
-        {isLoading ? (
+        {!showForm && (isLoading ? (
           <div className="flex justify-center py-10">
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
           </div>
-        ) : addresses.length === 0 && !showForm ? (
+        ) : addresses.length === 0 ? (
           <div className="text-center py-16">
             <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
             <p className="text-foreground font-medium">Sin direcciones guardadas</p>
@@ -144,7 +144,7 @@ export default function Addresses() {
               </motion.div>
             ))}
           </AnimatePresence>
-        )}
+        ))}
       </div>
     </div>
   );
