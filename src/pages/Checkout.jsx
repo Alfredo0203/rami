@@ -10,8 +10,6 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import AddressForm from '@/components/addresses/AddressForm';
 import StripePaymentModal from '@/components/shop/StripePaymentModal';
-import WompiWidget from '@/components/shop/WompiWidget';
-import { appParams } from '@/lib/app-params';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -20,17 +18,13 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [userStatus, setUserStatus] = useState(null);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
-  const [allowedPaymentMethods, setAllowedPaymentMethods] = useState(['wompi']);
+  const [allowedPaymentMethods, setAllowedPaymentMethods] = useState(['credit_card']);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [user, setUser] = useState(null);
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [couponError, setCouponError] = useState('');
-  const [wompiLoading, setWompiLoading] = useState(false);
-  const [wompiUrl, setWompiUrl] = useState(null);
-  const [wompiModalOpen, setWompiModalOpen] = useState(false);
-  const [pendingWompiOrderId, setPendingWompiOrderId] = useState(null);
   const [stripeClientSecret, setStripeClientSecret] = useState(null);
   const [stripePublishableKey, setStripePublishableKey] = useState(null);
   const [showStripeModal, setShowStripeModal] = useState(false);
@@ -46,10 +40,10 @@ export default function Checkout() {
     }).catch(() => {});
     base44.entities.AppSettings.filter({ key: 'global' }).then(results => {
       const s = results[0];
-      const rawMethods = s?.allowed_payment_methods?.length ? s.allowed_payment_methods : ['wompi'];
-      // Ocultar Stripe (credit_card) por ahora — usar Wompi como tarjeta
-      const methods = rawMethods.filter(m => m !== 'credit_card');
-      const finalMethods = methods.length ? methods : ['wompi'];
+      const rawMethods = s?.allowed_payment_methods?.length ? s.allowed_payment_methods : ['credit_card'];
+      // Usar Stripe (credit_card) para tarjetas — sin branding de terceros
+      const methods = rawMethods.filter(m => m !== 'wompi');
+      const finalMethods = methods.length ? methods : ['credit_card'];
       setAllowedPaymentMethods(finalMethods);
       setPaymentMethod(finalMethods[0]);
       setShippingCost(s?.shipping_cost ?? 0);
@@ -205,62 +199,6 @@ export default function Checkout() {
     }));
 
     return { shippingAddress, cleanedCartItems };
-  };
-
-  // Para Wompi: crear orden primero, luego generar enlace y mostrar widget embebido
-  const handleWompiClick = async () => {
-    if (!selectedAddressId) {
-      toast.error('Selecciona una dirección de envío');
-      return;
-    }
-    // Abrir el modal inmediatamente con estado de carga — no esperar a que terminen las llamadas
-    setWompiModalOpen(true);
-    setWompiUrl(null);
-    setWompiLoading(true);
-    try {
-      const { shippingAddress, cleanedCartItems } = buildOrderPayload();
-      const res = await base44.functions.invoke('placeOrder', {
-        cartItems: cleanedCartItems,
-        shippingAddress,
-        paymentMethod: 'wompi',
-        couponCode: appliedCoupon?.code,
-        skipCartClear: true,
-      });
-      if (res.data?.error) throw new Error(res.data.details?.join('\n') || res.data.error);
-      const order = res.data.order;
-      if (!order?.id) throw new Error('No se pudo crear la orden');
-
-      setPendingWompiOrderId(order.id);
-
-      const baseUrl = appParams.appBaseUrl || window.location.origin;
-
-      const linkRes = await base44.functions.invoke('createWompiPaymentLink', {
-        orderId: order.id,
-        amount: total,
-        orderNumber: order.order_number,
-        appBaseUrl: baseUrl,
-      });
-      if (linkRes.data?.error) throw new Error(linkRes.data.error);
-      const url = linkRes.data?.urlEnlace;
-      if (!url) throw new Error('No se obtuvo enlace de pago');
-
-      setWompiUrl(url);
-    } catch (err) {
-      toast.error(err.message || 'Error al iniciar pago con tarjeta');
-      setWompiModalOpen(false);
-      setPendingWompiOrderId(null);
-    } finally {
-      setWompiLoading(false);
-    }
-  };
-
-  const handleWompiClose = () => {
-    setWompiModalOpen(false);
-    setWompiUrl(null);
-    if (pendingWompiOrderId) {
-      setPendingWompiOrderId(null);
-      toast.info('Pago cancelado. Puedes intentar nuevamente cuando quieras.');
-    }
   };
 
   const handleStripeSuccess = async (paymentIntentId, orderId) => {
@@ -482,7 +420,7 @@ export default function Checkout() {
           </div>
           <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-2">
             {[
-              { value: 'wompi', icon: CreditCard, label: 'Tarjeta de Crédito / Débito', description: 'Pago seguro en línea' },
+              { value: 'credit_card', icon: CreditCard, label: 'Tarjeta de Crédito / Débito', description: 'Pago seguro en línea' },
               { value: 'cash_on_delivery', icon: Banknote, label: 'Efectivo', description: 'Pagas en efectivo al recibir tu pedido' },
             ].filter(m => allowedPaymentMethods.includes(m.value)).map(method => {
               const Icon = method.icon;
@@ -598,16 +536,6 @@ export default function Checkout() {
         />
       )}
 
-      {/* Modal de pago con tarjeta (embebido) */}
-      {wompiModalOpen && (
-        <WompiWidget
-          urlPago={wompiUrl}
-          onClose={handleWompiClose}
-          total={total.toFixed(2)}
-          loading={!wompiUrl}
-        />
-      )}
-
       {/* Place Order */}
       <div className="sticky bottom-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border px-4 pt-3 pb-6 safe-area-bottom mt-4">
         {paymentMethod === 'cash_on_delivery' && (
@@ -615,19 +543,19 @@ export default function Checkout() {
             💵 Pagarás <span className="font-semibold text-foreground">${total.toFixed(2)}</span> en efectivo al recibir tu pedido
           </p>
         )}
-        {paymentMethod === 'wompi' && (
+        {paymentMethod === 'credit_card' && (
           <p className="text-xs text-muted-foreground text-center mb-2">
             🔒 Pago seguro · Cifrado SSL
           </p>
         )}
         <Button
-          onClick={() => paymentMethod === 'wompi' ? handleWompiClick() : placeOrderMutation.mutate()}
-          disabled={placeOrderMutation.isPending || wompiLoading || !selectedAddressId || !paymentMethod}
+          onClick={() => placeOrderMutation.mutate()}
+          disabled={placeOrderMutation.isPending || !selectedAddressId || !paymentMethod}
           className="w-full bg-primary text-primary-foreground font-bold h-11 rounded-full text-base max-w-lg mx-auto block"
         >
-          {placeOrderMutation.isPending || wompiLoading ? (
+          {placeOrderMutation.isPending ? (
             <Loader2 className="w-5 h-5 animate-spin" />
-          ) : paymentMethod === 'wompi' ? (
+          ) : paymentMethod === 'credit_card' ? (
             '💳 Pagar con Tarjeta'
           ) : (
             'Finalizar Compra'
