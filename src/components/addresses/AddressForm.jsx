@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -209,9 +209,13 @@ export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
     );
   };
 
-  // Reset municipio when departamento changes
+  // Reset municipio when departamento changes (skip initial mount so editing keeps saved value)
+  const prevDeptRef = useRef(form.departamento);
   useEffect(() => {
-    setForm(f => ({ ...f, municipio: '' }));
+    if (prevDeptRef.current !== form.departamento) {
+      prevDeptRef.current = form.departamento;
+      setForm(f => ({ ...f, municipio: '' }));
+    }
   }, [form.departamento]);
 
   const set = (field, value) => {
