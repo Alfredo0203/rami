@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Loader2, MapPin, Navigation } from 'lucide-react';
 import { getDepartments, getMunicipalities } from '@/lib/territorial';
 import { toast } from 'sonner';
@@ -82,17 +83,20 @@ function Field({ label, error, optional, children }) {
 
 function SelectField({ value, onChange, disabled, placeholder, options }) {
   return (
-    <select
-      value={value}
-      onChange={onChange}
+    <Select
+      value={value || undefined}
+      onValueChange={onChange}
       disabled={disabled}
-      className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
     >
-      <option value="">{placeholder}</option>
-      {options.map(opt => (
-        <option key={opt} value={opt}>{opt}</option>
-      ))}
-    </select>
+      <SelectTrigger className="h-9 text-sm">
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map(opt => (
+          <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
