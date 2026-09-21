@@ -208,7 +208,7 @@ export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
         <Field label="Nombre" error={errors.first_name}>
           <Input
             value={form.first_name}
-            onChange={e => set('first_name', e.target.value)}
+            onChange={e => set('first_name', e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, ''))}
             placeholder="Ej: María"
             className="h-9 text-sm"
           />
@@ -216,7 +216,7 @@ export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
         <Field label="Apellido" error={errors.last_name}>
           <Input
             value={form.last_name}
-            onChange={e => set('last_name', e.target.value)}
+            onChange={e => set('last_name', e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, ''))}
             placeholder="Ej: García"
             className="h-9 text-sm"
           />
