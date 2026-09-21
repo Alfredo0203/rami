@@ -108,40 +108,64 @@ export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
     : [];
 
   // GPS: get coordinates and reverse-geocode to fill the address fields
+  const fillFormFromCoords = async (latitude, longitude) => {
+    const addr = await reverseGeocode(latitude, longitude);
+
+    // Match departamento to known SV list
+    const matchedDept = matchName(addr.state, departmentNames);
+    let matchedMuni = '';
+    if (matchedDept) {
+      const muniNames = getMunicipalities(COUNTRY_CODE, matchedDept);
+      matchedMuni = matchName(addr.city || addr.town || addr.village || addr.county, muniNames);
+    }
+
+    setForm(f => ({
+      ...f,
+      departamento: matchedDept || f.departamento,
+      municipio: matchedMuni || f.municipio,
+      colonia: addr.suburb || addr.neighbourhood || addr.hamlet || addr.quarter || f.colonia,
+      street: addr.road || addr.pedestrian || addr.footway || f.street,
+      house_number: addr.house_number || f.house_number,
+      reference: [
+        addr.neighbourhood && addr.neighbourhood !== (addr.suburb || '') ? addr.neighbourhood : '',
+        addr.city && addr.city !== matchedMuni ? addr.city : '',
+      ].filter(Boolean).join(', ') || f.reference,
+    }));
+    setErrors({});
+    toast.success('Ubicación detectada. Revisa los campos antes de guardar.');
+  };
+
   const handleUseLocation = () => {
     if (!navigator.geolocation) {
       toast.error('Tu dispositivo no soporta GPS');
       return;
     }
     setLocating(true);
+
+    const onError = (err) => {
+      setLocating(false);
+      let msg;
+      switch (err.code) {
+        case 1:
+          msg = 'Permiso de ubicación denegado. Activa los permisos de ubicación en la configuración de tu dispositivo.';
+          break;
+        case 2:
+          msg = 'No se pudo determinar tu ubicación. Verifica que el GPS esté activado e intenta de nuevo.';
+          break;
+        case 3:
+          msg = 'El GPS tardó demasiado. Asegúrate de estar al aire libre o cerca de una ventana e intenta de nuevo.';
+          break;
+        default:
+          msg = 'No se pudo obtener tu ubicación. Inténtalo de nuevo.';
+      }
+      toast.error(msg);
+    };
+
+    // Primer intento: alta precisión con timeout largo
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
-          const { latitude, longitude } = position.coords;
-          const addr = await reverseGeocode(latitude, longitude);
-
-          // Match departamento to known SV list
-          const matchedDept = matchName(addr.state, departmentNames);
-          let matchedMuni = '';
-          if (matchedDept) {
-            const muniNames = getMunicipalities(COUNTRY_CODE, matchedDept);
-            matchedMuni = matchName(addr.city || addr.town || addr.village || addr.county, muniNames);
-          }
-
-          setForm(f => ({
-            ...f,
-            departamento: matchedDept || f.departamento,
-            municipio: matchedMuni || f.municipio,
-            colonia: addr.suburb || addr.neighbourhood || addr.hamlet || addr.quarter || f.colonia,
-            street: addr.road || addr.pedestrian || addr.footway || f.street,
-            house_number: addr.house_number || f.house_number,
-            reference: [
-              addr.neighbourhood && addr.neighbourhood !== (addr.suburb || '') ? addr.neighbourhood : '',
-              addr.city && addr.city !== matchedMuni ? addr.city : '',
-            ].filter(Boolean).join(', ') || f.reference,
-          }));
-          setErrors({});
-          toast.success('Ubicación detectada. Revisa los campos antes de guardar.');
+          await fillFormFromCoords(position.coords.latitude, position.coords.longitude);
         } catch (err) {
           toast.error(err.message || 'Error al obtener tu dirección');
         } finally {
@@ -149,13 +173,26 @@ export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
         }
       },
       (err) => {
-        setLocating(false);
-        const msg = err.code === 1
-          ? 'Permiso de ubicación denegado. Actívalo en tu navegador.'
-          : 'No se pudo obtener tu ubicación. Inténtalo de nuevo.';
-        toast.error(msg);
+        // Si falla por timeout o posición no disponible, reintentar con baja precisión
+        if (err.code === 2 || err.code === 3) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              try {
+                await fillFormFromCoords(position.coords.latitude, position.coords.longitude);
+              } catch (retryErr) {
+                toast.error(retryErr.message || 'Error al obtener tu dirección');
+              } finally {
+                setLocating(false);
+              }
+            },
+            onError,
+            { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+          );
+        } else {
+          onError(err);
+        }
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 30000 }
     );
   };
 
