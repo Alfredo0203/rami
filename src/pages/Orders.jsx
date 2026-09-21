@@ -74,7 +74,9 @@ export default function Orders() {
 
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
 
-  const filteredOrders = statusFilter === 'all' ? orders : orders.filter(o => o.status === statusFilter);
+  // Ocultar órdenes no pagadas (estilo Temu: si no pagaste, no hay orden)
+  const visibleOrders = orders.filter(o => o.payment_status !== 'pending_payment');
+  const filteredOrders = statusFilter === 'all' ? visibleOrders : visibleOrders.filter(o => o.status === statusFilter);
   const activeFilterCount = statusFilter !== 'all' ? 1 : 0;
 
   return (
@@ -94,7 +96,7 @@ export default function Orders() {
                 </span>
               )}
             </Link>
-            {orders.length > 0 && (
+            {visibleOrders.length > 0 && (
               <button
                 onClick={() => setShowFilters(s => !s)}
                 className={`relative w-9 h-9 flex items-center justify-center rounded-full transition-colors ${showFilters || activeFilterCount > 0 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground'}`}
@@ -160,7 +162,7 @@ export default function Orders() {
         <div className="flex justify-center py-20">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
-      ) : orders.length === 0 ? (
+      ) : visibleOrders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 px-4">
           <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
             <Package className="w-10 h-10 text-muted-foreground" />
@@ -197,14 +199,7 @@ export default function Orders() {
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-muted-foreground font-medium">{order.order_number}</span>
-                <div className="flex items-center gap-1.5">
-                  {order.payment_status === 'pending_payment' && order.status === 'pending' && (
-                    <span className="text-[10px] font-bold text-warning bg-warning/10 px-2 py-0.5 rounded-full">
-                      Pago pendiente
-                    </span>
-                  )}
-                  <OrderStatusBadge status={order.status} />
-                </div>
+                <OrderStatusBadge status={order.status} />
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-2">

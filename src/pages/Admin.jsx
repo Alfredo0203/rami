@@ -63,6 +63,8 @@ export default function Admin() {
   const { data: orders = [], isLoading: loadingOrders } = useQuery({
     queryKey: ['admin-orders'],
     queryFn: () => base44.entities.Order.list('-created_date'),
+    // Ocultar órdenes no pagadas (estilo Temu: el admin solo ve órdenes reales)
+    select: (data) => data.filter(o => o.payment_status !== 'pending_payment'),
   });
 
   const { data: categories = [] } = useQuery({

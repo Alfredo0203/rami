@@ -253,10 +253,8 @@ export default function Checkout() {
   const handleWompiClose = () => {
     setWompiUrl(null);
     if (pendingWompiOrderId) {
-      const orderId = pendingWompiOrderId;
       setPendingWompiOrderId(null);
-      toast.info('Pago pendiente. Puedes completarlo más tarde.');
-      navigate(createPageUrl('OrderConfirmation') + `?id=${orderId}&payment=pending`);
+      toast.info('Pago cancelado. Puedes intentar nuevamente cuando quieras.');
     }
   };
 

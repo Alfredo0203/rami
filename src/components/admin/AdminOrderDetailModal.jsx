@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import OrderStatusBadge from '../shop/OrderStatusBadge';
@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { formatDateSV } from '@/lib/dateUtils';
 import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Phone, MapPin, Mail, Package, CreditCard, StickyNote, Truck, X, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Phone, MapPin, Mail, Package, CreditCard, StickyNote, Truck, X } from 'lucide-react';
 
 const NON_CANCELLABLE = ['delivered', 'cancelled'];
 
@@ -28,10 +28,6 @@ const PAYMENT_STATUS_LABELS = {
 
 export default function AdminOrderDetailModal({ order, open, onOpenChange }) {
   const queryClient = useQueryClient();
-  const [verifying, setVerifying] = useState(false);
-
-  const isOnlinePayment = order?.payment_method === 'wompi' || order?.payment_method === 'credit_card';
-  const isPaymentPending = order?.payment_status === 'pending_payment';
 
   const updateMutation = useMutation({
     mutationFn: ({ newStatus, extraFields }) =>
@@ -48,11 +44,6 @@ export default function AdminOrderDetailModal({ order, open, onOpenChange }) {
       toast.error('No se puede cancelar un pedido ya entregado o cancelado');
       return;
     }
-    // Bloquear avance de estado si el pago online está pendiente
-    if (isOnlinePayment && isPaymentPending && ['processing', 'shipped', 'delivered'].includes(newStatus)) {
-      toast.error('No se puede avanzar el estado: el pago está pendiente. Verifica o confirma el pago primero.');
-      return;
-    }
     const extraFields = {};
     if (newStatus === 'shipped' && !order.tracking_number) {
       const ts = Date.now().toString(36).toUpperCase();
@@ -60,26 +51,6 @@ export default function AdminOrderDetailModal({ order, open, onOpenChange }) {
       extraFields.tracking_number = 'RA-' + ts + rand;
     }
     updateMutation.mutate({ newStatus, extraFields });
-  };
-
-  const handleVerifyPayment = async () => {
-    setVerifying(true);
-    try {
-      const res = await base44.functions.invoke('verifyWompiPayment', { orderId: order.id });
-      if (res.data?.error) throw new Error(res.data.error);
-      if (res.data?.alreadyPaid) {
-        toast.info('El pago ya estaba confirmado');
-      } else if (res.data?.approved) {
-        toast.success('¡Pago verificado y confirmado en Wompi!');
-        queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-      } else {
-        toast.warning(res.data?.message || 'No se encontró pago aprobado en Wompi');
-      }
-    } catch (err) {
-      toast.error(err?.message || 'Error al verificar el pago');
-    } finally {
-      setVerifying(false);
-    }
   };
 
   const saveTracking = (val) => {
@@ -252,37 +223,6 @@ export default function AdminOrderDetailModal({ order, open, onOpenChange }) {
               </div>
             )}
           </div>
-
-          {/* Pending payment warning + verify button */}
-          {isOnlinePayment && isPaymentPending && (
-            <div className="bg-warning/10 border border-warning/30 rounded-xl p-3 space-y-2">
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs font-bold text-warning">Pago pendiente</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    Este pedido no ha sido pagado. No se puede avanzar el estado hasta confirmar el pago.
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleVerifyPayment}
-                disabled={verifying}
-                className="w-full flex items-center justify-center gap-2 h-9 bg-warning text-white rounded-lg text-xs font-semibold disabled:opacity-60"
-              >
-                {verifying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                {verifying ? 'Verificando en Wompi…' : 'Verificar pago en Wompi'}
-              </button>
-            </div>
-          )}
-
-          {/* Payment confirmed badge */}
-          {order.payment_status === 'paid' && (
-            <div className="bg-success/10 border border-success/30 rounded-xl p-3 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
-              <p className="text-xs font-semibold text-success">Pago confirmado</p>
-            </div>
-          )}
 
           {/* Customer notes */}
           {order.customer_notes && (
