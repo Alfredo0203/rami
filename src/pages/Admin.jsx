@@ -63,8 +63,11 @@ export default function Admin() {
   const { data: orders = [], isLoading: loadingOrders } = useQuery({
     queryKey: ['admin-orders'],
     queryFn: () => base44.entities.Order.list('-created_date'),
-    // Ocultar órdenes no pagadas (estilo Temu: el admin solo ve órdenes reales)
-    select: (data) => data.filter(o => o.payment_status !== 'pending_payment'),
+    // Ocultar órdenes de pago online no completadas — el admin solo ve órdenes reales
+    // Contra entrega SI se muestra — son órdenes válidas con pago al recibir
+    select: (data) => data.filter(o =>
+      o.payment_status !== 'pending_payment' || o.payment_method === 'cash_on_delivery'
+    ),
   });
 
   const { data: categories = [] } = useQuery({

@@ -74,8 +74,11 @@ export default function Orders() {
 
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
 
-  // Ocultar órdenes no pagadas (estilo Temu: si no pagaste, no hay orden)
-  const visibleOrders = orders.filter(o => o.payment_status !== 'pending_payment');
+  // Ocultar órdenes de pago online no completadas (estilo Temu: si no pagaste, no hay orden)
+  // Contra entrega SI se muestra — son órdenes válidas con pago al recibir
+  const visibleOrders = orders.filter(o =>
+    o.payment_status !== 'pending_payment' || o.payment_method === 'cash_on_delivery'
+  );
   const filteredOrders = statusFilter === 'all' ? visibleOrders : visibleOrders.filter(o => o.status === statusFilter);
   const activeFilterCount = statusFilter !== 'all' ? 1 : 0;
 
