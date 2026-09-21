@@ -71,7 +71,8 @@ export default function OrderDetail() {
   const isCancelled = order.status === 'cancelled';
 
   // Lógica de cancelación según método de pago
-  const isOnlinePayment = order.payment_method === 'credit_card';
+  const isOnlinePayment = ['credit_card', 'wompi', 'paypal'].includes(order.payment_method);
+  const isWompi = order.payment_method === 'wompi';
   const orderAgeHours = order.created_date
     ? (Date.now() - new Date(order.created_date).getTime()) / (1000 * 60 * 60)
     : 0;
@@ -160,7 +161,9 @@ export default function OrderDetail() {
                 <AlertDialogTitle>¿Cancelar este pedido?</AlertDialogTitle>
                 <AlertDialogDescription>
                   {isOnlinePayment && order.payment_status === 'paid'
-                    ? 'Se procesará un reembolso automático a tu tarjeta. Puede tardar 5-10 días hábiles en reflejarse.'
+                    ? isWompi
+                      ? 'Tu reembolso será procesado manualmente y se reflejará en tu cuenta en los próximos días hábiles.'
+                      : 'Se procesará un reembolso automático a tu tarjeta. Puede tardar 5-10 días hábiles en reflejarse.'
                     : 'Esta acción no se puede deshacer. El pedido será marcado como cancelado y el stock será restaurado.'}
                   {isOnlinePayment && within24h && (
                     <span className="block mt-1 text-warning font-medium">
