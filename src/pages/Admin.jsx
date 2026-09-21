@@ -7,7 +7,7 @@ import AdminProductForm from '../components/admin/AdminProductForm';
 import AdminOrderCard from '../components/admin/AdminOrderCard';
 import AdminOrderDetailModal from '../components/admin/AdminOrderDetailModal';
 import AdminUserCard from '../components/admin/AdminUserCard';
-import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, Trash2, Loader2, Eye, EyeOff, Users, Settings, MessageSquare, LayoutGrid, BarChart3, Ticket, Search, AlertTriangle, History, Store, ChevronDown, ChevronUp, SlidersHorizontal, X, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Plus, Package, ShoppingBag, DollarSign, TrendingUp, Edit2, Trash2, Loader2, Eye, EyeOff, Users, Settings, MessageSquare, LayoutGrid, BarChart3, Ticket, Search, AlertTriangle, History, Store, ChevronDown, ChevronUp, SlidersHorizontal, X, RotateCcw, FileText } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import AdminSettingsTab from '../components/admin/AdminSettingsTab';
 import AdminReviewsTab from '../components/admin/AdminReviewsTab';
@@ -15,6 +15,7 @@ import AdminCategoriesTab from '../components/admin/AdminCategoriesTab';
 import AdminCouponsTab from '../components/admin/AdminCouponsTab';
 import AdminStoresTab from '../components/admin/AdminStoresTab';
 import AdminRefundsTab from '../components/admin/AdminRefundsTab';
+import AdminPoliciesTab from '../components/admin/AdminPoliciesTab';
 import AdminInventoryModal from '../components/admin/AdminInventoryModal';
 import InventoryHistoryModal from '../components/admin/InventoryHistoryModal';
 import { Button } from '@/components/ui/button';
@@ -211,6 +212,7 @@ export default function Admin() {
               <TabsTrigger value="reviews" className="px-2"><MessageSquare className="w-4 h-4" /></TabsTrigger>
               <TabsTrigger value="stores" className="px-2"><Store className="w-4 h-4" /></TabsTrigger>
               <TabsTrigger value="refunds" className="px-2"><RotateCcw className="w-4 h-4" /></TabsTrigger>
+              <TabsTrigger value="policies" className="px-2"><FileText className="w-4 h-4" /></TabsTrigger>
               {user?.role === 'super_admin' && (
                 <TabsTrigger value="settings" className="px-2"><Settings className="w-4 h-4" /></TabsTrigger>
               )}
@@ -732,6 +734,10 @@ export default function Admin() {
 
         <TabsContent value="refunds">
           <AdminRefundsTab />
+        </TabsContent>
+
+        <TabsContent value="policies">
+          <AdminPoliciesTab />
         </TabsContent>
 
         {user?.role === 'super_admin' && (
