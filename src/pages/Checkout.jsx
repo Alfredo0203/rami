@@ -259,6 +259,16 @@ export default function Checkout() {
     }
   };
 
+  const handleWompiSuccess = (orderId) => {
+    setWompiModalOpen(false);
+    setWompiUrl(null);
+    setPendingWompiOrderId(null);
+    queryClient.invalidateQueries({ queryKey: ['cart'] });
+    queryClient.invalidateQueries({ queryKey: ['orders'] });
+    queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
+    navigate(createPageUrl('OrderConfirmation') + `?id=${orderId}&payment=success`);
+  };
+
   const handleStripeSuccess = async (paymentIntentId, orderId) => {
     try {
       if (!orderId) {
@@ -601,6 +611,8 @@ export default function Checkout() {
           onClose={handleWompiClose}
           total={total.toFixed(2)}
           loading={!wompiUrl}
+          orderId={pendingWompiOrderId}
+          onSuccess={handleWompiSuccess}
         />
       )}
 

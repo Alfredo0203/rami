@@ -1,16 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, CreditCard, Loader2, Shield } from 'lucide-react';
+import { X, CreditCard, Loader2, Shield, CheckCircle2 } from 'lucide-react';
 import { useBackButtonOverlay } from '@/hooks/useBackButtonClose';
+import { base44 } from '@/api/base44Client';
 
 /**
  * Modal de pago con tarjeta (sin branding del proveedor).
  * Muestra "Pagar con Tarjeta" + el total mientras se prepara el widget,
  * luego inyecta el formulario de pago en el contenedor.
+ *
+ * En lugar de depender del redirect de Wompi (que se bloquea dentro del
+ * iframe por X-Frame-Options), hace polling del estado de la orden y
+ * dispara onSuccess cuando el webhook la marca como pagada.
  */
-export default function WompiWidget({ urlPago, onClose, total, loading }) {
+export default function WompiWidget({ urlPago, onClose, total, loading, orderId, onSuccess }) {
   useBackButtonOverlay(true, onClose);
   const containerRef = useRef(null);
   const [ready, setReady] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current || !urlPago) return;
@@ -60,6 +66,33 @@ export default function WompiWidget({ urlPago, onClose, total, loading }) {
     };
   }, [urlPago]);
 
+  // Polling del estado de la orden: cuando el webhook de Wompi la marque
+  // como pagada, navegamos internamente (sin depender del redirect que
+  // se bloquea dentro del iframe por X-Frame-Options).
+  useEffect(() => {
+    if (!orderId || !onSuccess) return;
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const order = await base44.entities.Order.get(orderId);
+        if (cancelled) return;
+        if (order?.payment_status === 'paid') {
+          setVerifying(true);
+          onSuccess(orderId);
+          return;
+        }
+      } catch (e) {
+        // ordenar aún no existe o no se pudo leer — seguir intentando
+      }
+    };
+    poll();
+    const interval = setInterval(poll, 2500);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [orderId, onSuccess]);
+
   return (
     <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4">
       <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[92vh] flex flex-col">
@@ -84,7 +117,14 @@ export default function WompiWidget({ urlPago, onClose, total, loading }) {
         </div>
 
         {/* Contenido: spinner mientras carga, widget cuando esté listo */}
-        {loading || !urlPago ? (
+        {verifying ? (
+          <div className="flex flex-col items-center justify-center py-20 px-4">
+            <CheckCircle2 className="w-12 h-12 text-green-500 mb-3" />
+            <p className="text-sm font-semibold text-gray-800">¡Pago recibido!</p>
+            <p className="text-xs text-gray-500 mt-1">Confirmando tu orden...</p>
+            <Loader2 className="w-5 h-5 animate-spin text-primary mt-3" />
+          </div>
+        ) : loading || !urlPago ? (
           <div className="flex flex-col items-center justify-center py-20 px-4">
             <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
             <p className="text-sm text-gray-500">Preparando tu pago seguro...</p>
