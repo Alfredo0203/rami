@@ -228,6 +228,34 @@ export default function AddressForm({ initial, onSave, onCancel, isSaving }) {
   return (
     <div className="space-y-3">
 
+      {/* Etiqueta + Predeterminada */}
+      <div className="flex items-end gap-3">
+        <Field label="Etiqueta">
+          <Select
+            value={form.label || 'Casa'}
+            onValueChange={val => set('label', val)}
+          >
+            <SelectTrigger className="h-9 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Casa">Casa</SelectItem>
+              <SelectItem value="Trabajo">Trabajo</SelectItem>
+              <SelectItem value="Otro">Otro</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+        <label className="flex items-center gap-2 h-9 pb-0.5 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={!!form.is_default}
+            onChange={e => set('is_default', e.target.checked)}
+            className="w-4 h-4 rounded border-input accent-primary"
+          />
+          <span className="text-xs text-muted-foreground">Predeterminada</span>
+        </label>
+      </div>
+
       {/* País */}
       <Field label="País">
         <Input value="El Salvador" disabled className="h-9 text-sm bg-muted" />
