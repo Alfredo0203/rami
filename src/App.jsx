@@ -6,7 +6,6 @@ import { pagesConfig } from './pages.config'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, useNavigate, useLocation, useNavigationType } from 'react-router-dom';
 import { trackNavigation } from '@/lib/navigation';
-import { useExitOnBack } from '@/hooks/useExitOnBack';
 import PageNotFound from './lib/PageNotFound';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { base44 } from '@/api/base44Client';
@@ -38,8 +37,8 @@ const AuthenticatedApp = () => {
   const navType = useNavigationType();
   const isFirstRender = useRef(true);
 
-  // Track navigation depth FIRST so canGoBack() is accurate for useExitOnBack's
-  // guard effect (React runs effects in registration order).
+  // Track navigation depth so the visual back button (goBack) knows whether
+  // there's a previous page to return to.
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
@@ -47,9 +46,6 @@ const AuthenticatedApp = () => {
     }
     trackNavigation(navType);
   }, [location]);
-
-  // Enable "press back twice to exit" on root-level pages
-  useExitOnBack();
 
   useEffect(() => {
     // Recover token from URL or localStorage if the client doesn't have it
