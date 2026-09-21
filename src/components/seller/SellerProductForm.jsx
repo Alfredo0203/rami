@@ -7,8 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { useBackButtonOverlay } from '@/hooks/useBackButtonClose';
 
 export default function SellerProductForm({ product, storeId, categories, onClose }) {
+  useBackButtonOverlay(true, onClose);
   const queryClient = useQueryClient();
   const [form, setForm] = useState({
     name: '',

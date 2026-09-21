@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Loader2, Trash2, Plus, X } from 'lucide-react';
+import { useBackButtonOverlay } from '@/hooks/useBackButtonClose';
 
 export default function AdminCouponAssignments({ coupon, onClose }) {
+  useBackButtonOverlay(true, onClose);
   const [userSearchInput, setUserSearchInput] = useState('');
   const queryClient = useQueryClient();
 

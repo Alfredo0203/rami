@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
+import { useBackButtonOverlay } from '@/hooks/useBackButtonClose';
 
 /**
  * Renderiza el widget de cobro de Wompi inline dentro de la app.
@@ -8,6 +9,7 @@ import { X } from 'lucide-react';
  * para que Wompi inyecte el formulario de pago directamente.
  */
 export default function WompiWidget({ urlPago, onClose }) {
+  useBackButtonOverlay(!!urlPago, onClose);
   const containerRef = useRef(null);
   const [ready, setReady] = useState(false);
 

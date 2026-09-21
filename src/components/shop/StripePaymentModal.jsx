@@ -3,6 +3,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { X, Loader2, Lock, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useBackButtonOverlay } from '@/hooks/useBackButtonClose';
 
 // Íconos SVG de marcas de tarjeta
 const CardBrandIcons = () => (
@@ -149,6 +150,7 @@ function CheckoutForm({ onSuccess, onCancel, total, clientSecret, orderId }) {
 }
 
 export default function StripePaymentModal({ clientSecret, publishableKey, total, orderId, onSuccess, onClose }) {
+  useBackButtonOverlay(!!clientSecret && !!publishableKey, onClose);
   if (!clientSecret || !publishableKey) return null;
 
   const stripePromise = loadStripe(publishableKey);

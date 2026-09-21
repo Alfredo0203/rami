@@ -10,8 +10,10 @@ import { Switch } from '@/components/ui/switch';
 import { X, Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import AdminVariantManager from './AdminVariantManager';
+import { useBackButtonOverlay } from '@/hooks/useBackButtonClose';
 
 export default function AdminProductForm({ product, categories, onClose }) {
+  useBackButtonOverlay(true, onClose);
   const queryClient = useQueryClient();
   const isEditing = !!product;
 

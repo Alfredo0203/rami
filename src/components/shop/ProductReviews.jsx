@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { formatDateTimeSV } from '@/lib/dateUtils';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReviewDetailModal from './ReviewDetailModal';
+import { useBackButtonOverlay } from '@/hooks/useBackButtonClose';
 
 function StarRating({ value, onChange, readonly = false }) {
   const [hover, setHover] = useState(0);
@@ -36,6 +37,7 @@ function StarRating({ value, onChange, readonly = false }) {
 }
 
 function ImageGallery({ images, onClose }) {
+  useBackButtonOverlay(!!images?.length, onClose);
   const [currentIndex, setCurrentIndex] = useState(0);
   const touchStartX = useRef(null);
 
