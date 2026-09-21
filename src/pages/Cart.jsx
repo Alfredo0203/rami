@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { goBack } from '@/lib/navigation';
 import { createPageUrl } from '@/utils';
 import CartItemCard from '../components/shop/CartItemCard';
 import { ArrowLeft, ShoppingBag, Loader2, AlertTriangle, CheckCircle2, Circle } from 'lucide-react';
@@ -145,7 +146,7 @@ export default function Cart() {
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 safe-area-top flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="p-2 bg-secondary rounded-full">
+        <button onClick={() => goBack(navigate)} className="p-2 bg-secondary rounded-full">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <h1 className="text-lg font-bold text-foreground">Mi Carrito</h1>

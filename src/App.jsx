@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { Toaster as SonnerToaster } from "@/components/ui/sonner"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { pagesConfig } from './pages.config'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useNavigate, useLocation, useNavigationType } from 'react-router-dom';
+import { trackNavigation } from '@/lib/navigation';
 import PageNotFound from './lib/PageNotFound';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { base44 } from '@/api/base44Client';
@@ -31,6 +32,18 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
 const AuthenticatedApp = () => {
   const [authError, setAuthError] = useState(null);
   const [checking, setChecking] = useState(true);
+  const location = useLocation();
+  const navType = useNavigationType();
+  const isFirstRender = useRef(true);
+
+  // Track navigation depth so back buttons know whether there's a previous page
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    trackNavigation(navType);
+  }, [location]);
 
   useEffect(() => {
     // Recover token from URL or localStorage if the client doesn't have it

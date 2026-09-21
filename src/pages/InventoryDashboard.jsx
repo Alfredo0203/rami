@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { goBack } from '@/lib/navigation';
 import { ArrowLeft, Package, TrendingUp, AlertTriangle, ShoppingCart, DollarSign, ArrowLeftRight, TrendingDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -72,7 +73,7 @@ export default function InventoryDashboard() {
   return (
     <div className="min-h-screen bg-background pb-6">
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 safe-area-top flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="p-2 bg-secondary rounded-full">
+        <button onClick={() => goBack(navigate)} className="p-2 bg-secondary rounded-full">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <h1 className="text-lg font-bold text-foreground">Dashboard de Inventario</h1>

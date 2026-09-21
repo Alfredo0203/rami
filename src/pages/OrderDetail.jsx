@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { goBack } from '@/lib/navigation';
 import { createPageUrl } from '@/utils';
 import OrderStatusBadge from '../components/shop/OrderStatusBadge';
 import OrderStatusTimeline from '../components/shop/OrderStatusTimeline';
@@ -120,7 +121,7 @@ export default function OrderDetail() {
   return (
     <div className="min-h-screen bg-background pb-6">
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 safe-area-top flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="p-2 bg-secondary rounded-full">
+        <button onClick={() => goBack(navigate)} className="p-2 bg-secondary rounded-full">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { goBack } from '@/lib/navigation';
 import { createPageUrl } from '@/utils';
 import { ArrowLeft, Heart, ShoppingCart, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -53,7 +54,7 @@ export default function Wishlist() {
     <div className="min-h-screen bg-background pb-8">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg flex items-center gap-3 px-4 safe-area-top border-b border-border">
-        <button onClick={() => navigate(-1)} className="p-2 bg-secondary rounded-full">
+        <button onClick={() => goBack(navigate)} className="p-2 bg-secondary rounded-full">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <h1 className="text-base font-semibold text-foreground flex-1">Mis favoritos</h1>

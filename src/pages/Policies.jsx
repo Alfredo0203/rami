@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { goBack } from '@/lib/navigation';
 
 const SECTIONS = [
   {
@@ -283,7 +284,7 @@ export default function Policies() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border px-4 py-3 flex items-center gap-3 safe-area-top">
-        <button onClick={() => navigate(-1)} className="p-1.5 -ml-1.5 rounded-full hover:bg-muted">
+        <button onClick={() => goBack(navigate)} className="p-1.5 -ml-1.5 rounded-full hover:bg-muted">
           <ChevronLeft className="w-5 h-5" />
         </button>
         <h1 className="font-bold text-base">Políticas legales</h1>

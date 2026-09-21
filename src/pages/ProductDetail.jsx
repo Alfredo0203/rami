@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { ArrowLeft, Star, ShoppingCart, Heart, Minus, Plus, Check, Truck, Shield, RotateCcw, Loader2, AlertCircle, X, ZoomIn } from 'lucide-react';
 import { useBackButtonClose, isInternalBack } from '@/hooks/useBackButtonClose';
+import { goBack, canGoBack } from '@/lib/navigation';
 import ProductReviews from '@/components/shop/ProductReviews';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -34,24 +35,15 @@ export default function ProductDetail() {
   const touchStartX = useRef(null);
 
   // Safe back: go back in history if there's a previous page, otherwise go Home
-  const handleBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate('/');
-    }
-  };
+  const handleBack = () => goBack(navigate);
 
   // Intercept physical back button when arriving from a shared link (no in-app history)
   useEffect(() => {
-    // Push a state so we can detect if the user presses back before any navigation
-    const entryLength = window.history.length;
-
     const handlePopState = () => {
       // Ignore popstate triggered by overlay cleanup (back() called internally)
       if (isInternalBack()) return;
-      // If history length suggests they came directly (shared link), redirect to Home
-      if (entryLength <= 1) {
+      // If there's no previous page in the app, redirect to Home
+      if (!canGoBack()) {
         navigate('/', { replace: true });
       }
     };
