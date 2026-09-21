@@ -114,7 +114,7 @@ export default function StoreModal({ store, products, categories, orders = [], r
         style={{ touchAction: 'none' }}
       >
         {/* Header */}
-        <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 py-3">
+        <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <img
