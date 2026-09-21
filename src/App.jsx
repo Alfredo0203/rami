@@ -38,10 +38,8 @@ const AuthenticatedApp = () => {
   const navType = useNavigationType();
   const isFirstRender = useRef(true);
 
-  // Enable "press back twice to exit" on root-level pages
-  useExitOnBack();
-
-  // Track navigation depth so back buttons know whether there's a previous page
+  // Track navigation depth FIRST so canGoBack() is accurate for useExitOnBack's
+  // guard effect (React runs effects in registration order).
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
@@ -49,6 +47,9 @@ const AuthenticatedApp = () => {
     }
     trackNavigation(navType);
   }, [location]);
+
+  // Enable "press back twice to exit" on root-level pages
+  useExitOnBack();
 
   useEffect(() => {
     // Recover token from URL or localStorage if the client doesn't have it

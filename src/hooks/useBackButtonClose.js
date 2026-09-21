@@ -11,6 +11,15 @@ export function isInternalBack() {
   return _internalBack;
 }
 
+// Module-level counter: tracks how many overlays/modals are currently open.
+// useExitOnBack checks this to avoid showing the "press back to exit" toast
+// when the user is actually closing an overlay/modal at the root page.
+let _openOverlays = 0;
+
+export function hasOpenOverlay() {
+  return _openOverlays > 0;
+}
+
 /**
  * Lightweight hook that ONLY intercepts the back button to close an overlay.
  * Does NOT handle scroll locking (Radix/vaul already do that).
@@ -27,6 +36,7 @@ export function useBackButtonOverlay(isOpen, onClose) {
   useEffect(() => {
     if (!isOpen) return;
 
+    _openOverlays++;
     window.history.pushState({ overlay: true }, '');
 
     const handlePopState = () => {
@@ -37,6 +47,7 @@ export function useBackButtonOverlay(isOpen, onClose) {
     window.addEventListener('popstate', handlePopState);
     return () => {
       window.removeEventListener('popstate', handlePopState);
+      _openOverlays = Math.max(0, _openOverlays - 1);
       if (window.history.state?.overlay) {
         _internalBack = true;
         window.history.back();
@@ -93,6 +104,7 @@ export function useBackButtonClose(isOpen, onClose) {
   useEffect(() => {
     if (!isOpen) return;
 
+    _openOverlays++;
     window.history.pushState({ modal: true }, '');
 
     const handlePopState = () => {
@@ -103,6 +115,7 @@ export function useBackButtonClose(isOpen, onClose) {
     window.addEventListener('popstate', handlePopState);
     return () => {
       window.removeEventListener('popstate', handlePopState);
+      _openOverlays = Math.max(0, _openOverlays - 1);
       if (window.history.state?.modal) {
         _internalBack = true;
         window.history.back();
