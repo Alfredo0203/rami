@@ -6,9 +6,11 @@ import { pagesConfig } from './pages.config'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, useNavigate, useLocation, useNavigationType } from 'react-router-dom';
 import { trackNavigation } from '@/lib/navigation';
+import { useExitOnBack } from '@/hooks/useExitOnBack';
 import PageNotFound from './lib/PageNotFound';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { base44 } from '@/api/base44Client';
+import { AuthProvider } from '@/lib/AuthContext';
 import { LanguageProvider } from '@/components/i18n/LanguageProvider';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import AdminSalesCharts from './pages/AdminSalesCharts';
@@ -35,6 +37,9 @@ const AuthenticatedApp = () => {
   const location = useLocation();
   const navType = useNavigationType();
   const isFirstRender = useRef(true);
+
+  // Enable "press back twice to exit" on root-level pages
+  useExitOnBack();
 
   // Track navigation depth so back buttons know whether there's a previous page
   useEffect(() => {
@@ -143,13 +148,15 @@ function App() {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <QueryClientProvider client={queryClientInstance}>
-          <Router>
-            <AuthenticatedApp />
-          </Router>
-          <Toaster />
-          <SonnerToaster position="top-center" richColors />
-        </QueryClientProvider>
+        <AuthProvider>
+          <QueryClientProvider client={queryClientInstance}>
+            <Router>
+              <AuthenticatedApp />
+            </Router>
+            <Toaster />
+            <SonnerToaster position="top-center" richColors />
+          </QueryClientProvider>
+        </AuthProvider>
       </LanguageProvider>
     </ThemeProvider>
   )
