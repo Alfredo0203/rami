@@ -72,7 +72,8 @@ export default function AdminPoliciesTab() {
       toast.error('El contenido es obligatorio');
       return;
     }
-    saveMutation.mutate({ id: policy.id, data: draft });
+    const { title, ...updateData } = draft;
+    saveMutation.mutate({ id: policy.id, data: updateData });
   };
 
   const handleAdd = () => {
@@ -134,14 +135,6 @@ export default function AdminPoliciesTab() {
 
               {isExpanded && (
                 <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Título</label>
-                    <Input
-                      value={draft.title || ''}
-                      onChange={e => updateDraft(policy.id, 'title', e.target.value)}
-                      className="text-sm"
-                    />
-                  </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground mb-1 block">Última actualización</label>
                     <Input
