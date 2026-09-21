@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const appUrl = req.headers.get('origin') || 'https://app.base44.com';
+    const appUrl = req.headers.get('origin') || 'https://fractal-nova-cart-shop.base44.app';
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
