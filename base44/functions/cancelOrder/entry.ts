@@ -99,6 +99,25 @@ Deno.serve(async (req) => {
     };
     await base44.asServiceRole.entities.Order.update(orderId, updateData);
 
+    // Registrar solicitud de reembolso manual (Wompi) para seguimiento en panel admin
+    if (manualRefundNeeded) {
+      try {
+        await base44.asServiceRole.entities.RefundRequest.create({
+          order_id: orderId,
+          order_number: order.order_number,
+          customer_email: order.customer_email,
+          customer_name: order.customer_name,
+          payment_method: order.payment_method,
+          payment_transaction_id: order.payment_transaction_id || null,
+          amount: Number(order.total) || 0,
+          status: 'pending',
+        });
+        console.log(`RefundRequest creada para orden ${order.order_number}`);
+      } catch (refundErr) {
+        console.error('Error creando RefundRequest:', refundErr.message);
+      }
+    }
+
     // Historial de estados
     await base44.asServiceRole.entities.OrderStatusHistory.create({
       order_id: orderId,
