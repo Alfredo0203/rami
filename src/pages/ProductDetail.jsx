@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { ArrowLeft, Star, ShoppingCart, Heart, Minus, Plus, Check, Truck, Shield, RotateCcw, Loader2, AlertCircle, X, ZoomIn } from 'lucide-react';
-import { useBackButtonClose } from '@/hooks/useBackButtonClose';
+import { useBackButtonClose, isInternalBack } from '@/hooks/useBackButtonClose';
 import ProductReviews from '@/components/shop/ProductReviews';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -48,6 +48,8 @@ export default function ProductDetail() {
     const entryLength = window.history.length;
 
     const handlePopState = () => {
+      // Ignore popstate triggered by overlay cleanup (back() called internally)
+      if (isInternalBack()) return;
       // If history length suggests they came directly (shared link), redirect to Home
       if (entryLength <= 1) {
         navigate('/', { replace: true });

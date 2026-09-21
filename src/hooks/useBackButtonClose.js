@@ -1,5 +1,16 @@
 import { useEffect, useRef } from 'react';
 
+// Module-level flag: set to true when we call history.back() internally
+// (during overlay cleanup). Other popstate handlers can check isInternalBack()
+// to avoid reacting to these programmatic back navigations.
+// The flag is cleared via setTimeout(0) after the popstate event has been
+// processed by all handlers.
+let _internalBack = false;
+
+export function isInternalBack() {
+  return _internalBack;
+}
+
 /**
  * Lightweight hook that ONLY intercepts the back button to close an overlay.
  * Does NOT handle scroll locking (Radix/vaul already do that).
@@ -19,6 +30,7 @@ export function useBackButtonOverlay(isOpen, onClose) {
     window.history.pushState({ overlay: true }, '');
 
     const handlePopState = () => {
+      if (_internalBack) return; // Don't close — this was a cleanup back()
       onCloseRef.current();
     };
 
@@ -26,7 +38,12 @@ export function useBackButtonOverlay(isOpen, onClose) {
     return () => {
       window.removeEventListener('popstate', handlePopState);
       if (window.history.state?.overlay) {
+        _internalBack = true;
         window.history.back();
+        // Clear the flag after popstate has been processed by all handlers.
+        // popstate fires as a microtask, setTimeout(0) as a macrotask,
+        // so popstate always runs first.
+        setTimeout(() => { _internalBack = false; }, 0);
       }
     };
   }, [isOpen]);
@@ -41,6 +58,9 @@ export function useBackButtonOverlay(isOpen, onClose) {
  * @param {Function} onClose - Callback to close the modal
  */
 export function useBackButtonClose(isOpen, onClose) {
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   // ── Scroll lock ────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!isOpen) return;
@@ -76,15 +96,19 @@ export function useBackButtonClose(isOpen, onClose) {
     window.history.pushState({ modal: true }, '');
 
     const handlePopState = () => {
-      onClose();
+      if (_internalBack) return; // Don't close — this was a cleanup back()
+      onCloseRef.current();
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => {
       window.removeEventListener('popstate', handlePopState);
       if (window.history.state?.modal) {
+        _internalBack = true;
         window.history.back();
+        // Clear the flag after popstate has been processed by all handlers.
+        setTimeout(() => { _internalBack = false; }, 0);
       }
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 }
