@@ -4,7 +4,7 @@ import { Toaster as SonnerToaster } from "@/components/ui/sonner"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { pagesConfig } from './pages.config'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes, useNavigate, useLocation, useNavigationType } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate, useLocation, useNavigationType } from 'react-router-dom';
 import { trackNavigation } from '@/lib/navigation';
 import PageNotFound from './lib/PageNotFound';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -135,6 +135,8 @@ const AuthenticatedApp = () => {
       <Route path="/reactivate" element={<Reactivate />} />
       <Route path="/data-deletion" element={<DataDeletion />} />
       <Route path="/Login" element={<Login />} />
+      {/* Redirect lowercase /home to root — prevents Google Soft 404 classification */}
+      <Route path="/home" element={<Navigate to="/" replace />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
