@@ -21,11 +21,6 @@
     "product_price": {
       "type": "number",
       "description": "Precio del producto al momento de guardar (snapshot)"
-    },
-    "description": {
-      "type": "string",
-      "description": "Descripci\u00f3n opcional (hasta 1000 caracteres)",
-      "maxLength": 1000
     }
   },
   "required": [

@@ -47,11 +47,6 @@
     "is_default": {
       "type": "boolean",
       "default": false
-    },
-    "description": {
-      "type": "string",
-      "description": "Descripci\u00f3n opcional (hasta 1000 caracteres)",
-      "maxLength": 1000
     }
   },
   "required": [

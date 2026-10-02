@@ -14,11 +14,6 @@
       "type": "number",
       "default": 1,
       "description": "N\u00famero de veces que se ha hecho esta b\u00fasqueda"
-    },
-    "description": {
-      "type": "string",
-      "description": "Descripci\u00f3n opcional (hasta 1000 caracteres)",
-      "maxLength": 1000
     }
   },
   "required": [

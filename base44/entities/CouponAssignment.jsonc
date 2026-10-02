@@ -34,11 +34,6 @@
       "type": "number",
       "default": 0,
       "description": "N\u00famero de veces que este usuario ha usado este cup\u00f3n"
-    },
-    "description": {
-      "type": "string",
-      "description": "Descripci\u00f3n opcional (hasta 1000 caracteres)",
-      "maxLength": 1000
     }
   },
   "required": [
