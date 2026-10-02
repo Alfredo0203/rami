@@ -23,52 +23,41 @@ export default function About() {
         <p>
           RAmi es una plataforma de comercio electrónico con sede en El Salvador, dedicada a
           entregar productos esenciales premium directamente a la puerta de nuestros clientes.
-          Nacimos con una misión clara: democratizar el acceso a productos de calidad, combinando
-          precios accesibles, una experiencia de compra sencilla y un servicio al cliente cercano.
+          Combinamos precios accesibles, una experiencia de compra sencilla y un servicio al
+          cliente cercano para democratizar el acceso a productos de calidad.
         </p>
 
         <h2>Qué hacemos</h2>
         <p>
-          Operamos un catálogo curado de productos que abarca desde artículos para el hogar y
-          cuidado personal hasta tecnología y accesorios. Cada producto es seleccionado pensando
-          en la relación entre calidad y precio, y trabajamos con vendedores externos y con nuestra
-          propia tienda para ofrecer la mayor variedad posible. Gestionamos todo el ciclo de
-          compra: desde la navegación del catálogo y el carrito, pasando por el pago seguro con
-          tarjeta o contra entrega, hasta la entrega final en la dirección que elijas dentro de
-          El Salvador.
+          Operamos un catálogo curado que abarca desde artículos para el hogar hasta tecnología y
+          accesorios. Gestionamos todo el ciclo de compra: navegación del catálogo, carrito, pago
+          seguro con tarjeta o contra entrega, y entrega final en la dirección que elijas dentro de
+          El Salvador. También trabajamos con vendedores externos que publican sus propios productos
+          en la plataforma.
         </p>
 
         <h2>Para quién es RAmi</h2>
         <p>
           RAmi está diseñado para cualquier persona en El Salvador que busque una forma rápida,
-          confiable y transparente de comprar productos esenciales desde su teléfono. Ya seas un
-          cliente que descubre productos por primera vez o un comprador frecuente que aprovecha
-          nuestras ofertas y cupones, la app se adapta a ti. También ofrecemos herramientas para
-          vendedores externos que desean publicar y administrar sus propios productos dentro de la
-          plataforma, creando así un ecosistema de comercio inclusivo.
+          confiable y transparente de comprar desde su teléfono. Ya seas un cliente nuevo o un
+          comprador frecuente que aprovecha nuestras ofertas y cupones, la app se adapta a ti.
         </p>
 
         <h2>Quiénes somos</h2>
         <p>
           RAmi es construido y mantenido por Alfred Torres y Raquel, un equipo comprometido con
-          crear tecnología que mejore la vida de las personas en El Salvador. Creemos en el
-          comercio justo, en la transparencia con nuestros clientes y en el uso responsable de los
-          datos personales. Nuestra infraestructura de pago está respaldada por proveedores
-          certificados como Stripe, y nunca almacenamos los datos de tu tarjeta.
+          crear tecnología que mejore la vida de las personas en El Salvador. Nuestra
+          infraestructura de pago está respaldada por proveedores certificados como Stripe, y
+          nunca almacenamos los datos de tu tarjeta.
         </p>
 
         <h2>Nuestros valores</h2>
         <ul>
-          <li><strong>Transparencia:</strong> precios claros, sin sorpresas, y políticas accesibles.</li>
-          <li><strong>Calidad:</strong> productos seleccionados que cumplen con nuestros estándares.</li>
-          <li><strong>Cercanía:</strong> soporte humano disponible cuando lo necesites.</li>
-          <li><strong>Seguridad:</strong> tus datos y pagos protegidos con cifrado de extremo a extremo.</li>
+          <li><strong>Transparencia:</strong> precios claros, sin sorpresas.</li>
+          <li><strong>Calidad:</strong> productos seleccionados que cumplen nuestros estándares.</li>
+          <li><strong>Cercanía:</strong> soporte humano cuando lo necesites.</li>
+          <li><strong>Seguridad:</strong> tus datos y pagos protegidos con cifrado.</li>
         </ul>
-
-        <p>
-          Gracias por confiar en RAmi. Si tienes preguntas, sugerencias o quieres formar parte como
-          vendedor, no dudes en contactarnos a través de nuestra página de contacto.
-        </p>
 
         <hr className="my-8" />
         <p className="text-xs text-muted-foreground text-center pt-4 pb-8">
