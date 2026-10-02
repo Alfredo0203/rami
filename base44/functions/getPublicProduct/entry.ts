@@ -17,7 +17,8 @@ Deno.serve(async (req) => {
     const activeVariants = variants.filter(v => v.is_active !== false);
     activeVariants.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
-    return Response.json({ product, variants: activeVariants });
+    const { cost_per_unit, ...publicProduct } = product;
+    return Response.json({ product: publicProduct, variants: activeVariants });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

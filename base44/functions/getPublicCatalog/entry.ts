@@ -41,7 +41,8 @@ Deno.serve(async (req) => {
         variantAttributesFlat[key] = Array.from(set);
       }
 
-      return { ...p, effective_stock: effectiveStock, variant_attributes: variantAttributesFlat };
+      const { cost_per_unit, ...publicProduct } = p;
+      return { ...publicProduct, effective_stock: effectiveStock, variant_attributes: variantAttributesFlat };
     });
 
     // Ordenar: Featured → Más vendidos → Resto (sin ordenar, se randomiza en cliente)
