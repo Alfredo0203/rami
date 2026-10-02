@@ -137,6 +137,11 @@
     "internal_notes": {
       "type": "string",
       "description": "Internal admin notes about the order"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descripci\u00f3n opcional (hasta 1000 caracteres)",
+      "maxLength": 1000
     }
   },
   "required": [

@@ -57,6 +57,11 @@
     "admin_notes": {
       "type": "string",
       "description": "Notas internas del admin sobre el reembolso"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descripci\u00f3n opcional (hasta 1000 caracteres)",
+      "maxLength": 1000
     }
   },
   "required": [

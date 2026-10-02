@@ -30,6 +30,11 @@
     "product_price": {
       "type": "number",
       "description": "Unit price snapshot at time of adding to cart"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descripci\u00f3n opcional (hasta 1000 caracteres)",
+      "maxLength": 1000
     }
   },
   "required": [
