@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import BottomNav from '../components/shop/BottomNav';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { User, Package, MapPin, Heart, LogOut, ChevronRight, Shield, Loader2, Trash2, AlertTriangle, LogIn, MessageCircle, FileText } from 'lucide-react';
+import { User, Package, MapPin, Heart, LogOut, ChevronRight, Shield, Loader2, Trash2, AlertTriangle, LogIn, MessageCircle, FileText, Info, Mail } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -83,6 +83,8 @@ export default function Account() {
     { icon: Heart, label: 'Mis favoritos', page: 'Wishlist' },
     { icon: MessageCircle, label: 'Contáctanos', action: 'support' },
     { icon: FileText, label: 'Políticas legales', page: 'Policies' },
+    { icon: Info, label: 'Acerca de RAmi', page: 'About' },
+    { icon: Mail, label: 'Contacto', page: 'Contact' },
   ];
 
   if (user?.role === 'admin' || user?.role === 'super_admin') {
@@ -164,6 +166,22 @@ export default function Account() {
           >
             <FileText className="w-5 h-5 text-primary" />
             <span className="text-sm font-medium text-foreground flex-1 text-left">Políticas legales</span>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
+          <button
+            onClick={() => navigate('/About')}
+            className="w-full flex items-center gap-3 p-4 bg-card rounded-xl shadow-sm hover:bg-secondary/50 transition-colors"
+          >
+            <Info className="w-5 h-5 text-primary" />
+            <span className="text-sm font-medium text-foreground flex-1 text-left">Acerca de RAmi</span>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
+          <button
+            onClick={() => navigate('/Contact')}
+            className="w-full flex items-center gap-3 p-4 bg-card rounded-xl shadow-sm hover:bg-secondary/50 transition-colors"
+          >
+            <Mail className="w-5 h-5 text-primary" />
+            <span className="text-sm font-medium text-foreground flex-1 text-left">Contacto</span>
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>

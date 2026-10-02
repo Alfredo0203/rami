@@ -24,6 +24,8 @@ const LOWERCASE_MAP = {
   '/policies': '/Policies',
   '/privacypolicy': '/privacy-policy',
   '/login': '/Login',
+  '/about': '/About',
+  '/contact': '/Contact',
 };
 
 export default function LowercaseRedirect() {

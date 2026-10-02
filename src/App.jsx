@@ -21,6 +21,8 @@ import Recommendations from './pages/Recommendations';
 import Reactivate from './pages/Reactivate';
 import DataDeletion from './pages/DataDeletion';
 import Login from './pages/Login';
+import About from './pages/About';
+import Contact from './pages/Contact';
 import LowercaseRedirect from '@/components/LowercaseRedirect';
 
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -136,6 +138,8 @@ const AuthenticatedApp = () => {
       <Route path="/reactivate" element={<Reactivate />} />
       <Route path="/data-deletion" element={<DataDeletion />} />
       <Route path="/Login" element={<Login />} />
+      <Route path="/About" element={<LayoutWrapper currentPageName="About"><About /></LayoutWrapper>} />
+      <Route path="/Contact" element={<LayoutWrapper currentPageName="Contact"><Contact /></LayoutWrapper>} />
       {/* Redirect lowercase URLs to correct-case routes — prevents Google Soft 404 */}
       <Route path="*" element={<LowercaseRedirect />} />
     </Routes>
