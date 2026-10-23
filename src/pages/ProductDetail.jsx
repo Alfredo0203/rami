@@ -404,9 +404,13 @@ export default function ProductDetail() {
         </div>
       </div>
 
+      {/* Desktop: two columns (gallery + info) */}
+      <div className="max-w-6xl mx-auto lg:grid lg:grid-cols-2 lg:gap-10 lg:items-start lg:px-6 lg:pt-6">
+      {/* Left column */}
+      <div>
       {/* Image gallery */}
       <div
-        className="relative aspect-square bg-card overflow-hidden"
+        className="relative aspect-square bg-card overflow-hidden lg:rounded-2xl"
         onTouchStart={handleTouchStart}
         onTouchEnd={(e) => handleTouchEnd(e, images)}
       >
@@ -447,7 +451,7 @@ export default function ProductDetail() {
 
       {/* Thumbnails */}
       {images.length > 1 && (
-        <div className="flex gap-2 px-4 py-3 overflow-x-auto hide-scrollbar">
+        <div className="flex gap-2 px-4 py-3 overflow-x-auto hide-scrollbar lg:px-0">
           {images.map((img, i) => (
             <button key={i} onClick={() => setCurrentImage(i)}
               className={`w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${i === safeImageIndex ? 'border-primary' : 'border-transparent'}`}
@@ -457,17 +461,18 @@ export default function ProductDetail() {
           ))}
         </div>
       )}
+      </div>
 
-      {/* Product info */}
-      <div className="px-4 pt-3 space-y-4">
+      {/* Right column: product info */}
+      <div className="px-4 pt-3 space-y-4 lg:px-0 lg:pt-0">
         <div>
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-2xl font-extrabold text-primary">${effectivePrice?.toFixed(2)}</span>
+            <span className="text-2xl lg:text-3xl font-extrabold text-primary">${effectivePrice?.toFixed(2)}</span>
             {discount > 0 && (
               <span className="text-sm text-muted-foreground line-through">${effectiveOriginalPrice?.toFixed(2)}</span>
             )}
           </div>
-          <h1 className="text-base font-semibold text-foreground leading-tight">{product.name}</h1>
+          <h1 className="text-base lg:text-xl font-semibold text-foreground leading-tight">{product.name}</h1>
           {displayStore && (
             <button
               onClick={() => setViewingStore(displayStore)}
@@ -488,7 +493,7 @@ export default function ProductDetail() {
         </div>
 
         {/* Rating and sold */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           {dynamicRating > 0 && (
             <div className="flex items-center gap-1">
               <Star className="w-4 h-4 fill-warning text-warning" />
@@ -503,8 +508,8 @@ export default function ProductDetail() {
             <span className="text-xs text-success font-medium flex items-center gap-1">
               <Check className="w-3 h-3" />
               {hasVariants && selectedVariant
-                ? `${Array.isArray(selectedVariant.attributes) 
-                    ? selectedVariant.attributes.map(a => `${a.key}: ${a.values.join(', ')}`).join(' / ') 
+                ? `${Array.isArray(selectedVariant.attributes)
+                    ? selectedVariant.attributes.map(a => `${a.key}: ${a.values.join(', ')}`).join(' / ')
                     : selectedVariant.name} — ${effectiveStock} disponibles`
                 : `En stock (${effectiveStock})`}
             </span>
@@ -534,10 +539,8 @@ export default function ProductDetail() {
           />
         )}
 
-
-
         {/* Features */}
-        <div className="flex gap-4 py-3 border-t border-b border-border">
+        <div className="flex gap-4 flex-wrap py-3 border-t border-b border-border">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Truck className="w-4 h-4" /><span>Envío gratis</span>
           </div>
@@ -557,19 +560,22 @@ export default function ProductDetail() {
           </div>
         )}
       </div>
+      </div>
 
       {/* Reviews */}
-      <div className="mt-4 border-t border-border">
+      <div className="max-w-6xl mx-auto lg:px-6 mt-6 border-t border-border">
         <ProductReviews productId={productId} isGuest={isGuest} />
       </div>
 
       {/* Related products — al final */}
       {product.category_id && (
-        <RelatedProducts
-          categoryId={product.category_id}
-          currentProductId={productId}
-          currentTags={product.tags || []}
-        />
+        <div className="max-w-6xl mx-auto lg:px-6">
+          <RelatedProducts
+            categoryId={product.category_id}
+            currentProductId={productId}
+            currentTags={product.tags || []}
+          />
+        </div>
       )}
 
       {/* Store Modal */}
@@ -586,7 +592,7 @@ export default function ProductDetail() {
 
       {/* Bottom action bar */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border px-4 py-3 safe-area-bottom">
-        <div className="flex items-center gap-3 max-w-lg mx-auto">
+        <div className="flex items-center gap-3 max-w-lg mx-auto lg:max-w-6xl lg:justify-end">
           <div className="flex items-center gap-0 bg-secondary rounded-full">
             <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-2.5 rounded-full">
               <Minus className="w-4 h-4 text-foreground" />
@@ -608,7 +614,7 @@ export default function ProductDetail() {
           <Button
             onClick={() => isGuest ? navigate('/Login?from=' + encodeURIComponent(window.location.pathname + window.location.search)) : addToCartMutation.mutate()}
             disabled={addToCartMutation.isPending || (!isGuest && !inStock) || needsVariantSelection}
-            className="flex-1 bg-primary text-primary-foreground font-bold h-12 rounded-full text-base"
+            className="flex-1 lg:max-w-xs bg-primary text-primary-foreground font-bold h-12 rounded-full text-base"
           >
             {addToCartMutation.isPending ? (
               <Loader2 className="w-5 h-5 animate-spin" />
