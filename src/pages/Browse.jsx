@@ -280,7 +280,7 @@ export default function Browse() {
       />
 
       <div className="sticky top-16 z-40 bg-card/95 backdrop-blur-lg border-b border-border px-4 overflow-visible">
-        <div className="flex items-center gap-2 max-w-lg mx-auto pt-2 pb-2">
+        <div className="flex items-center gap-2 max-w-6xl mx-auto pt-2 pb-2">
           <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
             <SheetTrigger asChild>
               <button className="relative p-1.5 bg-secondary rounded-full mt-1">
@@ -491,7 +491,7 @@ export default function Browse() {
       </div>
 
       <PullToRefresh onRefresh={handleRefresh}>
-        <div className="px-3">
+        <div className="max-w-6xl mx-auto px-3">
           {isLoading ? (
             <div className="flex justify-center py-20">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -501,7 +501,7 @@ export default function Browse() {
               <p className="text-muted-foreground text-sm">{t('no_products')}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-3">
               {filteredProducts.map((product, i) => (
                 <ProductCard key={product.id} product={product} index={i} />
               ))}

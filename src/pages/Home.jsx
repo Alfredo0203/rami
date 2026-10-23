@@ -146,38 +146,40 @@ export default function Home() {
       />
 
       <PullToRefresh onRefresh={handleRefresh}>
-        <PromoBanner />
+        <div className="max-w-6xl mx-auto">
+          <PromoBanner />
 
-        <CategoryBar
-          categories={categories}
-          selectedId={selectedCategory}
-          onSelect={setSelectedCategory}
-        />
+          <CategoryBar
+            categories={categories}
+            selectedId={selectedCategory}
+            onSelect={setSelectedCategory}
+          />
 
-        <div className="px-3">
-          {searchQuery && (
-            <p className="text-xs text-muted-foreground mb-2 px-1">
-              {t('search_results', { count: filteredProducts.length, query: searchQuery })}
-            </p>
-          )}
+          <div className="px-3">
+            {searchQuery && (
+              <p className="text-xs text-muted-foreground mb-2 px-1">
+                {t('search_results', { count: filteredProducts.length, query: searchQuery })}
+              </p>
+            )}
 
-          {loadingProducts ? (
-            <div className="flex justify-center py-20">
-              <div className="w-8 h-8 border-4 border-slate-200 border-t-primary rounded-full animate-spin"></div>
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-muted-foreground text-sm">{t('no_products')}</p>
-            </div>
-          ) : (
-            <InfiniteScroll
-              items={displayedProducts}
-              renderItem={(product, i) => <ProductCard product={product} index={i} />}
-              onLoadMore={handleLoadMore}
-              isLoading={false}
-              hasMore={hasMore}
-            />
-          )}
+            {loadingProducts ? (
+              <div className="flex justify-center py-20">
+                <div className="w-8 h-8 border-4 border-slate-200 border-t-primary rounded-full animate-spin"></div>
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="text-center py-20">
+                <p className="text-muted-foreground text-sm">{t('no_products')}</p>
+              </div>
+            ) : (
+              <InfiniteScroll
+                items={displayedProducts}
+                renderItem={(product, i) => <ProductCard product={product} index={i} />}
+                onLoadMore={handleLoadMore}
+                isLoading={false}
+                hasMore={hasMore}
+              />
+            )}
+          </div>
         </div>
       </PullToRefresh>
 

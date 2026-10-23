@@ -27,7 +27,7 @@ export default function BottomNav({ cartCount = 0 }) {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border safe-area-bottom">
-      <div className="flex items-center justify-around max-w-lg mx-auto px-2 py-1.5">
+      <div className="flex items-center justify-around max-w-6xl mx-auto px-2 py-1.5">
          {navItems.map(({ icon: Icon, label, page, path }) => {
            const url = path || createPageUrl(page);
            const isActive = currentPath === url || (page === 'Home' && currentPath === '/');
