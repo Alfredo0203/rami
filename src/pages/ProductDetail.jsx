@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { ArrowLeft, Star, ShoppingCart, Heart, Minus, Plus, Check, Truck, Shield, RotateCcw, Loader2, AlertCircle, X, ZoomIn } from 'lucide-react';
+import { ArrowLeft, Star, ShoppingCart, Heart, Minus, Plus, Check, Truck, Shield, RotateCcw, Loader2, AlertCircle, X, ZoomIn, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useBackButtonClose } from '@/hooks/useBackButtonClose';
 import { goBack } from '@/lib/navigation';
 import ProductReviews from '@/components/shop/ProductReviews';
@@ -346,6 +346,11 @@ export default function ProductDetail() {
   // Normalizar índice: si era -1 (variante fuera del array), ahora es 0
   const safeImageIndex = currentImage === -1 ? 0 : Math.min(currentImage, images.length - 1);
 
+  // Navegación en el visor: da la vuelta al llegar al final
+  const goToImage = (delta) => {
+    setCurrentImage((safeImageIndex + delta + images.length) % images.length);
+  };
+
   const discount = effectiveOriginalPrice && effectiveOriginalPrice > effectivePrice
     ? Math.round((1 - effectivePrice / effectiveOriginalPrice) * 100)
     : 0;
@@ -367,6 +372,27 @@ export default function ProductDetail() {
         >
           <div className="relative max-w-lg w-full" onClick={e => e.stopPropagation()}>
             <img src={images[safeImageIndex]} alt={product.name} className="w-full max-h-[85vh] object-contain rounded-2xl" />
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={() => goToImage(-1)}
+                  aria-label="Imagen anterior"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-11 h-11 bg-black/60 rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
+                >
+                  <ChevronLeft className="w-6 h-6 text-white" />
+                </button>
+                <button
+                  onClick={() => goToImage(1)}
+                  aria-label="Imagen siguiente"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-11 h-11 bg-black/60 rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
+                >
+                  <ChevronRight className="w-6 h-6 text-white" />
+                </button>
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/60 text-white text-xs font-medium px-2.5 py-1 rounded-full">
+                  {safeImageIndex + 1} / {images.length}
+                </div>
+              </>
+            )}
             <button
               onClick={() => setLightboxOpen(false)}
               className="absolute top-2 right-2 w-9 h-9 bg-black/60 rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
