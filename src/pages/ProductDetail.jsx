@@ -460,6 +460,24 @@ export default function ProductDetail() {
           <ZoomIn className="w-4 h-4 text-white" />
         </button>
         {images.length > 1 && (
+          <>
+            <button
+              onClick={() => goToImage(-1)}
+              aria-label="Imagen anterior"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 rounded-full flex items-center justify-center hover:bg-black/60 transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5 text-white" />
+            </button>
+            <button
+              onClick={() => goToImage(1)}
+              aria-label="Imagen siguiente"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 rounded-full flex items-center justify-center hover:bg-black/60 transition-colors"
+            >
+              <ChevronRight className="w-5 h-5 text-white" />
+            </button>
+          </>
+        )}
+        {images.length > 1 && (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
             {images.map((_, i) => (
               <button key={i} onClick={() => setCurrentImage(i)}
