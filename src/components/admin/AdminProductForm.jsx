@@ -118,7 +118,9 @@ export default function AdminProductForm({ product, categories, onClose }) {
         </div>
       </div>
     )}
-    <div className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm flex items-end sm:items-center justify-center">
+    {/* translate="no": evita que el traductor del navegador reescriba el DOM del
+        modal — React no puede desmontar nodos que el traductor ya modificó. */}
+    <div translate="no" className="notranslate fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm flex items-end sm:items-center justify-center">
       <div className="bg-card w-full max-w-md max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-5 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-foreground">{isEditing ? 'Editar Producto' : 'Agregar Producto'}</h2>
