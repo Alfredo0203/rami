@@ -9,6 +9,9 @@ import ReactMarkdown from 'react-markdown';
 const AGENT_NAME = 'product_recommender';
 const LS_CONV_ID = 'rami_conversation_id';
 const LS_LAST_CONSULTED = 'rami_last_consulted';
+// Un hilo muy largo hace que el asistente responda cada vez más lento:
+// al pasar este límite se arranca una conversación nueva.
+const MAX_HISTORY = 20;
 
 const INITIAL_SUGGESTIONS = [
   { label: '🔥 Más vendidos', query: 'Muéstrame los productos más vendidos' },
@@ -99,7 +102,13 @@ export default function Recommendations() {
     const savedConvId = localStorage.getItem(LS_CONV_ID);
     if (savedConvId) {
       base44.agents.getConversation(savedConvId)
-        .then(conv => { if (conv) { setConversation(conv); setMessages(conv.messages || []); } })
+        .then(conv => {
+          if (conv?.messages?.length > MAX_HISTORY) {
+            localStorage.removeItem(LS_CONV_ID);
+            return;
+          }
+          if (conv) { setConversation(conv); setMessages(conv.messages || []); }
+        })
         .catch(() => localStorage.removeItem(LS_CONV_ID))
         .finally(() => setInitializing(false));
     } else {
