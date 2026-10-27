@@ -13,7 +13,7 @@ import { buildVariantHistory, suggestionsFor } from '@/lib/variantHistory';
 
 // Sugerencias de claves por categoría — puramente cosmético/ayuda al admin
 const ATTR_KEY_SUGGESTIONS = [
-  'Color', 'Talla', 'Tamaño', 'Material', 'Estilo', 'Modelo',
+  'Color', 'Talla', 'Tamaño', 'Estilo', 'Modelo',
   'Almacenamiento', 'RAM', 'Voltaje', 'Volumen', 'Aroma', 'Presentación',
   'Acabado', 'Conectividad', 'Capacidad',
 ];
@@ -276,7 +276,7 @@ export default function AdminVariantManager({ product }) {
                 Ejemplo — Para una camisa: <strong>Color: Verde + Talla: M</strong> es una variante. <strong>Color: Verde + Talla: L</strong> es otra.
               </p>
               <p>
-                <strong>Sin límite</strong> de atributos: Color + Talla + Material + lo que necesites.
+                <strong>Sin límite</strong> de atributos: Color + Talla + lo que necesites. El material y los detalles de fabricación van en la descripción del producto, no como atributo.
               </p>
             </div>
           </div>
@@ -339,7 +339,7 @@ export default function AdminVariantManager({ product }) {
                             }
                           }}
                           className="h-9 text-xs"
-                          placeholder="ej: Color, Talla, Material..."
+                          placeholder="ej: Color, Talla, Tamaño..."
                         />
                         <datalist id={`attr-keys-${groupIdx}`}>
                           {keyOptions.map(k => <option key={k} value={k} />)}
