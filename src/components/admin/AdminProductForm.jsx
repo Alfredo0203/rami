@@ -26,6 +26,7 @@ export default function AdminProductForm({ product, categories, onClose }) {
     category_ids: product?.category_ids?.length ? product.category_ids : (product?.category_id ? [product.category_id] : []),
     brand: product?.brand || '',
     color: product?.color || '',
+    material: product?.material || '',
     stock: product?.stock || 0,
     store_id: product?.store_id || '',
     rating: product?.rating || 0,
@@ -153,6 +154,11 @@ export default function AdminProductForm({ product, categories, onClose }) {
         <div className="grid grid-cols-2 gap-3">
           <div><Label className="text-xs">Marca</Label><Input value={form.brand} onChange={e => setForm({...form, brand: e.target.value})} className="h-9 text-sm" placeholder="Nike, Samsung…" /></div>
           <div><Label className="text-xs">Color</Label><Input value={form.color} onChange={e => setForm({...form, color: e.target.value})} className="h-9 text-sm" placeholder="Rojo, Azul…" /></div>
+        </div>
+
+        <div>
+          <Label className="text-xs">Material (opcional) <span className="font-normal text-muted-foreground">— se muestra en los detalles del producto</span></Label>
+          <Input value={form.material} onChange={e => setForm({...form, material: e.target.value})} className="h-9 text-sm mt-0.5" placeholder="Algodón, Cuero, Acero inoxidable…" />
         </div>
 
         <div>

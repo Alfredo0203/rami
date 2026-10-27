@@ -41,6 +41,10 @@
       "type": "string",
       "description": "Primary color of the product (e.g. Rojo, Azul, Negro)"
     },
+    "material": {
+      "type": "string",
+      "description": "Material del producto (opcional, informativo - no es una variante)"
+    },
     "sku": {
       "type": "string",
       "description": "Base Stock Keeping Unit code for the product"

@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { ArrowLeft, Star, ShoppingCart, Heart, Minus, Plus, Check, Truck, Shield, RotateCcw, Loader2, AlertCircle, X, ZoomIn, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Star, ShoppingCart, Heart, Minus, Plus, Check, Truck, Shield, RotateCcw, Loader2, AlertCircle, X, ZoomIn, ChevronLeft, ChevronRight, Tag } from 'lucide-react';
 import { useBackButtonClose } from '@/hooks/useBackButtonClose';
 import { goBack } from '@/lib/navigation';
 import ProductReviews from '@/components/shop/ProductReviews';
@@ -595,6 +595,19 @@ export default function ProductDetail() {
             <RotateCcw className="w-4 h-4" /><span>Devoluciones</span>
           </div>
         </div>
+
+        {/* Material (opcional) */}
+        {product.material && (
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-2">Detalles</h3>
+            <div className="flex flex-wrap gap-1.5">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-secondary text-foreground border border-border">
+                <Tag className="w-3 h-3 text-muted-foreground" />
+                Material: <span className="font-medium">{product.material}</span>
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Description */}
         {product.description && (

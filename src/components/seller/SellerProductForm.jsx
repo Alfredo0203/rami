@@ -21,6 +21,7 @@ export default function SellerProductForm({ product, storeId, categories, onClos
     cost_per_unit: 0,
     category_ids: [],
     brand: '',
+    material: '',
     stock: 0,
     images: [],
     is_active: true,
@@ -37,6 +38,7 @@ export default function SellerProductForm({ product, storeId, categories, onClos
         cost_per_unit: product.cost_per_unit || 0,
         category_ids: product.category_ids?.length ? product.category_ids : (product.category_id ? [product.category_id] : []),
         brand: product.brand || '',
+        material: product.material || '',
         stock: product.stock || 0,
         images: product.images || [],
         is_active: product.is_active !== false,
@@ -189,6 +191,16 @@ export default function SellerProductForm({ product, storeId, categories, onClos
               value={form.brand}
               onChange={(e) => setForm({...form, brand: e.target.value})}
               placeholder="Marca"
+              className="h-9 text-sm"
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs">Material (opcional)</Label>
+            <Input
+              value={form.material}
+              onChange={(e) => setForm({...form, material: e.target.value})}
+              placeholder="Algodón, Cuero, Acero…"
               className="h-9 text-sm"
             />
           </div>
