@@ -8,6 +8,8 @@ import { Switch } from '@/components/ui/switch';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Plus, Trash2, Loader2, ChevronDown, ChevronUp, ImagePlus, Info, X, Edit2 } from 'lucide-react';
 import { toast } from 'sonner';
+import AttrValueSuggestions from './AttrValueSuggestions';
+import { buildVariantHistory, suggestionsFor } from '@/lib/variantHistory';
 
 // Sugerencias de claves por categoría — puramente cosmético/ayuda al admin
 const ATTR_KEY_SUGGESTIONS = [
@@ -40,6 +42,28 @@ export default function AdminVariantManager({ product }) {
     queryFn: () => base44.entities.ProductVariant.filter({ product_id: product.id }),
     enabled: open,
   });
+
+  // Historial del catálogo: tipos de atributo y valores ya usados (solo para sugerir)
+  const { data: historyVariants = [] } = useQuery({
+    queryKey: ['variant-attr-history'],
+    queryFn: async () => {
+      const res = await base44.entities.ProductVariant.list({ sort: '-created_date', limit: 500 });
+      return Array.isArray(res) ? res : (res?.items || []);
+    },
+    enabled: open,
+  });
+
+  const attrHistory = React.useMemo(() => buildVariantHistory(historyVariants), [historyVariants]);
+
+  const keyOptions = React.useMemo(() => {
+    const seen = new Set();
+    return [...ATTR_KEY_SUGGESTIONS, ...attrHistory.keys].filter(k => {
+      const norm = k.toLowerCase();
+      if (seen.has(norm)) return false;
+      seen.add(norm);
+      return true;
+    });
+  }, [attrHistory]);
 
   // Recalcula el stock total del producto sumando todas sus variantes activas
   const syncProductStock = async (updatedVariantId, updatedStock, isDelete = false) => {
@@ -283,7 +307,7 @@ export default function AdminVariantManager({ product }) {
                           placeholder="ej: Color, Talla, Material..."
                         />
                         <datalist id={`attr-keys-${groupIdx}`}>
-                          {ATTR_KEY_SUGGESTIONS.map(k => <option key={k} value={k} />)}
+                          {keyOptions.map(k => <option key={k} value={k} />)}
                         </datalist>
                       </div>
                     </div>
@@ -347,6 +371,10 @@ export default function AdminVariantManager({ product }) {
                             ))}
                           </div>
                         )}
+                        <AttrValueSuggestions
+                          suggestions={suggestionsFor(attrHistory, attrGroup.key, attrGroup.values)}
+                          onPick={(value) => addAttrValue(groupIdx, value)}
+                        />
                       </div>
                     )}
 
