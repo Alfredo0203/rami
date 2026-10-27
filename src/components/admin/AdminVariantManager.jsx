@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
@@ -134,6 +134,26 @@ export default function AdminVariantManager({ product }) {
     });
   };
 
+  // Tipo de atributo "confirmado" de cada grupo. Al confirmar un tipo distinto se
+  // vacían los valores del grupo, para no arrastrar valores de otro tipo
+  // (ej. la talla "L" quedando dentro de Color).
+  const committedKeys = useRef({});
+
+  const commitAttrKey = (idx, rawKey) => {
+    const key = rawKey.trim();
+    const previous = committedKeys.current[idx];
+    const group = form.attrs[idx];
+    committedKeys.current[idx] = key;
+    if (previous && key && previous !== key && group?.values?.length) {
+      setForm(f => {
+        const attrs = [...f.attrs];
+        attrs[idx] = { ...attrs[idx], values: [] };
+        return { ...f, attrs };
+      });
+      toast.info('Se vaciaron los valores porque cambiaste el tipo de atributo');
+    }
+  };
+
   const addAttrValue = (idx, value) => {
     if (!value.trim()) return;
     setForm(f => {
@@ -157,12 +177,18 @@ export default function AdminVariantManager({ product }) {
     });
   };
 
-  const addAttrGroup = () => setForm(f => ({ ...f, attrs: [...f.attrs, { key: '', values: [] }] }));
+  const addAttrGroup = () => {
+    committedKeys.current = {};
+    setForm(f => ({ ...f, attrs: [...f.attrs, { key: '', values: [] }] }));
+  };
 
-  const removeAttrGroup = (idx) => setForm(f => ({
-    ...f,
-    attrs: f.attrs.filter((_, i) => i !== idx),
-  }));
+  const removeAttrGroup = (idx) => {
+    committedKeys.current = {};
+    setForm(f => ({
+      ...f,
+      attrs: f.attrs.filter((_, i) => i !== idx),
+    }));
+  };
 
   const buildVariantData = () => {
     const validAttrs = form.attrs.filter(a => a?.key?.trim?.() && a.values?.length > 0);
@@ -208,6 +234,7 @@ export default function AdminVariantManager({ product }) {
 
   const startEdit = (variant) => {
     setEditing(variant);
+    committedKeys.current = {};
     setForm({
       attrs: (Array.isArray(variant.attributes) ? variant.attributes : []) || [EMPTY_ATTR_GROUP],
       price: variant.price ? String(variant.price) : '',
@@ -303,6 +330,14 @@ export default function AdminVariantManager({ product }) {
                           list={`attr-keys-${groupIdx}`}
                           value={attrGroup.key}
                           onChange={e => setAttrKey(groupIdx, e.target.value)}
+                          onBlur={e => commitAttrKey(groupIdx, e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              commitAttrKey(groupIdx, e.target.value);
+                              e.currentTarget.blur();
+                            }
+                          }}
                           className="h-9 text-xs"
                           placeholder="ej: Color, Talla, Material..."
                         />
