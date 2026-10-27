@@ -8,7 +8,7 @@ export default function AttrValueSuggestions({ suggestions, onPick }) {
   return (
     <div className="space-y-1.5">
       <p className="text-[11px] text-muted-foreground">
-        Ya usados en otros productos — toca para agregar:
+        Usados anteriormente:
       </p>
       <div className="flex flex-wrap gap-1.5">
         {suggestions.map((value) => (
