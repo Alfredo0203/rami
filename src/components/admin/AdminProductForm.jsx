@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { X, Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import AdminVariantManager from './AdminVariantManager';
+import CategoryMultiSelect from '../CategoryMultiSelect';
 import { useBackButtonOverlay } from '@/hooks/useBackButtonClose';
 
 export default function AdminProductForm({ product, categories, onClose }) {
@@ -22,7 +23,7 @@ export default function AdminProductForm({ product, categories, onClose }) {
     description: product?.description || '',
     price: product?.price || '',
     original_price: product?.original_price || '',
-    category_id: product?.category_id || '',
+    category_ids: product?.category_ids?.length ? product.category_ids : (product?.category_id ? [product.category_id] : []),
     brand: product?.brand || '',
     color: product?.color || '',
     stock: product?.stock || 0,
@@ -73,6 +74,7 @@ export default function AdminProductForm({ product, categories, onClose }) {
     }
     const data = {
       ...form,
+      category_id: form.category_ids?.[0] || '',
       price: parseFloat(form.price) || 0,
       original_price: parseFloat(form.original_price) || 0,
       stock: parseInt(form.stock) || 0,
@@ -135,20 +137,18 @@ export default function AdminProductForm({ product, categories, onClose }) {
           <div><Label className="text-xs">Precio Original ($)</Label><Input type="number" value={form.original_price} onChange={e => setForm({...form, original_price: e.target.value})} className="h-9 text-sm" /></div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label className="text-xs">Categoría</Label>
-            <Select value={form.category_id} onValueChange={v => setForm({...form, category_id: v})}>
-              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-              <SelectContent>
-                {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          {!form.has_variants && (
-            <div><Label className="text-xs">Inventario (unidades)</Label><Input type="number" min="0" value={form.stock} onChange={e => setForm({...form, stock: e.target.value})} className="h-9 text-sm" /></div>
-          )}
+        <div>
+          <Label className="text-xs">Categorías <span className="font-normal text-muted-foreground">(★ = principal)</span></Label>
+          <CategoryMultiSelect
+            categories={categories}
+            value={form.category_ids}
+            onChange={ids => setForm({ ...form, category_ids: ids })}
+          />
         </div>
+
+        {!form.has_variants && (
+          <div><Label className="text-xs">Inventario (unidades)</Label><Input type="number" min="0" value={form.stock} onChange={e => setForm({...form, stock: e.target.value})} className="h-9 text-sm" /></div>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
           <div><Label className="text-xs">Marca</Label><Input value={form.brand} onChange={e => setForm({...form, brand: e.target.value})} className="h-9 text-sm" placeholder="Nike, Samsung…" /></div>

@@ -6,6 +6,7 @@ import ProductCard from './ProductCard';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import ReviewDetailModal from './ReviewDetailModal';
+import { getProductCategoryIds, productMatchesCategory } from '@/lib/productCategories';
 
 export default function StoreModal({ store, products, categories, orders = [], reviews = [], onClose }) {
   useBackButtonClose(!!store, onClose);
@@ -26,7 +27,7 @@ export default function StoreModal({ store, products, categories, orders = [], r
 
     // Filtrar por categoría si está seleccionada
     if (selectedCategory) {
-      filtered = filtered.filter(p => p.category_id === selectedCategory);
+      filtered = filtered.filter(p => productMatchesCategory(p, selectedCategory));
     }
 
     return filtered.filter(p => p.is_active !== false);
@@ -63,7 +64,7 @@ export default function StoreModal({ store, products, categories, orders = [], r
       return p.store_id === store.id;
     }).filter(p => p.is_active !== false);
     
-    const categoryIds = [...new Set(allStoreProducts.map(p => p.category_id))];
+    const categoryIds = [...new Set(allStoreProducts.flatMap(p => getProductCategoryIds(p)))];
     return categories.filter(c => categoryIds.includes(c.id));
   }, [products, categories, store]);
 

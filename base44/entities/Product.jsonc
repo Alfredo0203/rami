@@ -24,7 +24,14 @@
     },
     "category_id": {
       "type": "string",
-      "description": "Category ID"
+      "description": "Categor\u00eda principal del producto (primera de category_ids)"
+    },
+    "category_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Todas las categor\u00edas del producto (la primera es la principal)"
     },
     "brand": {
       "type": "string",

@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useBackButtonOverlay } from '@/hooks/useBackButtonClose';
+import CategoryMultiSelect from '@/components/CategoryMultiSelect';
 
 export default function SellerProductForm({ product, storeId, categories, onClose }) {
   useBackButtonOverlay(true, onClose);
@@ -18,7 +19,7 @@ export default function SellerProductForm({ product, storeId, categories, onClos
     price: 0,
     original_price: 0,
     cost_per_unit: 0,
-    category_id: '',
+    category_ids: [],
     brand: '',
     stock: 0,
     images: [],
@@ -34,7 +35,7 @@ export default function SellerProductForm({ product, storeId, categories, onClos
         price: product.price || 0,
         original_price: product.original_price || 0,
         cost_per_unit: product.cost_per_unit || 0,
-        category_id: product.category_id || '',
+        category_ids: product.category_ids?.length ? product.category_ids : (product.category_id ? [product.category_id] : []),
         brand: product.brand || '',
         stock: product.stock || 0,
         images: product.images || [],
@@ -93,7 +94,7 @@ export default function SellerProductForm({ product, storeId, categories, onClos
       toast.error('Nombre y precio son requeridos');
       return;
     }
-    saveMutation.mutate(form);
+    saveMutation.mutate({ ...form, category_id: form.category_ids?.[0] || '' });
   };
 
   return (
@@ -173,29 +174,23 @@ export default function SellerProductForm({ product, storeId, categories, onClos
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="text-xs">Categoría</Label>
-              <select
-                value={form.category_id}
-                onChange={(e) => setForm({...form, category_id: e.target.value})}
-                className="w-full h-9 text-sm px-3 rounded-lg bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="">Seleccionar</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <Label className="text-xs">Marca</Label>
-              <Input
-                value={form.brand}
-                onChange={(e) => setForm({...form, brand: e.target.value})}
-                placeholder="Marca"
-                className="h-9 text-sm"
-              />
-            </div>
+          <div>
+            <Label className="text-xs">Categorías <span className="font-normal text-muted-foreground">(★ = principal)</span></Label>
+            <CategoryMultiSelect
+              categories={categories}
+              value={form.category_ids}
+              onChange={(ids) => setForm({ ...form, category_ids: ids })}
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs">Marca</Label>
+            <Input
+              value={form.brand}
+              onChange={(e) => setForm({...form, brand: e.target.value})}
+              placeholder="Marca"
+              className="h-9 text-sm"
+            />
           </div>
 
           <div>

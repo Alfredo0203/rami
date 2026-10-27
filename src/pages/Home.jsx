@@ -8,6 +8,7 @@ import PromoBanner from '../components/shop/PromoBanner';
 import ProductCard from '../components/shop/ProductCard';
 import BottomNav from '../components/shop/BottomNav';
 import InfiniteScroll from '../components/shop/InfiniteScroll';
+import { productMatchesCategory } from '@/lib/productCategories';
 
 import { useTranslation } from '../components/i18n/useTranslation';
 import { AlertTriangle, Loader2 } from 'lucide-react';
@@ -54,7 +55,7 @@ export default function Home() {
     if (selectedCategory === 'featured') {
       filtered = filtered.filter(p => p.is_featured);
     } else if (selectedCategory) {
-      filtered = filtered.filter(p => p.category_id === selectedCategory);
+      filtered = filtered.filter(p => productMatchesCategory(p, selectedCategory));
     }
     
     if (searchQuery.trim()) {

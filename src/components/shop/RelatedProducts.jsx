@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Star, ShoppingBag } from 'lucide-react';
+import { productMatchesCategory } from '@/lib/productCategories';
 
 export default function RelatedProducts({ categoryId, currentProductId, currentTags = [] }) {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ export default function RelatedProducts({ categoryId, currentProductId, currentT
 
   // Misma categoría, excluye el producto actual
   const sameCategory = (data?.products || []).filter(
-    p => p.category_id === categoryId && p.id !== currentProductId && p.is_active !== false
+    p => productMatchesCategory(p, categoryId) && p.id !== currentProductId && p.is_active !== false
   );
 
   // Si hay tags, priorizar los que comparten al menos uno

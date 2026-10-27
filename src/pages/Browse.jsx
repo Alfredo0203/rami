@@ -8,6 +8,7 @@ import SearchHeaderWithHistory from '../components/shop/SearchHeaderWithHistory'
 import { SlidersHorizontal, X, Loader2, Star, Tag, Package, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { localLogout } from '@/lib/authRedirect';
+import { productMatchesCategory } from '@/lib/productCategories';
 import RecommendationsModal from '../components/shop/RecommendationsModal';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -139,7 +140,7 @@ export default function Browse() {
     }
 
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(p => p.category_id === selectedCategory);
+      filtered = filtered.filter(p => productMatchesCategory(p, selectedCategory));
     }
 
     filtered = filtered.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);

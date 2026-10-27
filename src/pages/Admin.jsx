@@ -12,6 +12,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import AdminSettingsTab from '../components/admin/AdminSettingsTab';
 import AdminReviewsTab from '../components/admin/AdminReviewsTab';
 import AdminCategoriesTab from '../components/admin/AdminCategoriesTab';
+import { getProductCategoryIds } from '@/lib/productCategories';
 import AdminCouponsTab from '../components/admin/AdminCouponsTab';
 import AdminStoresTab from '../components/admin/AdminStoresTab';
 import AdminRefundsTab from '../components/admin/AdminRefundsTab';
@@ -341,7 +342,7 @@ export default function Admin() {
                   (f === 'out' && stock === 0) ||
                   (f === 'in_stock' && stock >= 5)
                 );
-                const matchesCategory = categoryFilters.length === 0 || categoryFilters.includes(p.category_id);
+                const matchesCategory = categoryFilters.length === 0 || getProductCategoryIds(p).some(id => categoryFilters.includes(id));
                 return matchesSearch && matchesStock && matchesCategory;
               });
 
