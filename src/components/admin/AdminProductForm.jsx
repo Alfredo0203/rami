@@ -44,6 +44,16 @@ export default function AdminProductForm({ product, categories, onClose }) {
     queryFn: () => base44.entities.Store.list(),
   });
 
+  // Variantes reales del producto: el stock se controla por variante cuando existen.
+  const { data: productVariants = [] } = useQuery({
+    queryKey: ['form-product-variants', product?.id],
+    queryFn: () => base44.entities.ProductVariant.filter({ product_id: product.id }),
+    enabled: !!product?.id,
+  });
+  const activeVariants = productVariants.filter(v => v.is_active !== false);
+  const variantsStock = activeVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
+  const usesVariantStock = isEditing && productVariants.length > 0;
+
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
 
@@ -147,7 +157,17 @@ export default function AdminProductForm({ product, categories, onClose }) {
           />
         </div>
 
-        {!form.has_variants && (
+        {usesVariantStock ? (
+          <div className="bg-secondary/60 rounded-xl px-3 py-2.5">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Inventario total</Label>
+              <span className="text-sm font-bold text-foreground">{variantsStock} unidades</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
+              Se controla variante por variante en <strong>Variantes</strong> (abajo) · {activeVariants.length} {activeVariants.length === 1 ? 'variante activa' : 'variantes activas'}
+            </p>
+          </div>
+        ) : (
           <div><Label className="text-xs">Inventario (unidades)</Label><Input type="number" min="0" value={form.stock} onChange={e => setForm({...form, stock: e.target.value})} className="h-9 text-sm" /></div>
         )}
 
