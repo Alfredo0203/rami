@@ -46,7 +46,7 @@ export default function AdminProductForm({ product, categories, onClose }) {
 
   // Variantes reales del producto: el stock se controla por variante cuando existen.
   const { data: productVariants = [] } = useQuery({
-    queryKey: ['form-product-variants', product?.id],
+    queryKey: ['variants', product?.id],
     queryFn: () => base44.entities.ProductVariant.filter({ product_id: product.id }),
     enabled: !!product?.id,
   });

@@ -37,10 +37,11 @@ export default function AdminVariantManager({ product }) {
   const [uploadingImg, setUploadingImg] = useState(false);
   const [deletingVariantId, setDeletingVariantId] = useState(null);
 
+  // Se cargan siempre (no solo al abrir), para que el encabezado muestre el conteo real
   const { data: variants = [], isLoading } = useQuery({
     queryKey: ['variants', product.id],
     queryFn: () => base44.entities.ProductVariant.filter({ product_id: product.id }),
-    enabled: open,
+    enabled: !!product?.id,
   });
 
   // Historial del catálogo: tipos de atributo y valores ya usados (solo para sugerir)
@@ -258,7 +259,7 @@ export default function AdminVariantManager({ product }) {
         className="w-full flex items-center justify-between px-4 py-3 bg-secondary text-sm font-semibold text-foreground"
       >
         <span>
-          Variantes ({variants.length > 0 ? `${variants.length} creadas` : 'ninguna aún'})
+          Variantes ({isLoading ? 'cargando…' : variants.length > 0 ? `${variants.length} creadas` : 'ninguna aún'})
         </span>
         {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
       </button>
