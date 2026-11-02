@@ -126,7 +126,6 @@ ${footerBlock}
 </div>
 </body></html>`;
     } else if (type === 'admin_new_order') {
-      to = 'somosrami@gmail.com';
       subject = `Nuevo pedido ${order.order_number} - ${fmt(order.total)}`;
       text = adminText;
       html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head><body style="margin:0;padding:0;background-color:#f4f4f5;font-family:'Inter',Arial,sans-serif;">
@@ -159,8 +158,30 @@ ${footerBlock}
       return Response.json({ error: 'Tipo de email no válido: ' + type }, { status: 400 });
     }
 
-    await base44.asServiceRole.functions.invoke('sendGmailEmail', { to, subject, html, text });
-    return Response.json({ success: true });
+    // Destinatarios: todos los admins y super_admins (fallback al correo de la tienda)
+    let recipients = [to].filter(Boolean);
+    if (type === 'admin_new_order') {
+      const [admins, superAdmins] = await Promise.all([
+        base44.asServiceRole.entities.User.filter({ role: 'admin' }),
+        base44.asServiceRole.entities.User.filter({ role: 'super_admin' }),
+      ]);
+      const emails = [...admins, ...superAdmins]
+        .map(u => u.email)
+        .filter(Boolean);
+      recipients = [...new Set(emails)];
+      if (recipients.length === 0) recipients = ['somosrami@gmail.com'];
+    }
+
+    const results = await Promise.allSettled(
+      recipients.map(recipient =>
+        base44.asServiceRole.functions.invoke('sendGmailEmail', { to: recipient, subject, html, text })
+      )
+    );
+    results.forEach((r, i) => {
+      if (r.status === 'rejected') console.error('Error email a ' + recipients[i] + ':', r.reason?.message || r.reason);
+    });
+
+    return Response.json({ success: true, sent_to: recipients });
   } catch (error) {
     console.error('sendOrderEmail error:', error.message);
     return Response.json({ error: error.message }, { status: 500 });
