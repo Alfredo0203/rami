@@ -39,6 +39,7 @@ export default function Admin() {
   const [sortBy, setSortBy] = useState('recent'); // 'recent', 'name', 'stock', 'sold'
   const [storeFilters, setStoreFilters] = useState([]);
   const [categoryFilters, setCategoryFilters] = useState([]);
+  const [statusFilters, setStatusFilters] = useState([]);
   const [orderStatusFilters, setOrderStatusFilters] = useState([]);
   const [orderSearch, setOrderSearch] = useState('');
   const [orderSort, setOrderSort] = useState('newest');
@@ -233,6 +234,23 @@ export default function Admin() {
             <Plus className="w-4 h-4 mr-2" /> Agregar Producto
           </Button>
 
+          {/* Buscador siempre visible */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Buscar producto por nombre..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-9 py-2.5 text-sm bg-card border border-border rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full bg-secondary">
+                <X className="w-3.5 h-3.5 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+
           {/* Filtros — Sheet igual que Browse */}
           {(() => {
             const toggleMulti = (arr, setArr, val) => setArr(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
@@ -241,6 +259,7 @@ export default function Admin() {
               stockFilters.length > 0,
               sortBy !== 'recent',
               categoryFilters.length > 0,
+              statusFilters.length > 0,
             ].filter(Boolean).length;
             return (
               <Sheet open={showProductFilters} onOpenChange={setShowProductFilters}>
@@ -258,7 +277,7 @@ export default function Admin() {
                   </button>
                   {activeCount > 0 && (
                     <button
-                      onClick={() => { setSearchQuery(''); setStockFilters([]); setSortBy('recent'); setCategoryFilters([]); }}
+                      onClick={() => { setSearchQuery(''); setStockFilters([]); setSortBy('recent'); setCategoryFilters([]); setStatusFilters([]); }}
                       className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-colors"
                     >
                       <X className="w-3 h-3" /> Limpiar filtros
@@ -270,7 +289,7 @@ export default function Admin() {
                     <SheetTitle>Filtros de productos</SheetTitle>
                     {activeCount > 0 && (
                       <button
-                        onClick={() => { setSearchQuery(''); setStockFilters([]); setSortBy('recent'); setCategoryFilters([]); }}
+                        onClick={() => { setSearchQuery(''); setStockFilters([]); setSortBy('recent'); setCategoryFilters([]); setStatusFilters([]); }}
                         className="text-xs text-primary font-medium"
                       >
                         Limpiar todo
@@ -279,24 +298,22 @@ export default function Admin() {
                   </SheetHeader>
                   <div className="space-y-5 py-4">
                     <div>
-                      <label className="text-sm font-semibold text-foreground mb-2 block">Buscar</label>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <input
-                          type="text"
-                          placeholder="Nombre del producto..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full pl-9 pr-3 py-2 text-sm bg-secondary border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                    </div>
-                    <div>
                       <label className="text-sm font-semibold text-foreground mb-1 block">Stock <span className="text-[10px] text-muted-foreground font-normal">(selección múltiple)</span></label>
                       <div className="flex flex-wrap gap-2">
                         {[['in_stock','✅ En stock'],['low','⚠️ Casi agotado'],['out','❌ Agotado']].map(([v, label]) => (
                           <button key={v} onClick={() => toggleMulti(stockFilters, setStockFilters, v)}
                             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${stockFilters.includes(v) ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-foreground mb-1 block">Visibilidad <span className="text-[10px] text-muted-foreground font-normal">(selección múltiple)</span></label>
+                      <div className="flex flex-wrap gap-2">
+                        {[['active','Visibles'],['hidden','Ocultos']].map(([v, label]) => (
+                          <button key={v} onClick={() => toggleMulti(statusFilters, setStatusFilters, v)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${statusFilters.includes(v) ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border'}`}>
                             {label}
                           </button>
                         ))}
@@ -325,7 +342,7 @@ export default function Admin() {
                       </div>
                     </div>
                     <Button onClick={() => setShowProductFilters(false)} className="w-full bg-primary text-primary-foreground rounded-full">
-                      Aplicar
+                      Listo
                     </Button>
                   </div>
                 </SheetContent>
@@ -346,7 +363,8 @@ export default function Admin() {
                   (f === 'in_stock' && stock >= 5)
                 );
                 const matchesCategory = categoryFilters.length === 0 || getProductCategoryIds(p).some(id => categoryFilters.includes(id));
-                return matchesSearch && matchesStock && matchesCategory;
+                const matchesStatus = statusFilters.length === 0 || statusFilters.some(f => (f === 'hidden' ? p.is_active === false : p.is_active !== false));
+                return matchesSearch && matchesStock && matchesCategory && matchesStatus;
               });
 
               if (sortBy === 'recent') filtered.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
