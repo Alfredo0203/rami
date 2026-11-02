@@ -8,6 +8,7 @@ import OrderStatusBadge from '../components/shop/OrderStatusBadge';
 import OrderStatusTimeline from '../components/shop/OrderStatusTimeline';
 import { ArrowLeft, MapPin, CreditCard, Package, Truck, CheckCircle2, Clock, Loader2, RotateCcw, XCircle } from 'lucide-react';
 import { formatDateTimeSV } from '@/lib/dateUtils';
+import { toast } from 'sonner';
 import InvoicePDF from '../components/shop/InvoicePDF';
 import { Button } from '@/components/ui/button';
 import {
@@ -92,7 +93,7 @@ export default function OrderDetail() {
       if (res.data?.error) throw new Error(res.data.error);
       queryClient.invalidateQueries({ queryKey: ['order', orderId] });
     } catch (e) {
-      alert(e.message || 'Error al cancelar el pedido');
+      toast.error(e.message || 'Error al cancelar el pedido');
     }
     setCancelling(false);
   };

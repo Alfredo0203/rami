@@ -4,10 +4,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, RotateCcw, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import RefundNotesDialog from './RefundNotesDialog';
 
 export default function AdminRefundsTab() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState('pending');
+  const [dialog, setDialog] = useState(null);
 
   const { data: refunds = [], isLoading } = useQuery({
     queryKey: ['admin-refunds'],
@@ -118,11 +120,7 @@ export default function AdminRefundsTab() {
                 <div className="flex gap-2">
                   <Button
                     size="sm"
-                    onClick={() => {
-                      const notes = prompt('Notas (opcional):', '');
-                      if (notes === null) return;
-                      markProcessed.mutate({ id: refund.id, notes });
-                    }}
+                    onClick={() => setDialog({ mode: 'process', refund })}
                     className="flex-1 bg-success text-white hover:bg-success/90 h-8 text-xs"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Marcar procesado
@@ -130,11 +128,7 @@ export default function AdminRefundsTab() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => {
-                      const notes = prompt('Motivo del fallo:', '');
-                      if (notes === null) return;
-                      markFailed.mutate({ id: refund.id, notes });
-                    }}
+                    onClick={() => setDialog({ mode: 'fail', refund })}
                     className="flex-1 border-destructive text-destructive hover:bg-destructive/10 h-8 text-xs"
                   >
                     <XCircle className="w-3.5 h-3.5 mr-1" /> Fallido
@@ -151,6 +145,21 @@ export default function AdminRefundsTab() {
           ))}
         </div>
       )}
+
+      <RefundNotesDialog
+        open={!!dialog}
+        onOpenChange={(v) => { if (!v) setDialog(null); }}
+        mode={dialog?.mode}
+        orderNumber={dialog?.refund?.order_number}
+        loading={markProcessed.isPending || markFailed.isPending}
+        onConfirm={(notes) => {
+          const mutation = dialog.mode === 'process' ? markProcessed : markFailed;
+          mutation.mutate(
+            { id: dialog.refund.id, notes },
+            { onSuccess: () => setDialog(null) }
+          );
+        }}
+      />
     </div>
   );
 }

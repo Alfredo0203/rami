@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Sparkles, Clock, ExternalLink, ShoppingBag, ChevronDown, Trash2, Mic, MicOff } from 'lucide-react';
 import { useBackButtonClose } from '@/hooks/useBackButtonClose';
+import { toast } from 'sonner';
 
 const APP_LOGO_URL = 'https://lh3.googleusercontent.com/d/1XvzxcscLVC00UVnvggpG1qTLTiyQ_6d0';
 import { useNavigate } from 'react-router-dom';
@@ -266,7 +267,7 @@ export default function RecommendationsModal({ open, onClose }) {
   const startListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert('Tu navegador no soporta reconocimiento de voz');
+      toast.error('Tu navegador no soporta reconocimiento de voz');
       return;
     }
 
