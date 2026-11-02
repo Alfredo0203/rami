@@ -255,6 +255,12 @@ export default function AdminStoresTab() {
                   autoComplete="off"
                   className="h-9 text-sm"
                 />
+                {users.length > 0 && storeForm.owner_email &&
+                  !users.some(u => u.email?.toLowerCase() === storeForm.owner_email.toLowerCase()) && (
+                  <p className="text-[10px] text-warning mt-1 leading-snug">
+                    Este correo no pertenece a un usuario registrado. La tienda se guarda, pero esa persona no tendrá acceso a su panel de vendedor.
+                  </p>
+                )}
                 {users.length > 0 && (
                   <Select
                     value=""
