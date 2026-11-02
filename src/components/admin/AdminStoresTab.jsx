@@ -43,7 +43,10 @@ export default function AdminStoresTab() {
 
   const { data: users = [] } = useQuery({
     queryKey: ['admin-users-stores'],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: async () => {
+      const res = await base44.functions.invoke('listAdminUsers', {});
+      return res.data?.users || [];
+    },
   });
 
   const saveStoreMutation = useMutation({
@@ -244,19 +247,31 @@ export default function AdminStoresTab() {
 
               <div>
                 <Label className="text-xs">Email del dueño</Label>
-                <Select
+                <Input
+                  type="email"
                   value={storeForm.owner_email}
-                  onValueChange={v => setStoreForm({...storeForm, owner_email: v})}
-                >
-                  <SelectTrigger className="h-9 text-sm">
-                    <SelectValue placeholder="Seleccionar usuario" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {users.map(u => (
-                      <SelectItem key={u.id} value={u.email}>{u.email} - {u.full_name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={e => setStoreForm({...storeForm, owner_email: e.target.value.replace(/\s/g, '')})}
+                  placeholder="correo@tutienda.com"
+                  autoComplete="off"
+                  className="h-9 text-sm"
+                />
+                {users.length > 0 && (
+                  <Select
+                    value=""
+                    onValueChange={v => setStoreForm({...storeForm, owner_email: v})}
+                  >
+                    <SelectTrigger className="h-8 text-xs mt-1.5 text-muted-foreground">
+                      <SelectValue placeholder="O elegir un usuario registrado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {users.map(u => (
+                        <SelectItem key={u.id} value={u.email} className="text-xs">
+                          {u.email}{u.full_name ? ` — ${u.full_name}` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               <div>
