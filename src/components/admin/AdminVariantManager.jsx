@@ -9,6 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, Trash2, Loader2, ChevronDown, ChevronUp, ImagePlus, Info, X, Edit2 } from 'lucide-react';
 import { toast } from 'sonner';
 import AttrValueSuggestions from './AttrValueSuggestions';
+import VariantImagePicker from './VariantImagePicker';
 import { buildVariantHistory, suggestionsFor } from '@/lib/variantHistory';
 
 // Sugerencias de claves por categoría — puramente cosmético/ayuda al admin
@@ -192,6 +193,9 @@ export default function AdminVariantManager({ product }) {
     }));
   };
 
+  // Solo las variantes de talla ofrecen la opción de reutilizar la foto principal
+  const isSizeVariant = form.attrs.some(a => ['talla', 'tallas', 'tamaño', 'tamaños'].includes((a?.key || '').trim().toLowerCase()));
+
   const buildVariantData = () => {
     const validAttrs = form.attrs.filter(a => a?.key?.trim?.() && a.values?.length > 0);
     if (validAttrs.length === 0) {
@@ -216,8 +220,8 @@ export default function AdminVariantManager({ product }) {
       price: parseFloat(form.price) || undefined,
       original_price: parseFloat(form.original_price) || undefined,
       stock: parseInt(form.stock) || 0,
-      // null = usa la foto principal del producto en la tienda
-      image_url: form.use_product_image ? null : (form.image_url || null),
+      // En tallas con el switch activo: null = usa la foto principal del producto
+      image_url: (isSizeVariant && form.use_product_image) ? null : (form.image_url || undefined),
       attributes: attributesArr,
     };
   };
@@ -446,46 +450,31 @@ export default function AdminVariantManager({ product }) {
                 )}
               </div>
 
-              {/* Imagen: la principal del producto o una propia de la variante */}
-              <div className="flex items-start justify-between gap-3 bg-secondary/60 rounded-xl px-3 py-2">
-                <div className="min-w-0">
-                  <p className="text-xs font-medium text-foreground">Usar la foto principal del producto</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {form.use_product_image
-                      ? 'Esta variante mostrará la foto principal, sin foto propia.'
-                      : 'Sube una foto solo para esta variante.'}
-                  </p>
-                </div>
-                <Switch
-                  checked={form.use_product_image}
-                  onCheckedChange={v => setForm(f => ({ ...f, use_product_image: v }))}
-                />
-              </div>
-
-              {!form.use_product_image && (
-                <div className="flex items-center gap-3">
-                  {form.image_url ? (
-                    <div className="relative">
-                      <img src={form.image_url} alt="preview" className="w-14 h-14 rounded-lg object-cover border border-border" />
-                      <button
-                        onClick={() => setForm(f => ({ ...f, image_url: '' }))}
-                        className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-white rounded-full text-[10px] flex items-center justify-center"
-                      >✕</button>
-                    </div>
-                  ) : (
-                    <label className="w-14 h-14 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors bg-secondary">
-                      {uploadingImg
-                        ? <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                        : <ImagePlus className="w-4 h-4 text-muted-foreground" />
-                      }
-                      <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                    </label>
-                  )}
-                  <div>
-                    <p className="text-xs font-medium text-foreground">Foto de esta variante</p>
-                    <p className="text-[11px] text-muted-foreground">Opcional — útil para diferenciar por color o modelo</p>
+              {/* Imagen: solo en variantes de talla se ofrece usar la foto principal del producto */}
+              {isSizeVariant && (
+                <div className="flex items-start justify-between gap-3 bg-secondary/60 rounded-xl px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-foreground">Usar la foto principal del producto</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {form.use_product_image
+                        ? 'Esta talla mostrará la foto principal, sin foto propia.'
+                        : 'Sube una foto solo para esta talla.'}
+                    </p>
                   </div>
+                  <Switch
+                    checked={form.use_product_image}
+                    onCheckedChange={v => setForm(f => ({ ...f, use_product_image: v }))}
+                  />
                 </div>
+              )}
+
+              {(!isSizeVariant || !form.use_product_image) && (
+                <VariantImagePicker
+                  imageUrl={form.image_url}
+                  uploading={uploadingImg}
+                  onUpload={handleImageUpload}
+                  onClear={() => setForm(f => ({ ...f, image_url: '' }))}
+                />
               )}
 
               {/* Price & stock */}
