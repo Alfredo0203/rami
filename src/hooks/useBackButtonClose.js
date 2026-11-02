@@ -33,7 +33,12 @@ function _isGuardEntry() {
 function _pushGuard() {
   if (_holdsGuard) return;
   try {
-    window.history.pushState({ [GUARD_KEY]: true }, '');
+    // The guard entry must carry a router-compatible index: pushing state
+    // without it makes React Router read the guard entry as index 0 and jump
+    // several pages back when the modal closes.
+    const current = window.history.state || {};
+    const idx = typeof current.idx === 'number' ? current.idx : 0;
+    window.history.pushState({ [GUARD_KEY]: true, idx: idx + 1 }, '');
     _holdsGuard = true;
   } catch {
     // History unavailable (restricted context): overlays still close from their X.

@@ -35,7 +35,7 @@ export default function ProductDetail() {
   const touchStartX = useRef(null);
 
   // Safe back: go back in history if there's a previous page, otherwise go Home
-  const handleBack = () => goBack(navigate);
+  const handleBack = () => goBack(navigate, createPageUrl('Browse'));
 
   // Back button closes lightbox instead of navigating away
   useBackButtonClose(lightboxOpen, () => setLightboxOpen(false));
