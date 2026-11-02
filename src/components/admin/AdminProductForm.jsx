@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { X, Upload, Loader2 } from 'lucide-react';
+import { X, Upload, Loader2, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import AdminVariantManager from './AdminVariantManager';
 import CategoryMultiSelect from '../CategoryMultiSelect';
@@ -113,6 +113,16 @@ export default function AdminProductForm({ product, categories, onClose }) {
     setForm(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== idx) }));
   };
 
+  // La primera foto de la galería es la principal
+  const setAsMainImage = (idx) => {
+    setForm(prev => {
+      const images = [...prev.images];
+      const [picked] = images.splice(idx, 1);
+      images.unshift(picked);
+      return { ...prev, images };
+    });
+  };
+
   return (
     <>
     {previewUrl && (
@@ -209,6 +219,20 @@ export default function AdminProductForm({ product, categories, onClose }) {
                 <button onClick={() => removeImage(i)} className="absolute top-0.5 right-0.5 w-5 h-5 bg-foreground/60 rounded-full flex items-center justify-center">
                   <X className="w-3 h-3 text-primary-foreground" />
                 </button>
+                {i === 0 ? (
+                  <span className="absolute bottom-0 inset-x-0 bg-primary/90 text-primary-foreground text-[9px] font-semibold text-center py-0.5">
+                    Principal
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setAsMainImage(i)}
+                    title="Usar como principal"
+                    className="absolute bottom-0 inset-x-0 h-4 bg-foreground/60 hover:bg-primary flex items-center justify-center transition-colors"
+                  >
+                    <Star className="w-3 h-3 text-primary-foreground" />
+                  </button>
+                )}
               </div>
             ))}
             <label className="w-16 h-16 rounded-lg border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-primary transition-colors">
