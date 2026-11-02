@@ -63,9 +63,12 @@ Deno.serve(async (req) => {
 
     // Construir URL de retorno/redirect — usar la URL base de la app pasada desde el frontend
     // (appBaseUrl), con fallback al origin del request, y finalmente a la URL publicada
+    // La tienda publicada no se puede mostrar dentro de la vista de Wompi
+    // (x-frame-options: DENY), así que el regreso apunta a una página propia
+    // servida por función, y sin parámetros que Wompi pueda corromper.
     const appUrl = appBaseUrl || req.headers.get('origin') || 'https://fractal-nova-cart-shop.base44.app';
-    const redirectUrl = `${appUrl}/OrderConfirmation?id=${orderId}&payment=success&method=wompi`;
-    const returnUrl = `${appUrl}/OrderConfirmation?id=${orderId}&payment=success&method=wompi`;
+    const returnUrl = `${appUrl}/functions/wompiReturn`;
+    const redirectUrl = returnUrl;
     console.log('Wompi redirect URLs:', { redirectUrl, returnUrl });
 
     // 2. Crear enlace de pago
