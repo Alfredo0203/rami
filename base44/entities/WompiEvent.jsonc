@@ -1,0 +1,90 @@
+{
+  "name": "WompiEvent",
+  "type": "object",
+  "properties": {
+    "order_id": {
+      "type": "string",
+      "description": "ID de la orden asociada al identificador del enlace de pago"
+    },
+    "identificador": {
+      "type": "string",
+      "description": "IdentificadorEnlaceComercio recibido"
+    },
+    "resultado": {
+      "type": "string",
+      "description": "ResultadoTransaccion recibido"
+    },
+    "monto": {
+      "type": "number",
+      "description": "Monto recibido en el webhook"
+    },
+    "es_productiva": {
+      "type": "boolean",
+      "description": "EsProductiva recibido (false = transacci\u00f3n de prueba)"
+    },
+    "hash_header": {
+      "type": "string",
+      "description": "Valor del header wompi_hash recibido"
+    },
+    "hash_match": {
+      "type": "boolean",
+      "description": "Si el HMAC calculado con WOMPI_CLIENT_SECRET coincide con el header"
+    },
+    "payload": {
+      "type": "string",
+      "description": "Body crudo del webhook (para diagn\u00f3stico)"
+    },
+    "outcome": {
+      "type": "string",
+      "description": "Resultado del procesamiento: confirmed, rejected_signature, not_found, amount_mismatch, ignored"
+    }
+  },
+  "required": [
+    "outcome"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "super_admin"
+          }
+        }
+      ]
+    },
+    "create": {},
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "super_admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "super_admin"
+          }
+        }
+      ]
+    }
+  }
+}
