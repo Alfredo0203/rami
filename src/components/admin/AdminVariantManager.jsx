@@ -26,6 +26,7 @@ const EMPTY_FORM = {
   stock: '0',
   sku: '',
   image_url: '',
+  use_product_image: true, // por defecto la variante usa la foto principal del producto
 };
 
 export default function AdminVariantManager({ product }) {
@@ -215,7 +216,8 @@ export default function AdminVariantManager({ product }) {
       price: parseFloat(form.price) || undefined,
       original_price: parseFloat(form.original_price) || undefined,
       stock: parseInt(form.stock) || 0,
-      image_url: form.image_url || undefined,
+      // null = usa la foto principal del producto en la tienda
+      image_url: form.use_product_image ? null : (form.image_url || null),
       attributes: attributesArr,
     };
   };
@@ -243,6 +245,8 @@ export default function AdminVariantManager({ product }) {
       stock: String(variant.stock ?? 0),
       sku: variant.sku || '',
       image_url: variant.image_url || '',
+      // Si la variante ya tiene foto propia, el switch arranca apagado
+      use_product_image: !variant.image_url,
     });
   };
 
@@ -442,30 +446,47 @@ export default function AdminVariantManager({ product }) {
                 )}
               </div>
 
-              {/* Image */}
-              <div className="flex items-center gap-3">
-                {form.image_url ? (
-                  <div className="relative">
-                    <img src={form.image_url} alt="preview" className="w-14 h-14 rounded-lg object-cover border border-border" />
-                    <button
-                      onClick={() => setForm(f => ({ ...f, image_url: '' }))}
-                      className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-white rounded-full text-[10px] flex items-center justify-center"
-                    >✕</button>
-                  </div>
-                ) : (
-                  <label className="w-14 h-14 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors bg-secondary">
-                    {uploadingImg
-                      ? <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                      : <ImagePlus className="w-4 h-4 text-muted-foreground" />
-                    }
-                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                  </label>
-                )}
-                <div>
-                  <p className="text-xs font-medium text-foreground">Foto de esta variante</p>
-                  <p className="text-[11px] text-muted-foreground">Opcional — útil para diferenciar por color o modelo</p>
+              {/* Imagen: la principal del producto o una propia de la variante */}
+              <div className="flex items-start justify-between gap-3 bg-secondary/60 rounded-xl px-3 py-2">
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-foreground">Usar la foto principal del producto</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {form.use_product_image
+                      ? 'Esta variante mostrará la foto principal, sin foto propia.'
+                      : 'Sube una foto solo para esta variante.'}
+                  </p>
                 </div>
+                <Switch
+                  checked={form.use_product_image}
+                  onCheckedChange={v => setForm(f => ({ ...f, use_product_image: v }))}
+                />
               </div>
+
+              {!form.use_product_image && (
+                <div className="flex items-center gap-3">
+                  {form.image_url ? (
+                    <div className="relative">
+                      <img src={form.image_url} alt="preview" className="w-14 h-14 rounded-lg object-cover border border-border" />
+                      <button
+                        onClick={() => setForm(f => ({ ...f, image_url: '' }))}
+                        className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-white rounded-full text-[10px] flex items-center justify-center"
+                      >✕</button>
+                    </div>
+                  ) : (
+                    <label className="w-14 h-14 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors bg-secondary">
+                      {uploadingImg
+                        ? <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                        : <ImagePlus className="w-4 h-4 text-muted-foreground" />
+                      }
+                      <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                    </label>
+                  )}
+                  <div>
+                    <p className="text-xs font-medium text-foreground">Foto de esta variante</p>
+                    <p className="text-[11px] text-muted-foreground">Opcional — útil para diferenciar por color o modelo</p>
+                  </div>
+                </div>
+              )}
 
               {/* Price & stock */}
               <div className="grid grid-cols-3 gap-2">
@@ -581,6 +602,12 @@ function VariantRow({ variant, product, onEdit, onToggle, onDelete }) {
       {variant.image_url ? (
         <img
           src={variant.image_url}
+          alt={variant.name}
+          className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-border"
+        />
+      ) : product?.images?.[0] ? (
+        <img
+          src={product.images[0]}
           alt={variant.name}
           className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-border"
         />
