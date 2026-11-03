@@ -30,16 +30,22 @@ Deno.serve(async (req) => {
 
     for (const item of cartItems) {
       if (item.variant_id) {
-        const variant = await base44.asServiceRole.entities.ProductVariant.get(item.variant_id);
-        if (!variant) { stockErrors.push(`Producto no encontrado: ${item.product_name}`); continue; }
+        const variant = await base44.asServiceRole.entities.ProductVariant.get(item.variant_id).catch(() => null);
+        if (!variant || variant.is_active === false) {
+          stockErrors.push(`"${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''}" ya no está disponible.`);
+          continue;
+        }
         if ((variant.stock ?? 0) < item.quantity) {
           stockErrors.push(
             `"${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''}" solo tiene ${variant.stock ?? 0} unidades disponibles.`
           );
         }
       } else {
-        const product = await base44.asServiceRole.entities.Product.get(item.product_id);
-        if (!product) { stockErrors.push(`Producto no encontrado: ${item.product_name}`); continue; }
+        const product = await base44.asServiceRole.entities.Product.get(item.product_id).catch(() => null);
+        if (!product || product.is_active === false) {
+          stockErrors.push(`"${item.product_name}" ya no está disponible.`);
+          continue;
+        }
         if ((product.stock ?? 0) < item.quantity) {
           stockErrors.push(
             `"${item.product_name}" solo tiene ${product.stock ?? 0} unidades disponibles.`
@@ -49,7 +55,7 @@ Deno.serve(async (req) => {
     }
 
     if (stockErrors.length > 0) {
-      return Response.json({ error: 'Stock insuficiente', details: stockErrors }, { status: 409 });
+      return Response.json({ error: 'Hay productos que no se pueden comprar', details: stockErrors }, { status: 409 });
     }
 
     // ── 2. Calcular totales ───────────────────────────────────────────

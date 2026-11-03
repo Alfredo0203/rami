@@ -31,7 +31,6 @@ export default function Admin() {
   const [user, setUser] = useState(null);
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [deletingProductId, setDeletingProductId] = useState(null);
   const [inventoryProduct, setInventoryProduct] = useState(null);
   const [historyProduct, setHistoryProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -124,11 +123,12 @@ export default function Admin() {
   // Filtrar para mostrar solo tiendas externas (no la tienda principal)
   const externalStores = stores.filter(store => store.store_type !== 'owner');
 
-  const deleteProductMutation = useMutation({
-    mutationFn: (id) => base44.entities.Product.delete(id),
-    onSuccess: () => {
+  // Los productos nunca se borran: se desactivan y se pueden reactivar
+  const toggleProductMutation = useMutation({
+    mutationFn: ({ id, is_active }) => base44.entities.Product.update(id, { is_active }),
+    onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
-      toast.success('Producto eliminado');
+      toast.success(vars.is_active ? 'Producto reactivado' : 'Producto desactivado');
     },
   });
 
@@ -403,11 +403,13 @@ export default function Admin() {
                    <TrendingUp className="w-3.5 h-3.5 text-primary" />
                   </button>
                   <button
-                   onClick={() => setDeletingProductId(product.id)}
-                   className="p-1.5 bg-secondary rounded hover:bg-destructive/10"
-                   title="Eliminar"
+                   onClick={() => toggleProductMutation.mutate({ id: product.id, is_active: product.is_active === false })}
+                   className={`p-1.5 bg-secondary rounded ${product.is_active === false ? 'hover:bg-success/10' : 'hover:bg-destructive/10'}`}
+                   title={product.is_active === false ? 'Reactivar' : 'Desactivar'}
                   >
-                   <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                   {product.is_active === false
+                     ? <Eye className="w-3.5 h-3.5 text-success" />
+                     : <EyeOff className="w-3.5 h-3.5 text-destructive" />}
                   </button>
                   </div>
                   <div className="flex gap-3">
@@ -418,6 +420,11 @@ export default function Admin() {
                   />
                   <div className="flex-1 min-w-0">
                    <p className="text-sm font-medium text-foreground line-clamp-1">{product.name}</p>
+                   {product.is_active === false && (
+                     <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[10px] font-semibold">
+                       <EyeOff className="w-3 h-3" /> Desactivado
+                     </span>
+                   )}
                    <p className="text-base font-bold text-primary">${product.price?.toFixed(2)}</p>
                    <div className="flex items-center gap-2 mt-1">
                      <span className={`text-[10px] ${getProductStock(product) === 0 ? 'text-destructive font-semibold' : getProductStock(product) < 5 ? 'text-warning font-semibold' : 'text-muted-foreground'}`}>
@@ -802,25 +809,6 @@ export default function Admin() {
         onOpenChange={(open) => { if (!open) setDetailOrder(null); }}
       />
 
-      <AlertDialog open={!!deletingProductId} onOpenChange={(open) => { if (!open) setDeletingProductId(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar producto?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción no se puede deshacer. El producto será eliminado permanentemente.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => { deleteProductMutation.mutate(deletingProductId); setDeletingProductId(null); }}
-            >
-              Eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

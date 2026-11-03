@@ -20,7 +20,6 @@ export default function SellerDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [deletingProductId, setDeletingProductId] = useState(null);
   const [showStoreForm, setShowStoreForm] = useState(false);
 
   useEffect(() => {
@@ -90,15 +89,6 @@ export default function SellerDashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['seller-products'] });
       toast.success('Producto actualizado');
-    },
-  });
-
-  const deleteProductMutation = useMutation({
-    mutationFn: (id) => base44.entities.Product.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['seller-products'] });
-      toast.success('Producto eliminado');
-      setDeletingProductId(null);
     },
   });
 
@@ -245,13 +235,6 @@ export default function SellerDashboard() {
                               >
                                 <Edit2 className="w-3.5 h-3.5 text-foreground" />
                               </button>
-                              <button
-                                onClick={() => setDeletingProductId(product.id)}
-                                className="p-1.5 bg-secondary rounded hover:bg-destructive/10"
-                                title="Eliminar"
-                              >
-                                <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                              </button>
                             </div>
                             <div className="flex gap-3">
                               <img
@@ -369,26 +352,6 @@ export default function SellerDashboard() {
           onClose={() => { setShowProductForm(false); setEditingProduct(null); }}
         />
       )}
-
-      <AlertDialog open={!!deletingProductId} onOpenChange={(open) => { if (!open) setDeletingProductId(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar producto?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción no se puede deshacer. El producto será eliminado permanentemente.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => { deleteProductMutation.mutate(deletingProductId); setDeletingProductId(null); }}
-            >
-              Eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {showStoreForm && (
         <SellerStoreForm

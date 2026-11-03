@@ -62,8 +62,26 @@ export default function Cart() {
     }
   };
 
-  const selectedItems = useMemo(() => cartItems.filter(i => selectedIds.has(i.id)), [cartItems, selectedIds]);
+  const unavailableIds = useMemo(
+    () => new Set(cartItems.filter(i => stockInfoMap[i.id]?.unavailable).map(i => i.id)),
+    [cartItems, stockInfoMap]
+  );
+  const hasUnavailable = unavailableIds.size > 0;
+
+  // Lo que ya no está disponible nunca entra al total ni al pago
+  const selectedItems = useMemo(
+    () => cartItems.filter(i => selectedIds.has(i.id) && !stockInfoMap[i.id]?.unavailable),
+    [cartItems, selectedIds, stockInfoMap]
+  );
   const allSelected = cartItems.length > 0 && selectedIds.size === cartItems.length;
+
+  useEffect(() => {
+    if (!unavailableIds.size) return;
+    setSelectedIds(prev => {
+      const next = new Set([...prev].filter(id => !unavailableIds.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [unavailableIds]);
 
   const updateQtyMutation = useMutation({
     mutationFn: async ({ item, newQty }) => {
@@ -112,24 +130,28 @@ export default function Cart() {
       // Fetch all variants for products in cart
       const productIds = [...new Set(cartItems.filter(i => i.variant_id).map(i => i.product_id))];
       const results = await Promise.all(
-        productIds.map(pid => base44.asServiceRole?.entities?.ProductVariant?.filter({ product_id: pid }).catch(() => []))
+        productIds.map(pid => base44.entities.ProductVariant.filter({ product_id: pid }))
       );
       return results.flat().filter(Boolean);
     },
     enabled: variantIds.length > 0,
   });
 
-  // Mapa: item.id → { available: number }
+  // Mapa: item.id → { available, unavailable }
+  // unavailable = producto eliminado/desactivado, o variante que ya no está activa
   const stockInfoMap = useMemo(() => {
     const map = {};
     const products = catalogData?.products || [];
     for (const item of cartItems) {
+      if (!catalogData) { map[item.id] = { available: Infinity, unavailable: false }; continue; }
+      const product = products.find(p => p.id === item.product_id);
+      if (!product) { map[item.id] = { available: 0, unavailable: true }; continue; }
       if (item.variant_id) {
         const variant = variantsData.find(v => v.id === item.variant_id);
-        map[item.id] = { available: variant?.stock ?? Infinity };
+        const variantGone = variantsData.length > 0 && (!variant || variant.is_active === false);
+        map[item.id] = { available: variant?.stock ?? Infinity, unavailable: variantGone };
       } else {
-        const product = products.find(p => p.id === item.product_id);
-        map[item.id] = { available: product?.stock ?? Infinity };
+        map[item.id] = { available: product.stock ?? Infinity, unavailable: false };
       }
     }
     return map;
@@ -206,6 +228,12 @@ export default function Cart() {
       ) : (
         <>
           <div className="px-4 py-3 space-y-3">
+            {hasUnavailable && (
+              <div className="flex items-start gap-2 bg-destructive/10 border border-destructive/20 rounded-xl p-3">
+                <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-xs text-destructive font-medium">Tienes productos que ya no están disponibles. Elimínalos del carrito para continuar con tu compra.</p>
+              </div>
+            )}
             {hasStockIssues && (
               <div className="flex items-start gap-2 bg-destructive/10 border border-destructive/20 rounded-xl p-3">
                 <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
@@ -229,6 +257,7 @@ export default function Cart() {
                   onUpdateQty={(item, newQty) => updateQtyMutation.mutate({ item, newQty })}
                   onRemove={(item) => removeMutation.mutate(item)}
                   stockInfo={stockInfoMap[item.id]}
+                  unavailable={!!stockInfoMap[item.id]?.unavailable}
                 />
               ))}
             </AnimatePresence>
