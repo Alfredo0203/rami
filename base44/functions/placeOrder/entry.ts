@@ -35,6 +35,14 @@ Deno.serve(async (req) => {
           stockErrors.push(`"${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''}" ya no está disponible.`);
           continue;
         }
+        // El producto padre también debe estar activo, no solo la variante
+        const parentProduct = await base44.asServiceRole.entities.Product
+          .get(variant.product_id || item.product_id)
+          .catch(() => null);
+        if (!parentProduct || parentProduct.is_active === false) {
+          stockErrors.push(`"${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''}" ya no está disponible.`);
+          continue;
+        }
         if ((variant.stock ?? 0) < item.quantity) {
           stockErrors.push(
             `"${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''}" solo tiene ${variant.stock ?? 0} unidades disponibles.`
