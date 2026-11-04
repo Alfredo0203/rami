@@ -18,9 +18,14 @@ export function normalizeText(value) {
 }
 
 function tolerance(token) {
-  if (token.length >= 7) return 2;
+  if (token.length >= 10) return 2;
   if (token.length >= 4) return 1;
   return 0;
+}
+
+// Plurales y variantes simples: "pantalones" → "pantalon", "zapatos" → "zapato"
+function singular(word) {
+  return word.replace(/(es|s)$/, '');
 }
 
 function editDistance(a, b, max) {
@@ -50,13 +55,13 @@ function editDistance(a, b, max) {
 function tokenMatches(textToken, queryToken) {
   if (textToken.includes(queryToken)) return true;
 
+  if (singular(textToken) === singular(queryToken)) return true;
+
   const tol = tolerance(queryToken);
   if (tol === 0) return false;
+  if (Math.abs(textToken.length - queryToken.length) > tol) return false;
 
-  // Prefijo con tolerancia: "pantlon" → "pantalon"
-  if (editDistance(textToken.slice(0, queryToken.length + tol), queryToken, tol) <= tol) return true;
-
-  // Plurales y variantes: "pantalones" → "pantalon"
+  // Solo errores de escritura reales: "camista" → "camiseta", "creama" → "crema"
   return editDistance(textToken, queryToken, tol) <= tol;
 }
 
