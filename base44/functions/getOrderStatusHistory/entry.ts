@@ -24,8 +24,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Orden no encontrada' }, { status: 404 });
     }
 
-    // Permitir si es admin o si el email del cliente coincide
-    const isAdmin = user.role === 'admin';
+    // Permitir si es admin/super admin o si el email del cliente coincide
+    const isAdmin = user.role === 'admin' || user.role === 'super_admin';
     const isOwner = order.customer_email === user.email;
     
     if (!isAdmin && !isOwner) {
