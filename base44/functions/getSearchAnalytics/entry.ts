@@ -26,9 +26,35 @@ export default async function (req) {
       sum: ['search_count'],
     });
 
-    const terms = (result?.rows || [])
-      .map((r) => ({ term: r.query || '', searches: r.sum_search_count || 0 }))
-      .filter((r) => r.term.trim())
+    // Agrupa "Pantalón", "pantalon" y "PANTALON" como un mismo término
+    const normalize = (value: string) =>
+      String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    const merged = new Map<string, { term: string; searches: number; best: number }>();
+    (result?.rows || []).forEach((r) => {
+      const label = String(r.query || '').trim();
+      const count = r.sum_search_count || 0;
+      if (!label) return;
+      const key = normalize(label);
+      const current = merged.get(key);
+      if (!current) {
+        merged.set(key, { term: label, searches: count, best: count });
+      } else {
+        current.searches += count;
+        if (count > current.best) {
+          current.term = label;
+          current.best = count;
+        }
+      }
+    });
+
+    const terms = Array.from(merged.values())
+      .map(({ term, searches }) => ({ term, searches }))
       .sort((a, b) => b.searches - a.searches);
 
     const topProducts = await base44.asServiceRole.entities.Product

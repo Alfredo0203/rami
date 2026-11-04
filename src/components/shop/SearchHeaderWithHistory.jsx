@@ -80,14 +80,21 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
   }, [products]);
 
   // --- Save / Delete search history ---
+  const lastSaveRef = useRef({ q: '', at: 0 });
+
   const saveSearch = async (query) => {
     if (!user?.email || !query.trim()) return;
     const q = query.trim();
+    // Evita contar dos veces el mismo término (Enter + salir del buscador)
+    const key = q.toLowerCase();
+    if (lastSaveRef.current.q === key && Date.now() - lastSaveRef.current.at < 2000) return;
+    lastSaveRef.current = { q: key, at: Date.now() };
     const existing = history.find(h => h.query.toLowerCase() === q.toLowerCase());
     if (existing) {
+      // Contador fresco del servidor para no perder incrementos seguidos
+      const fresh = await base44.entities.SearchHistory.get(existing.id).catch(() => existing);
       await base44.entities.SearchHistory.update(existing.id, {
-        search_count: (existing.search_count || 1) + 1,
-        updated_date: new Date().toISOString(),
+        search_count: (fresh?.search_count || 1) + 1,
       });
     } else {
       await base44.entities.SearchHistory.create({ user_email: user.email, query: q, search_count: 1 });
@@ -227,6 +234,10 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
             onChange={(e) => {
               setInputValue(e.target.value);
               setIsOpen(true);
+              onSearch?.(e.target.value);
+            }}
+            onBlur={() => {
+              if (inputValue.trim().length >= 2) saveSearch(inputValue);
             }}
             onFocus={() => setIsOpen(true)}
             onKeyDown={(e) => {

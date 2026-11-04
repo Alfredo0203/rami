@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import PullToRefresh from '../components/shop/PullToRefresh';
-import SearchHeader from '../components/shop/SearchHeader';
+import SearchHeaderWithHistory from '../components/shop/SearchHeaderWithHistory';
 import CategoryBar from '../components/shop/CategoryBar';
 import PromoBanner from '../components/shop/PromoBanner';
 import ProductCard from '../components/shop/ProductCard';
@@ -137,10 +137,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <SearchHeader
+      <SearchHeaderWithHistory
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         cartCount={cartCount}
+        onSearch={setSearchQuery}
       />
 
       <PullToRefresh onRefresh={handleRefresh}>
