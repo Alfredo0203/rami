@@ -70,9 +70,7 @@ export default function CartItemCard({ item, selected, onToggleSelect, onUpdateQ
           </p>
         )}
         <div className="flex items-center justify-between mt-2">
-          {unavailable ? (
-            <span className="text-[11px] text-muted-foreground font-medium">Ya no se vende</span>
-          ) : (
+          {!unavailable && (
             <div className="flex items-center gap-0 bg-secondary rounded-full">
               <button
                 onClick={() => onUpdateQty(item, item.quantity - 1)}
