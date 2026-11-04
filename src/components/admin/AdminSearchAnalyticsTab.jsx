@@ -3,6 +3,7 @@ import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Loader2, Search, TrendingUp, Trash2, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
+import SearchAnalyticsDateFilter from '@/components/admin/SearchAnalyticsDateFilter';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,24 +16,17 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
-const RANGES = [
-  { label: '7 días', days: 7 },
-  { label: '30 días', days: 30 },
-  { label: '90 días', days: 90 },
-  { label: 'Todo', days: 0 },
-];
-
 export default function AdminSearchAnalyticsTab() {
-  const [days, setDays] = useState(30);
+  const [dateRange, setDateRange] = useState(null);
   const [cleaning, setCleaning] = useState(false);
   const [singlesOpen, setSinglesOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: pages, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: ['search-analytics', 'individual-searches', days],
+    queryKey: ['search-analytics', 'date-range', dateRange],
     initialPageParam: 0,
     queryFn: async ({ pageParam }) => {
-      const res = await base44.functions.invoke('getSearchAnalytics', { days, cursor: pageParam });
+      const res = await base44.functions.invoke('getSearchAnalytics', { ...dateRange, cursor: pageParam });
       return res.data;
     },
     getNextPageParam: (page) => page.nextCursor ?? undefined,
@@ -64,6 +58,7 @@ export default function AdminSearchAnalyticsTab() {
 
   if (isError) return (
     <div className="space-y-3 mt-3 p-4 bg-card border border-border rounded-xl">
+      <SearchAnalyticsDateFilter value={dateRange} onChange={setDateRange} />
       <p className="text-sm text-destructive">No se pudieron cargar las búsquedas. No es un conteo de cero.</p>
       <button onClick={() => refetch()} className="text-sm text-primary">Reintentar</button>
     </div>
@@ -71,21 +66,7 @@ export default function AdminSearchAnalyticsTab() {
 
   return (
     <div className="space-y-4 mt-3 pb-24">
-      <div className="flex gap-2">
-        {RANGES.map((r) => (
-          <button
-            key={r.days}
-            onClick={() => setDays(r.days)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-              days === r.days
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-secondary text-foreground border-border'
-            }`}
-          >
-            {r.label}
-          </button>
-        ))}
-      </div>
+      <SearchAnalyticsDateFilter value={dateRange} onChange={setDateRange} />
 
       <div className="grid grid-cols-2 gap-2">
         <div className="bg-card border border-border rounded-xl p-3">
@@ -219,7 +200,7 @@ export default function AdminSearchAnalyticsTab() {
       </AlertDialog>
 
       <p className="text-[11px] text-muted-foreground">
-        Las búsquedas requieren sesión iniciada. Este panel muestra únicamente términos y cantidades, sin identificar a las personas. Las vistas de productos son acumuladas, sin filtro de fecha.
+        Las búsquedas requieren sesión iniciada. Este panel muestra únicamente términos y cantidades, sin identificar a las personas. Los registros históricos acumulados se filtran por su última fecha registrada. Las vistas de productos son acumuladas, sin filtro de fecha.
       </p>
     </div>
   );

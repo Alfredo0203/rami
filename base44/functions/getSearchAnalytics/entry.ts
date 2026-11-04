@@ -13,15 +13,26 @@ export default async function (req) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const days = Number(body.days ?? 0);
+    const { startDate = null, endDate = null } = body;
     const cursor = Number(body.cursor ?? 0);
     const action = body.action || 'list';
-    if (![0, 7, 30, 90].includes(days) || !Number.isSafeInteger(cursor) || cursor < 0 || !['list', 'clear_single_terms'].includes(action)) {
-      return Response.json({ error: 'Filtro no válido' }, { status: 400 });
+    const isCalendarDate = (value) => {
+      if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+      const date = new Date(`${value}T00:00:00Z`);
+      return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+    };
+    const hasRange = startDate !== null || endDate !== null;
+    if ((hasRange && (!isCalendarDate(startDate) || !isCalendarDate(endDate) || startDate > endDate)) ||
+        !Number.isSafeInteger(cursor) || cursor < 0 || !['list', 'clear_single_terms'].includes(action)) {
+      return Response.json({ error: 'Selecciona una fecha inicial y final válidas' }, { status: 400 });
     }
     const query = {};
-    if (days > 0 && action === 'list') {
-      query.updated_date = { $gte: new Date(Date.now() - days * 86400000).toISOString() };
+    if (hasRange && action === 'list') {
+      // El Salvador (UTC-06): incluye el día inicial y todo el día final.
+      const from = new Date(`${startDate}T00:00:00-06:00`);
+      const until = new Date(`${endDate}T00:00:00-06:00`);
+      until.setUTCDate(until.getUTCDate() + 1);
+      query.updated_date = { $gte: from.toISOString(), $lt: until.toISOString() };
     }
     // Las búsquedas nuevas son registros individuales, no contadores que cambian de fecha.
     // Los registros históricos conservan su conteo y su última fecha disponible.
@@ -45,7 +56,8 @@ export default async function (req) {
     const topProducts = await base44.asServiceRole.entities.Product
       .filter({ is_active: true, view_count: { $gt: 0 } }, { sort: '-view_count', limit: 8 });
     return Response.json({
-      days,
+      startDate,
+      endDate,
       terms: repeatedTerms.slice(cursor, cursor + pageSize).map(toPublicTerm),
       singleTerms: singleTerms.slice(cursor, cursor + pageSize).map(toPublicTerm),
       uniqueTerms: allTerms.length,
