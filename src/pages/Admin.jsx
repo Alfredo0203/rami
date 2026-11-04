@@ -33,6 +33,7 @@ export default function Admin() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [inventoryProduct, setInventoryProduct] = useState(null);
   const [historyProduct, setHistoryProduct] = useState(null);
+  const [toggleTarget, setToggleTarget] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [stockFilters, setStockFilters] = useState([]);
   const [sortBy, setSortBy] = useState('recent'); // 'recent', 'name', 'stock', 'sold'
@@ -403,13 +404,14 @@ export default function Admin() {
                    <TrendingUp className="w-3.5 h-3.5 text-primary" />
                   </button>
                   <button
-                   onClick={() => toggleProductMutation.mutate({ id: product.id, is_active: product.is_active === false })}
-                   className={`p-1.5 bg-secondary rounded ${product.is_active === false ? 'hover:bg-success/10' : 'hover:bg-destructive/10'}`}
-                   title={product.is_active === false ? 'Reactivar' : 'Desactivar'}
+                   onClick={() => setToggleTarget(product)}
+                   className={`ml-auto px-2.5 py-1 rounded border text-[11px] font-semibold transition-colors ${
+                     product.is_active === false
+                       ? 'border-success/40 text-success hover:bg-success/10'
+                       : 'border-destructive/40 text-destructive hover:bg-destructive/10'
+                   }`}
                   >
-                   {product.is_active === false
-                     ? <Eye className="w-3.5 h-3.5 text-success" />
-                     : <EyeOff className="w-3.5 h-3.5 text-destructive" />}
+                   {product.is_active === false ? 'Reactivar' : 'Desactivar'}
                   </button>
                   </div>
                   <div className="flex gap-3">
@@ -808,6 +810,30 @@ export default function Admin() {
         open={!!detailOrder}
         onOpenChange={(open) => { if (!open) setDetailOrder(null); }}
       />
+
+      <AlertDialog open={!!toggleTarget} onOpenChange={(open) => { if (!open) setToggleTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {toggleTarget?.is_active === false ? '¿Reactivar producto?' : '¿Desactivar producto?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {toggleTarget?.is_active === false
+                ? `"${toggleTarget?.name}" volverá a mostrarse en la tienda y podrá comprarse de nuevo.`
+                : `"${toggleTarget?.name}" dejará de mostrarse en la tienda y no podrá comprarse. Podrás reactivarlo cuando quieras.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className={toggleTarget?.is_active === false ? 'bg-success text-white hover:bg-success/90' : 'bg-destructive text-destructive-foreground hover:bg-destructive/90'}
+              onClick={() => { toggleProductMutation.mutate({ id: toggleTarget.id, is_active: toggleTarget.is_active === false }); setToggleTarget(null); }}
+            >
+              {toggleTarget?.is_active === false ? 'Reactivar' : 'Desactivar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );
