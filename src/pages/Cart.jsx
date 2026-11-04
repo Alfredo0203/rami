@@ -140,7 +140,7 @@ export default function Cart() {
     () => new Set(cartItems.filter(i => stockInfoMap[i.id]?.unavailable).map(i => i.id)),
     [cartItems, stockInfoMap]
   );
-  const hasUnavailable = unavailableIds.size > 0;
+  const hasSelectedUnavailable = [...unavailableIds].some(id => selectedIds.has(id));
 
   // Lo que ya no está disponible nunca entra al total ni al pago
   const selectedItems = useMemo(
@@ -228,10 +228,10 @@ export default function Cart() {
       ) : (
         <>
           <div className="px-4 py-3 space-y-3">
-            {hasUnavailable && (
-              <div className="flex items-start gap-2 bg-destructive/10 border border-destructive/20 rounded-xl p-3">
-                <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-                <p className="text-xs text-destructive font-medium">Tienes productos que ya no están disponibles. Elimínalos del carrito para continuar con tu compra.</p>
+            {hasSelectedUnavailable && (
+              <div className="flex items-start gap-2 bg-warning/10 border border-warning/20 rounded-xl p-3">
+                <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+                <p className="text-xs text-foreground/80 font-medium">Tienes productos seleccionados que ya no están disponibles. No se incluirán en tu compra; puedes quitarlos del carrito cuando quieras.</p>
               </div>
             )}
             {hasStockIssues && (
