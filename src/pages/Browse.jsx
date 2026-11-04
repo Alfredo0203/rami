@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import { localLogout } from '@/lib/authRedirect';
 import { productMatchesCategory } from '@/lib/productCategories';
 import { productMatchScore } from '@/lib/search';
+import { stableShuffle } from '@/lib/stableOrder';
 import RecommendationsModal from '../components/shop/RecommendationsModal';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -24,7 +25,18 @@ import { toast } from 'sonner';
 export default function Browse() {
   useScrollRestoration();
   const { t } = useTranslation();
-  const [searchQuery, setSearchQuery] = useState('');
+  // La búsqueda vive en la URL para restaurarla al volver de un producto.
+  const [searchQuery, setSearchQuery] = useState(() => new URLSearchParams(window.location.search).get('q') || '');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (searchQuery) params.set('q', searchQuery); else params.delete('q');
+    const qs = params.toString();
+    const url = `${window.location.pathname}${qs ? `?${qs}` : ''}`;
+    if (`${window.location.pathname}${window.location.search}` !== url) {
+      window.history.replaceState(window.history.state, '', url);
+    }
+  }, [searchQuery]);
   const [sortBy, setSortBy] = useState(null); // null = random order
   const [priceRange, setPriceRange] = useState([0, 100]);
   const [currentUser, setCurrentUser] = useState(null);
@@ -185,8 +197,8 @@ export default function Browse() {
     else if (sortBy === 'rating') filtered = [...filtered].sort((a, b) => (b.rating || 0) - (a.rating || 0));
     else if (sortBy === 'popular') filtered = [...filtered].sort((a, b) => (b.sold_count || 0) - (a.sold_count || 0));
     else {
-      // Random order when no sorting selected
-      filtered = [...filtered].sort(() => Math.random() - 0.5);
+      // Orden aleatorio pero estable: no cambia al regresar de un producto.
+      filtered = stableShuffle(filtered, 'browse');
     }
 
     return filtered;

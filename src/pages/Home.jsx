@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import PullToRefresh from '../components/shop/PullToRefresh';
@@ -10,6 +10,7 @@ import BottomNav from '../components/shop/BottomNav';
 import InfiniteScroll from '../components/shop/InfiniteScroll';
 import { productMatchesCategory } from '@/lib/productCategories';
 import { productMatchScore } from '@/lib/search';
+import { stableShuffle } from '@/lib/stableOrder';
 
 import { useTranslation } from '../components/i18n/useTranslation';
 import { AlertTriangle, Loader2 } from 'lucide-react';
@@ -21,12 +22,33 @@ import { useScrollRestoration } from '../components/useScrollRestoration';
 export default function Home() {
   useScrollRestoration();
   const { t } = useTranslation();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  // La búsqueda y la categoría viven en la URL: al volver del detalle de un
+  // producto la lista se restaura tal como la dejó el usuario.
+  const [searchQuery, setSearchQuery] = useState(() => new URLSearchParams(window.location.search).get('q') || '');
+  const [selectedCategory, setSelectedCategory] = useState(() => new URLSearchParams(window.location.search).get('cat') || null);
   const [currentUser, setCurrentUser] = useState(null);
   const [userCheckDone, setUserCheckDone] = useState(false);
-  const [displayedCount, setDisplayedCount] = useState(12);
+  const [displayedCount, setDisplayedCount] = useState(() => {
+    const saved = Number(sessionStorage.getItem('home-displayed-count'));
+    return saved >= 12 ? saved : 12;
+  });
+  const filtersInitialized = useRef(false);
   const ITEMS_PER_LOAD = 8;
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (searchQuery) params.set('q', searchQuery); else params.delete('q');
+    if (selectedCategory) params.set('cat', selectedCategory); else params.delete('cat');
+    const qs = params.toString();
+    const url = `${window.location.pathname}${qs ? `?${qs}` : ''}`;
+    if (`${window.location.pathname}${window.location.search}` !== url) {
+      window.history.replaceState(window.history.state, '', url);
+    }
+  }, [searchQuery, selectedCategory]);
+
+  useEffect(() => {
+    sessionStorage.setItem('home-displayed-count', String(displayedCount));
+  }, [displayedCount]);
 
   useEffect(() => {
     base44.auth.me()
@@ -63,12 +85,17 @@ export default function Home() {
       filtered = filtered.filter(p => productMatchScore(p, searchQuery) > 0);
     }
     
-    // Randomizar todos los productos en cada carga
-    return [...filtered].sort(() => Math.random() - 0.5);
+    // Orden aleatorio pero estable: no cambia al regresar de un producto.
+    return stableShuffle(filtered, 'home');
   }, [products, selectedCategory, searchQuery]);
 
-  // Reset displayedCount when filters change
+  // Al cambiar los filtros se vuelve al inicio de la lista (no al montar,
+  // porque ahí hay que respetar lo que el usuario ya tenía).
   useEffect(() => {
+    if (!filtersInitialized.current) {
+      filtersInitialized.current = true;
+      return;
+    }
     setDisplayedCount(12);
   }, [searchQuery, selectedCategory]);
 
