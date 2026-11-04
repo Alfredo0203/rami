@@ -21,6 +21,7 @@ let _holdsGuard = false;    // our guard entry is on top of the history
 let _ignoreBackUntil = 0;   // ignore the pop produced by our own history.back()
 let _listening = false;
 let _seq = 0;
+let _staleSkips = 0;        // consecutive phantom guard entries skipped
 
 function _isGuardEntry() {
   try {
@@ -58,9 +59,28 @@ function _releaseGuard() {
   }
 }
 
+// A guard entry can be left below the current page when a panel was still open
+// while the app navigated (a payment closing into the confirmation page, for
+// example). That entry has the same URL as the page behind it, so landing on it
+// looks like "the back button does nothing". Skip it so one press still moves
+// the user one real page back.
+function _skipStaleGuard() {
+  if (_staleSkips >= 5) { _staleSkips = 0; return; }
+  _staleSkips++;
+  setTimeout(() => { _staleSkips = 0; }, 400);
+  try {
+    window.history.back();
+  } catch {
+    // Ignore: never let history break navigation.
+  }
+}
+
 function _handlePopState() {
   if (Date.now() < _ignoreBackUntil) return; // our own programmatic pop
-  if (_overlays.length === 0) return;        // nothing open — leave navigation alone
+  if (_overlays.length === 0) {
+    if (_isGuardEntry()) _skipStaleGuard();
+    return; // nothing open — leave navigation alone
+  }
   if (_isGuardEntry()) return;               // guard still on top: a page navigation popped
   _holdsGuard = false;                       // the user's back press consumed the guard
   const top = _overlays.pop();
