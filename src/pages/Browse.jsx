@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 import { localLogout } from '@/lib/authRedirect';
 import { productMatchesCategory } from '@/lib/productCategories';
 import { productMatchScore } from '@/lib/search';
-import { stableShuffle } from '@/lib/stableOrder';
+import { stableShuffle, resetOrderSeed } from '@/lib/stableOrder';
 import RecommendationsModal from '../components/shop/RecommendationsModal';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -38,6 +38,7 @@ export default function Browse() {
     }
   }, [searchQuery]);
   const [sortBy, setSortBy] = useState(null); // null = random order
+  const [orderVersion, setOrderVersion] = useState(0);
   const [priceRange, setPriceRange] = useState([0, 100]);
   const [currentUser, setCurrentUser] = useState(null);
   const [requestingReactivation, setRequestingReactivation] = useState(false);
@@ -202,7 +203,7 @@ export default function Browse() {
     }
 
     return filtered;
-  }, [products, searchQuery, selectedCategory, priceRange, sortBy, onlyOnSale, onlyInStock, minRating, selectedBrand, selectedColor, selectedVariantFilters]);
+  }, [products, searchQuery, selectedCategory, priceRange, sortBy, onlyOnSale, onlyInStock, minRating, selectedBrand, selectedColor, selectedVariantFilters, orderVersion]);
 
   const queryClient = useQueryClient();
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
@@ -230,8 +231,12 @@ export default function Browse() {
   };
 
   const handleRefresh = useCallback(async () => {
+    if (!searchQuery.trim() && !sortBy) {
+      resetOrderSeed('browse');
+      setOrderVersion(v => v + 1);
+    }
     await queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
-  }, [queryClient]);
+  }, [queryClient, searchQuery, sortBy]);
 
   const handleRequestReactivation = async () => {
     try {

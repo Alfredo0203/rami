@@ -4,6 +4,19 @@
 
 const PREFIX = 'order-seed:';
 
+// Al recargar la página o abrir la app de nuevo se genera un orden nuevo.
+// Al navegar dentro de la app (por ejemplo volver de un producto) se conserva.
+try {
+  const navType = performance.getEntriesByType?.('navigation')?.[0]?.type;
+  if (navType === 'reload' || navType === 'navigate') {
+    Object.keys(sessionStorage)
+      .filter((key) => key.startsWith(PREFIX))
+      .forEach((key) => sessionStorage.removeItem(key));
+  }
+} catch {
+  // sin sessionStorage disponible: se usa siempre el mismo orden base
+}
+
 function mulberry32(seed) {
   let a = seed;
   return function () {
@@ -24,6 +37,15 @@ function getSeed(key) {
     return seed;
   } catch {
     return 1;
+  }
+}
+
+// Fuerza un orden nuevo la próxima vez que se pinte la lista (pull-to-refresh).
+export function resetOrderSeed(key) {
+  try {
+    sessionStorage.removeItem(PREFIX + key);
+  } catch {
+    // nada que limpiar
   }
 }
 

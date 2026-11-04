@@ -10,7 +10,7 @@ import BottomNav from '../components/shop/BottomNav';
 import InfiniteScroll from '../components/shop/InfiniteScroll';
 import { productMatchesCategory } from '@/lib/productCategories';
 import { productMatchScore } from '@/lib/search';
-import { stableShuffle } from '@/lib/stableOrder';
+import { stableShuffle, resetOrderSeed } from '@/lib/stableOrder';
 
 import { useTranslation } from '../components/i18n/useTranslation';
 import { AlertTriangle, Loader2 } from 'lucide-react';
@@ -33,6 +33,7 @@ export default function Home() {
     return saved >= 12 ? saved : 12;
   });
   const filtersInitialized = useRef(false);
+  const [orderVersion, setOrderVersion] = useState(0);
   const ITEMS_PER_LOAD = 8;
 
   useEffect(() => {
@@ -87,7 +88,7 @@ export default function Home() {
     
     // Orden aleatorio pero estable: no cambia al regresar de un producto.
     return stableShuffle(filtered, 'home');
-  }, [products, selectedCategory, searchQuery]);
+  }, [products, selectedCategory, searchQuery, orderVersion]);
 
   // Al cambiar los filtros se vuelve al inicio de la lista (no al montar,
   // porque ahí hay que respetar lo que el usuario ya tenía).
@@ -106,9 +107,14 @@ export default function Home() {
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
 
   const handleRefresh = useCallback(async () => {
+    // Sin búsqueda activa, jalar la lista genera un orden nuevo de productos.
+    if (!searchQuery.trim()) {
+      resetOrderSeed('home');
+      setOrderVersion(v => v + 1);
+    }
     await queryClient.invalidateQueries({ queryKey: ['public-catalog'] });
     setDisplayedCount(12);
-  }, [queryClient]);
+  }, [queryClient, searchQuery]);
 
   const handleLoadMore = useCallback(() => {
     setDisplayedCount(prev => prev + ITEMS_PER_LOAD);
