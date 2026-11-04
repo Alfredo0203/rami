@@ -17,6 +17,7 @@ import AdminCouponsTab from '../components/admin/AdminCouponsTab';
 import AdminStoresTab from '../components/admin/AdminStoresTab';
 import AdminRefundsTab from '../components/admin/AdminRefundsTab';
 import AdminPoliciesTab from '../components/admin/AdminPoliciesTab';
+import AdminSearchAnalyticsTab from '../components/admin/AdminSearchAnalyticsTab';
 import AdminInventoryModal from '../components/admin/AdminInventoryModal';
 import InventoryHistoryModal from '../components/admin/InventoryHistoryModal';
 import { Button } from '@/components/ui/button';
@@ -223,6 +224,7 @@ export default function Admin() {
               <TabsTrigger value="stores" className="px-2"><Store className="w-4 h-4" /></TabsTrigger>
               <TabsTrigger value="refunds" className="px-2"><RotateCcw className="w-4 h-4" /></TabsTrigger>
               <TabsTrigger value="policies" className="px-2"><FileText className="w-4 h-4" /></TabsTrigger>
+              <TabsTrigger value="searches" className="px-2"><TrendingUp className="w-4 h-4" /></TabsTrigger>
               {user?.role === 'super_admin' && (
                 <TabsTrigger value="settings" className="px-2"><Settings className="w-4 h-4" /></TabsTrigger>
               )}
@@ -460,6 +462,10 @@ export default function Admin() {
                  );
                  })()
                  )}
+        </TabsContent>
+
+        <TabsContent value="searches">
+          <AdminSearchAnalyticsTab />
         </TabsContent>
 
         <TabsContent value="orders" className="space-y-3 mt-3">
