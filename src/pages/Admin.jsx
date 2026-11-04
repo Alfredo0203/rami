@@ -439,6 +439,7 @@ export default function Admin() {
                        Stock: {getProductStock(product)}
                      </span>
                      <span className="text-[10px] text-muted-foreground">Vendidos: {getProductSold(product)}</span>
+                     <span className="text-[10px] text-muted-foreground">Vistas: {product.view_count || 0}</span>
                    </div>
                    <div className="flex items-center gap-1 mt-1">
                      {getProductStock(product) === 0 && (

@@ -57,6 +57,14 @@ export default function ProductDetail() {
     enabled: !!productId,
   });
 
+  // Contador general de vistas (una por apertura del detalle)
+  const viewTracked = useRef(false);
+  useEffect(() => {
+    if (!productId || viewTracked.current) return;
+    viewTracked.current = true;
+    base44.functions.invoke('trackProductView', { product_id: productId }).catch(() => {});
+  }, [productId]);
+
   const { data: cartItems = [] } = useQuery({
     queryKey: ['cart', user?.email],
     queryFn: () => isGuest || !user?.email ? [] : base44.entities.CartItem.filter({ created_by: user.email }).catch(() => []),

@@ -76,6 +76,11 @@
       "default": 0,
       "description": "Number of items sold"
     },
+    "view_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Veces que se abri\u00f3 el detalle del producto (conteo general, sin datos del visitante)"
+    },
     "is_featured": {
       "type": "boolean",
       "default": false,

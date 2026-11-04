@@ -31,11 +31,18 @@ export default async function (req) {
       .filter((r) => r.term.trim())
       .sort((a, b) => b.searches - a.searches);
 
+    const topProducts = await base44.asServiceRole.entities.Product
+      .filter({ is_active: true }, { sort: '-view_count', limit: 8 })
+      .then((page) => (page.items || page || []));
+
     return Response.json({
       days,
       terms: terms.slice(0, 40),
       uniqueTerms: terms.length,
       totalSearches: terms.reduce((acc, t) => acc + t.searches, 0),
+      topProducts: topProducts
+        .filter((p) => (p.view_count || 0) > 0)
+        .map((p) => ({ id: p.id, name: p.name, views: p.view_count || 0, sold: p.sold_count || 0 })),
     });
   } catch (error) {
     console.error('Error in getSearchAnalytics:', error);

@@ -88,8 +88,29 @@ export default function AdminSearchAnalyticsTab() {
         </div>
       )}
 
+      <div className="space-y-2">
+        <h3 className="text-sm font-semibold text-foreground px-1">Productos más vistos</h3>
+        {(data?.topProducts || []).length === 0 ? (
+          <p className="text-xs text-muted-foreground px-1">Aún no hay vistas registradas.</p>
+        ) : (
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
+            {(data?.topProducts || []).map((p, i) => (
+              <div key={p.id} className="flex items-center justify-between gap-2 px-3 py-2.5 border-b border-border/40 last:border-0">
+                <span className="text-sm text-foreground truncate">
+                  <span className="text-muted-foreground text-xs mr-2">{i + 1}</span>
+                  {p.name}
+                </span>
+                <span className="text-xs text-muted-foreground flex-shrink-0">
+                  {p.views} vistas · {p.sold} vendidos
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <p className="text-[11px] text-muted-foreground">
-        Solo incluye búsquedas de usuarios con sesión iniciada. Se guarda el término y la cantidad, nunca quién lo buscó.
+        Solo incluye búsquedas y vistas de usuarios con sesión iniciada o invitados. Se guarda el término y la cantidad, nunca quién lo buscó.
       </p>
     </div>
   );
