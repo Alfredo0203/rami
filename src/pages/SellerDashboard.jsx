@@ -61,17 +61,15 @@ export default function SellerDashboard() {
   // Obtener pedidos que contienen productos de esta tienda
   const { data: allOrders = [], isLoading: loadingOrders } = useQuery({
     queryKey: ['seller-orders', store?.id],
-    queryFn: () => base44.entities.Order.list('-created_date'),
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getSellerOrders', {});
+      return res.data?.orders || [];
+    },
     enabled: !!store,
   });
 
-  // Filtrar órdenes de esta tienda
-  const storeOrders = allOrders.filter(order => {
-    return order.items?.some(item => {
-      const product = products.find(p => p.id === item.product_id);
-      return product?.store_id === store?.id;
-    });
-  });
+  // El servidor solo devuelve los pedidos con productos de esta tienda
+  const storeOrders = allOrders;
 
   // Estadísticas
   const stats = {
@@ -98,7 +96,7 @@ export default function SellerDashboard() {
   });
 
   const updateOrderStatusMutation = useMutation({
-    mutationFn: ({ orderId, status }) => base44.entities.Order.update(orderId, { status }),
+    mutationFn: ({ orderId, status }) => base44.functions.invoke('updateOrderStatus', { orderId, newStatus: status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['seller-orders'] });
       toast.success('Estado de la orden actualizado');

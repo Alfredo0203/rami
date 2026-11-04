@@ -10,7 +10,10 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) {
+    if (!user) return Response.json({ error: 'No autorizado' }, { status: 403 });
+
+    const isAdmin = user.role === 'admin' || user.role === 'super_admin';
+    if (!isAdmin && user.role !== 'seller') {
       return Response.json({ error: 'No autorizado' }, { status: 403 });
     }
 
@@ -21,6 +24,31 @@ Deno.serve(async (req) => {
 
     const order = await base44.asServiceRole.entities.Order.get(orderId);
     if (!order) return Response.json({ error: 'Orden no encontrada' }, { status: 404 });
+
+    // Un vendedor solo puede tocar pedidos con productos de su propia tienda,
+    // y solo datos de envío (nunca montos, cliente ni cancelaciones).
+    let updates = extraFields || {};
+    if (!isAdmin) {
+      if (newStatus === 'cancelled') {
+        return Response.json(
+          { error: 'Solo un administrador puede cancelar pedidos' },
+          { status: 403 }
+        );
+      }
+      const stores = await base44.asServiceRole.entities.Store.filter({ owner_email: user.email });
+      const storeIds = stores.map((s) => s.id);
+      const storeProducts = storeIds.length
+        ? await base44.asServiceRole.entities.Product.filter({ store_id: { $in: storeIds } })
+        : [];
+      const ownedIds = new Set(storeProducts.map((p) => p.id));
+      const belongsToStore = (order.items || []).some((item) => ownedIds.has(item.product_id));
+      if (!belongsToStore) {
+        return Response.json({ error: 'No tienes permiso sobre este pedido' }, { status: 403 });
+      }
+      updates = {};
+      if (extraFields?.tracking_number) updates.tracking_number = extraFields.tracking_number;
+      if (extraFields?.carrier) updates.carrier = extraFields.carrier;
+    }
 
     // No permitir cancelar si ya está entregado o ya cancelado
     if (newStatus === 'cancelled') {
@@ -37,7 +65,7 @@ Deno.serve(async (req) => {
 
     const updated = await base44.asServiceRole.entities.Order.update(orderId, {
       status: newStatus,
-      ...(extraFields || {}),
+      ...updates,
     });
 
     // Registrar en historial de estados
