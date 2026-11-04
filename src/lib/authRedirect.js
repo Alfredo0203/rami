@@ -50,6 +50,7 @@ export function localLogout(redirectPath = '/') {
     } catch (e) {
       console.error('Failed to clear token:', e);
     }
-    window.location.href = redirectPath;
+    // replace() so logging out never leaves an extra history entry behind
+    window.location.replace(redirectPath);
   }
 }

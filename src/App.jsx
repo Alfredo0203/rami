@@ -85,7 +85,8 @@ const AuthenticatedApp = () => {
         if (window.location.pathname === '/Login') {
           const urlParams = new URLSearchParams(window.location.search);
           const from = urlParams.get('from') || '/';
-          window.location.href = from.startsWith('/') ? from : '/';
+          // replace() so the redirect does not add a phantom history entry
+          window.location.replace(from.startsWith('/') ? from : '/');
           return;
         }
         setChecking(false);
