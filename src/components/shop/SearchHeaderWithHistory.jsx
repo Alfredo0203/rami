@@ -9,6 +9,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Scoring tolerante a tildes y errores de escritura
 import { scoreText, productMatchScore, findAccentInsensitiveIndex } from '@/lib/search';
+import useSearchRecorder from '@/components/shop/useSearchRecorder';
 
 function scoreMatch(text, query) {
   return scoreText(text, query);
@@ -35,9 +36,11 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
 
   // Fetch search history (user-specific)
   const { data: history = [] } = useQuery({
-    queryKey: ['search-history', user?.email],
-    queryFn: () =>
-      base44.entities.SearchHistory.filter({ user_email: user.email }, '-updated_date', 20),
+    queryKey: ['search-history', user?.email, 'individual-searches'],
+    queryFn: async () => {
+      const response = await base44.functions.invoke('getSearchHistory', {});
+      return response.data.history;
+    },
     enabled: !!user?.email,
   });
 
@@ -77,37 +80,22 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
   }, [products]);
 
   // --- Save / Delete search history ---
-  const lastSaveRef = useRef({ q: '', at: 0 });
+  const { saveSearch, editSearch } = useSearchRecorder(searchQuery || '', user);
 
-  const saveSearch = async (query) => {
-    if (!user?.email || !query.trim()) return;
-    const q = query.trim();
-    // Evita contar dos veces el mismo término (Enter + salir del buscador)
-    const key = q.toLowerCase();
-    if (lastSaveRef.current.q === key && Date.now() - lastSaveRef.current.at < 2000) return;
-    lastSaveRef.current = { q: key, at: Date.now() };
-    const existing = history.find(h => h.query.toLowerCase() === q.toLowerCase());
-    if (existing) {
-      // Contador fresco del servidor para no perder incrementos seguidos
-      const fresh = await base44.entities.SearchHistory.get(existing.id).catch(() => existing);
-      await base44.entities.SearchHistory.update(existing.id, {
-        search_count: (fresh?.search_count || 1) + 1,
-      });
-    } else {
-      await base44.entities.SearchHistory.create({ user_email: user.email, query: q, search_count: 1 });
-    }
-    queryClient.invalidateQueries({ queryKey: ['search-history', user?.email] });
-  };
+  const refreshHistory = () => Promise.all([
+    queryClient.invalidateQueries({ queryKey: ['search-history', user?.email] }),
+    queryClient.invalidateQueries({ queryKey: ['search-analytics'] }),
+  ]);
 
-  const deleteHistoryItem = async (e, id) => {
+  const deleteHistoryItem = async (e, term) => {
     e.stopPropagation();
-    await base44.entities.SearchHistory.delete(id);
-    queryClient.invalidateQueries({ queryKey: ['search-history', user?.email] });
+    await base44.functions.invoke('getSearchHistory', { action: 'delete', term });
+    await refreshHistory();
   };
 
   const clearAllHistory = async () => {
-    await Promise.all(history.map(h => base44.entities.SearchHistory.delete(h.id)));
-    queryClient.invalidateQueries({ queryKey: ['search-history', user?.email] });
+    await base44.functions.invoke('getSearchHistory', { action: 'clear' });
+    await refreshHistory();
   };
 
   // --- Execute a search ---
@@ -117,12 +105,13 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
     setInputValue(q);
     setSearchQuery(q);
     setIsOpen(false);
-    saveSearch(q);
+    void saveSearch(q, 'submit');
     onSearch?.(q);
   };
 
   // --- Navigate directly to product ---
   const goToProduct = (productId) => {
+    void saveSearch(inputValue, 'selection');
     setIsOpen(false);
     navigate(`/ProductDetail?id=${productId}`);
   };
@@ -219,6 +208,7 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
             type="text"
             value={inputValue}
             onChange={(e) => {
+              editSearch();
               setInputValue(e.target.value);
               setIsOpen(true);
               onSearch?.(e.target.value);
@@ -236,7 +226,7 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
           />
           {inputValue && (
             <button
-              onClick={() => { setInputValue(''); setSearchQuery(''); inputRef.current?.focus(); }}
+              onClick={() => { editSearch(); setInputValue(''); setSearchQuery(''); inputRef.current?.focus(); }}
               className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-muted transition-colors"
             >
               <X className="w-3.5 h-3.5 text-muted-foreground" />

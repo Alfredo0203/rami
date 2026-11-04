@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
+import { mergeSearchTerms } from '../../shared/searchTerms.ts';
 
-// Agrega las búsquedas (solo usuarios con sesión) por término.
+// Agrega registros de búsquedas (solo usuarios con sesión) por término.
 // Devuelve únicamente término + conteo: nunca quién buscó.
 export default async function (req) {
   try {
@@ -12,63 +13,51 @@ export default async function (req) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const days = Number(body?.days) || 0;
-
+    const days = Number(body.days ?? 0);
+    const cursor = Number(body.cursor ?? 0);
+    const action = body.action || 'list';
+    if (![0, 7, 30, 90].includes(days) || !Number.isSafeInteger(cursor) || cursor < 0 || !['list', 'clear_single_terms'].includes(action)) {
+      return Response.json({ error: 'Filtro no válido' }, { status: 400 });
+    }
     const query = {};
-    if (days > 0) {
-      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-      query.updated_date = { $gte: since };
+    if (days > 0 && action === 'list') {
+      query.updated_date = { $gte: new Date(Date.now() - days * 86400000).toISOString() };
+    }
+    // Las búsquedas nuevas son registros individuales, no contadores que cambian de fecha.
+    // Los registros históricos conservan su conteo y su última fecha disponible.
+    const result = await base44.asServiceRole.entities.SearchHistory.aggregate({
+      query, groupBy: 'query', sum: ['search_count'],
+    });
+    const allTerms = mergeSearchTerms(result.rows);
+    const repeatedTerms = allTerms.filter((item) => item.searches > 1);
+    const singleTerms = allTerms.filter((item) => item.searches === 1);
+
+    if (action === 'clear_single_terms') {
+      const queries = singleTerms.flatMap((item) => item.queries);
+      if (queries.length) {
+        await base44.asServiceRole.entities.SearchHistory.deleteMany({ query: { $in: queries } });
+      }
+      return Response.json({ removedTerms: singleTerms.length });
     }
 
-    const result = await base44.asServiceRole.entities.SearchHistory.aggregate({
-      query,
-      groupBy: 'query',
-      sum: ['search_count'],
-    });
-
-    // Agrupa "Pantalón", "pantalon" y "PANTALON" como un mismo término
-    const normalize = (value: string) =>
-      String(value || '')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase()
-        .replace(/\s+/g, ' ')
-        .trim();
-
-    const merged = new Map<string, { term: string; searches: number; best: number }>();
-    (result?.rows || []).forEach((r) => {
-      const label = String(r.query || '').trim();
-      const count = r.sum_search_count || 0;
-      if (!label) return;
-      const key = normalize(label);
-      const current = merged.get(key);
-      if (!current) {
-        merged.set(key, { term: label, searches: count, best: count });
-      } else {
-        current.searches += count;
-        if (count > current.best) {
-          current.term = label;
-          current.best = count;
-        }
-      }
-    });
-
-    const terms = Array.from(merged.values())
-      .map(({ term, searches }) => ({ term, searches }))
-      .sort((a, b) => b.searches - a.searches);
-
+    const pageSize = 40;
+    const toPublicTerm = ({ term, searches }) => ({ term, searches });
     const topProducts = await base44.asServiceRole.entities.Product
-      .filter({ is_active: true }, { sort: '-view_count', limit: 8 })
-      .then((page) => (page.items || page || []));
-
+      .filter({ is_active: true, view_count: { $gt: 0 } }, { sort: '-view_count', limit: 8 });
     return Response.json({
       days,
-      terms: terms.slice(0, 40),
-      uniqueTerms: terms.length,
-      totalSearches: terms.reduce((acc, t) => acc + t.searches, 0),
-      topProducts: topProducts
-        .filter((p) => (p.view_count || 0) > 0)
-        .map((p) => ({ id: p.id, name: p.name, views: p.view_count || 0, sold: p.sold_count || 0 })),
+      terms: repeatedTerms.slice(cursor, cursor + pageSize).map(toPublicTerm),
+      singleTerms: singleTerms.slice(cursor, cursor + pageSize).map(toPublicTerm),
+      uniqueTerms: allTerms.length,
+      repeatedTermCount: repeatedTerms.length,
+      singleTermCount: singleTerms.length,
+      repeatedSearches: repeatedTerms.reduce((sum, item) => sum + item.searches, 0),
+      singleSearches: singleTerms.length,
+      totalSearches: allTerms.reduce((sum, item) => sum + item.searches, 0),
+      nextCursor: Math.max(repeatedTerms.length, singleTerms.length) > cursor + pageSize ? cursor + pageSize : null,
+      topProducts: (topProducts.items || []).map((p) => ({
+        id: p.id, name: p.name, views: p.view_count || 0, sold: p.sold_count || 0,
+      })),
     });
   } catch (error) {
     console.error('Error in getSearchAnalytics:', error);
