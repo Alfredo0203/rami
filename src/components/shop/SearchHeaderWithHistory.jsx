@@ -80,7 +80,7 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
   }, [products]);
 
   // --- Save / Delete search history ---
-  const { saveSearch, editSearch } = useSearchRecorder(searchQuery || '', user);
+  const { saveSearch } = useSearchRecorder(user);
 
   const refreshHistory = () => Promise.all([
     queryClient.invalidateQueries({ queryKey: ['search-history', user?.email] }),
@@ -105,13 +105,12 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
     setInputValue(q);
     setSearchQuery(q);
     setIsOpen(false);
-    void saveSearch(q, 'submit');
+    void saveSearch(q);
     onSearch?.(q);
   };
 
   // --- Navigate directly to product ---
   const goToProduct = (productId) => {
-    void saveSearch(inputValue, 'selection');
     setIsOpen(false);
     navigate(`/ProductDetail?id=${productId}`);
   };
@@ -208,13 +207,9 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
             type="text"
             value={inputValue}
             onChange={(e) => {
-              editSearch();
               setInputValue(e.target.value);
               setIsOpen(true);
               onSearch?.(e.target.value);
-            }}
-            onBlur={() => {
-              if (inputValue.trim().length >= 2) saveSearch(inputValue);
             }}
             onFocus={() => setIsOpen(true)}
             onKeyDown={(e) => {
@@ -226,7 +221,7 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
           />
           {inputValue && (
             <button
-              onClick={() => { editSearch(); setInputValue(''); setSearchQuery(''); inputRef.current?.focus(); }}
+              onClick={() => { setInputValue(''); setSearchQuery(''); inputRef.current?.focus(); }}
               className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-muted transition-colors"
             >
               <X className="w-3.5 h-3.5 text-muted-foreground" />
