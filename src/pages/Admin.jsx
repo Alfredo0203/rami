@@ -463,6 +463,23 @@ export default function Admin() {
         </TabsContent>
 
         <TabsContent value="orders" className="space-y-3 mt-3">
+          {/* Buscador siempre visible */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Buscar por cliente, email o N° pedido..."
+              value={orderSearch}
+              onChange={(e) => setOrderSearch(e.target.value)}
+              className="w-full pl-9 pr-9 py-2.5 text-sm bg-card border border-border rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            {orderSearch && (
+              <button onClick={() => setOrderSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full bg-secondary">
+                <X className="w-3.5 h-3.5 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+
           {/* Filtros — Sheet igual que Browse */}
           {(() => {
             const toggleMulti = (arr, setArr, val) => setArr(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
@@ -508,19 +525,6 @@ export default function Admin() {
                     )}
                   </SheetHeader>
                   <div className="space-y-5 py-4">
-                    <div>
-                      <label className="text-sm font-semibold text-foreground mb-2 block">Buscar</label>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <input
-                          type="text"
-                          placeholder="Cliente o N° pedido..."
-                          value={orderSearch}
-                          onChange={(e) => setOrderSearch(e.target.value)}
-                          className="w-full pl-9 pr-3 py-2 text-sm bg-secondary border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                    </div>
                     <div>
                       <label className="text-sm font-semibold text-foreground mb-1 block">Estado <span className="text-[10px] text-muted-foreground font-normal">(selección múltiple)</span></label>
                       <div className="flex flex-wrap gap-2">
@@ -627,6 +631,23 @@ export default function Admin() {
         </TabsContent>
 
         <TabsContent value="users" className="space-y-3 mt-3">
+          {/* Buscador siempre visible */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Buscar por nombre o email..."
+              value={userSearch}
+              onChange={(e) => setUserSearch(e.target.value)}
+              className="w-full pl-9 pr-9 py-2.5 text-sm bg-card border border-border rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            {userSearch && (
+              <button onClick={() => setUserSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full bg-secondary">
+                <X className="w-3.5 h-3.5 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+
           {/* Filtros de usuarios */}
           {(() => {
             const toggleMulti = (arr, setArr, val) => setArr(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
@@ -671,19 +692,6 @@ export default function Admin() {
                     )}
                   </SheetHeader>
                   <div className="space-y-5 py-4">
-                    <div>
-                      <label className="text-sm font-semibold text-foreground mb-2 block">Buscar</label>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <input
-                          type="text"
-                          placeholder="Nombre o email..."
-                          value={userSearch}
-                          onChange={(e) => setUserSearch(e.target.value)}
-                          className="w-full pl-9 pr-3 py-2 text-sm bg-secondary border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                    </div>
                     <div>
                       <label className="text-sm font-semibold text-foreground mb-1 block">Estado <span className="text-[10px] text-muted-foreground font-normal">(selección múltiple)</span></label>
                       <div className="flex flex-wrap gap-2">
