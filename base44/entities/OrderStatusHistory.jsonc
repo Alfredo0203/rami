@@ -39,11 +39,13 @@
     "read": {
       "$or": [
         {
-          "user.role": {
-            "$in": [
-              "admin",
-              "super_admin"
-            ]
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "super_admin"
           }
         },
         {
@@ -52,28 +54,46 @@
       ]
     },
     "create": {
-      "user.role": {
-        "$in": [
-          "admin",
-          "super_admin"
-        ]
-      }
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "super_admin"
+          }
+        }
+      ]
     },
     "update": {
-      "user.role": {
-        "$in": [
-          "admin",
-          "super_admin"
-        ]
-      }
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "super_admin"
+          }
+        }
+      ]
     },
     "delete": {
-      "user.role": {
-        "$in": [
-          "admin",
-          "super_admin"
-        ]
-      }
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "super_admin"
+          }
+        }
+      ]
     }
   }
 }
