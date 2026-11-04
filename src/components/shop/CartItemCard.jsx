@@ -12,6 +12,7 @@ export default function CartItemCard({ item, selected, onToggleSelect, onUpdateQ
 
   const available = stockInfo?.available ?? Infinity;
   const isOverStock = item.quantity > available;
+  const unitPrice = stockInfo?.price ?? item.product_price ?? 0;
 
   const handlePlusClick = () => {
     if (item.quantity >= available) {
@@ -62,7 +63,7 @@ export default function CartItemCard({ item, selected, onToggleSelect, onUpdateQ
             </span>
           )}
         </button>
-        <p className="text-base font-bold text-primary mt-1">${item.product_price?.toFixed(2)}</p>
+        <p className="text-base font-bold text-primary mt-1">${unitPrice.toFixed(2)}</p>
         {isOverStock && !unavailable && (
           <p className="flex items-center gap-1 text-[10px] text-destructive font-medium mt-1">
             <AlertTriangle className="w-3 h-3" />

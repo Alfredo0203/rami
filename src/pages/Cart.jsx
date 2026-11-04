@@ -102,7 +102,7 @@ export default function Cart() {
 
   // Cargar variantes activas de productos en carrito que tienen variant_id
   const variantIds = cartItems.map(i => i.variant_id).filter(Boolean);
-  const { data: variantsData = [] } = useQuery({
+  const { data: variantsData = [], isLoading: variantsLoading } = useQuery({
     queryKey: ['cart-variants', variantIds.join(',')],
     queryFn: async () => {
       if (!variantIds.length) return [];
@@ -116,25 +116,54 @@ export default function Cart() {
     enabled: variantIds.length > 0,
   });
 
-  // Mapa: item.id → { available, unavailable }
+  // Mapa: item.id → { available, unavailable, price }
   // unavailable = producto eliminado/desactivado, o variante que ya no está activa
+  // price = precio actual en catálogo (variante primero, luego producto)
   const stockInfoMap = useMemo(() => {
     const map = {};
     const products = catalogData?.products || [];
     for (const item of cartItems) {
-      if (!catalogData) { map[item.id] = { available: Infinity, unavailable: false }; continue; }
+      const snapshot = item.product_price ?? 0;
+      if (!catalogData) { map[item.id] = { available: Infinity, unavailable: false, price: snapshot }; continue; }
       const product = products.find(p => p.id === item.product_id);
-      if (!product) { map[item.id] = { available: 0, unavailable: true }; continue; }
+      if (!product) { map[item.id] = { available: 0, unavailable: true, price: snapshot }; continue; }
       if (item.variant_id) {
         const variant = variantsData.find(v => v.id === item.variant_id);
         const variantGone = variantsData.length > 0 && (!variant || variant.is_active === false);
-        map[item.id] = { available: variant?.stock ?? Infinity, unavailable: variantGone };
+        map[item.id] = {
+          available: variant?.stock ?? Infinity,
+          unavailable: variantGone,
+          price: variant ? (variant.price ?? product.price ?? snapshot) : snapshot,
+        };
       } else {
-        map[item.id] = { available: product.stock ?? Infinity, unavailable: false };
+        map[item.id] = { available: product.stock ?? Infinity, unavailable: false, price: product.price ?? snapshot };
       }
     }
     return map;
   }, [cartItems, catalogData, variantsData]);
+
+  // Precio vigente del producto (no el que tenía al agregarlo al carrito)
+  const priceOf = (item) => stockInfoMap[item.id]?.price ?? item.product_price ?? 0;
+
+  // Si el admin cambió el precio, se actualiza el carrito para no cobrar mal
+  const syncPriceMutation = useMutation({
+    mutationFn: ({ id, price }) => base44.entities.CartItem.update(id, { product_price: price }),
+    onSuccess: (_res, { id, price }) =>
+      queryClient.setQueryData(['cart', user?.email], old =>
+        Array.isArray(old) ? old.map(i => i.id === id ? { ...i, product_price: price } : i) : old
+      ),
+  });
+
+  useEffect(() => {
+    if (!catalogData || variantsLoading) return;
+    for (const item of cartItems) {
+      const info = stockInfoMap[item.id];
+      if (!info || info.unavailable || info.price == null) continue;
+      if (Math.abs(info.price - (item.product_price ?? 0)) > 0.001) {
+        syncPriceMutation.mutate({ id: item.id, price: info.price });
+      }
+    }
+  }, [cartItems, stockInfoMap, catalogData]);
 
   const unavailableIds = useMemo(
     () => new Set(cartItems.filter(i => stockInfoMap[i.id]?.unavailable).map(i => i.id)),
@@ -162,7 +191,7 @@ export default function Cart() {
     return info && info.available !== Infinity && item.quantity > info.available;
   });
 
-  const subtotal = selectedItems.reduce((sum, item) => sum + (item.product_price || 0) * (item.quantity || 0), 0);
+  const subtotal = selectedItems.reduce((sum, item) => sum + priceOf(item) * (item.quantity || 0), 0);
   const shipping = (shippingCost === 0 || (freeShippingThreshold > 0 && subtotal >= freeShippingThreshold)) ? 0 : shippingCost;
   const total = subtotal + shipping;
 
