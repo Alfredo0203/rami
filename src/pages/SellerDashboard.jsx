@@ -301,7 +301,6 @@ export default function SellerDashboard() {
                              <option value="processing">Procesando</option>
                              <option value="shipped">Enviado</option>
                              <option value="delivered">Entregado</option>
-                             <option value="cancelled">Cancelado</option>
                            </select>
                          </div>
                          <div className="space-y-1">
