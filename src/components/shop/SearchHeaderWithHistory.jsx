@@ -69,9 +69,6 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
     [history]
   );
 
-  // Derived: featured categories (top 6)
-  const featuredCategories = useMemo(() => categories.slice(0, 6), [categories]);
-
   // Derived: all brands
   const allBrands = useMemo(() => {
     const s = new Set();
@@ -128,16 +125,6 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
   const goToProduct = (productId) => {
     setIsOpen(false);
     navigate(`/ProductDetail?id=${productId}`);
-  };
-
-  // --- Filter by category (set search to category name, close panel) ---
-  const filterByCategory = (category) => {
-    setInputValue('');
-    setSearchQuery('');
-    setIsOpen(false);
-    onSearch?.('');
-    // pass category selection up — Browse will handle it via URL or callback
-    navigate(`/Browse?category=${category.id}`);
   };
 
   // --- Suggestions while typing (smart relevance scoring) ---
@@ -313,7 +300,7 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
                 </div>
               )}
 
-              {/* == IDLE: historial + populares + categorías == */}
+              {/* == IDLE: historial + populares == */}
               {!isTyping && (
                 <div className="max-h-[75vh] overflow-y-auto">
 
@@ -370,33 +357,8 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
                     </section>
                   )}
 
-                  {/* Categorías destacadas */}
-                  {featuredCategories.length > 0 && (
-                    <section className="p-4">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Categorías</p>
-                      <div className="grid grid-cols-3 gap-2">
-                        {featuredCategories.map(cat => (
-                          <button
-                            key={cat.id}
-                            onClick={() => filterByCategory(cat)}
-                            className="flex flex-col items-center gap-1.5 p-3 bg-secondary/60 hover:bg-primary/10 border border-border/40 rounded-xl transition-colors group"
-                          >
-                            {cat.image_url ? (
-                              <img src={cat.image_url} className="w-8 h-8 rounded-lg object-cover" />
-                            ) : (
-                              <Tag className="w-5 h-5 text-primary" />
-                            )}
-                            <span className="text-xs text-foreground font-medium text-center leading-tight line-clamp-2">
-                              {cat.name}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    </section>
-                  )}
-
                   {/* Estado vacío total */}
-                  {recentHistory.length === 0 && popularSearches.length === 0 && featuredCategories.length === 0 && (
+                  {recentHistory.length === 0 && popularSearches.length === 0 && (
                     <div className="p-8 text-center">
                       <Search className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
                       <p className="text-sm text-muted-foreground">Escribe para buscar productos</p>
