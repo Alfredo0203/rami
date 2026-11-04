@@ -27,8 +27,10 @@ Deno.serve(async (req) => {
 
     // ── 1. Validar stock para cada item ──────────────────────────────
     const stockErrors = [];
+    // El precio SIEMPRE se resuelve desde la base de datos, nunca desde el cliente.
+    const resolvedPrices = [];
 
-    for (const item of cartItems) {
+    for (const [index, item] of cartItems.entries()) {
       if (item.variant_id) {
         const variant = await base44.asServiceRole.entities.ProductVariant.get(item.variant_id).catch(() => null);
         if (!variant || variant.is_active === false) {
@@ -43,6 +45,7 @@ Deno.serve(async (req) => {
           stockErrors.push(`"${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''}" ya no está disponible.`);
           continue;
         }
+        resolvedPrices[index] = variant.price ?? parentProduct.price ?? 0;
         if ((variant.stock ?? 0) < item.quantity) {
           stockErrors.push(
             `"${item.product_name}${item.variant_name ? ` (${item.variant_name})` : ''}" solo tiene ${variant.stock ?? 0} unidades disponibles.`
@@ -54,6 +57,7 @@ Deno.serve(async (req) => {
           stockErrors.push(`"${item.product_name}" ya no está disponible.`);
           continue;
         }
+        resolvedPrices[index] = product.price ?? 0;
         if ((product.stock ?? 0) < item.quantity) {
           stockErrors.push(
             `"${item.product_name}" solo tiene ${product.stock ?? 0} unidades disponibles.`
@@ -67,7 +71,7 @@ Deno.serve(async (req) => {
     }
 
     // ── 2. Calcular totales ───────────────────────────────────────────
-    const subtotal = cartItems.reduce((sum, item) => sum + (item.product_price || 0) * (item.quantity || 0), 0);
+    const subtotal = cartItems.reduce((sum, item, i) => sum + (resolvedPrices[i] || 0) * (item.quantity || 0), 0);
 
     // Obtener configuración de envío desde AppSettings
     let shippingCostCfg = 0;
@@ -166,13 +170,13 @@ Deno.serve(async (req) => {
 
     // ── 3. Crear la orden ─────────────────────────────────────────────
      // Validate each item before creating order
-     const cleanedItems = cartItems.map(item => {
+     const cleanedItems = cartItems.map((item, index) => {
        // Only include the exact fields Order schema expects
        return {
          product_id: item.product_id || '',
          product_name: item.product_name || '',
          product_image: item.product_image || '',
-         price: Number(item.product_price) || 0,
+         price: Number(resolvedPrices[index]) || 0,
          quantity: Number(item.quantity) || 1,
          ...(item.variant_id && { variant_id: item.variant_id }),
          ...(item.variant_name && { variant_name: item.variant_name }),

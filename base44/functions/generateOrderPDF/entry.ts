@@ -18,6 +18,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Order not found' }, { status: 404 });
     }
 
+    // Si la llamada viene de un usuario, solo puede generar su propia factura.
+    // Las llamadas internas (service role) llegan sin usuario y ya validaron
+    // la propiedad en downloadOrderPDF / getPDFLink.
+    let caller = null;
+    try { caller = await base44.auth.me(); } catch (_) { caller = null; }
+    const staff = caller && ['admin', 'super_admin', 'seller'].includes(caller.role);
+    if (caller && !staff && order.customer_email !== caller.email) {
+      return Response.json({ error: 'No autorizado' }, { status: 403 });
+    }
+
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
