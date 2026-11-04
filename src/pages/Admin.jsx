@@ -126,10 +126,14 @@ export default function Admin() {
 
   // Los productos nunca se borran: se desactivan y se pueden reactivar
   const toggleProductMutation = useMutation({
-    mutationFn: ({ id, is_active }) => base44.entities.Product.update(id, { is_active }),
+    mutationFn: async ({ id, is_active }) => {
+      await base44.entities.Product.update(id, { is_active });
+      // Al desactivar, el producto sale de todos los carritos
+      if (!is_active) await base44.functions.invoke('removeProductFromCarts', { productId: id });
+    },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
-      toast.success(vars.is_active ? 'Producto reactivado' : 'Producto desactivado');
+      toast.success(vars.is_active ? 'Producto reactivado' : 'Producto desactivado y retirado de los carritos');
     },
   });
 

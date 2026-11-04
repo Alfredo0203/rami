@@ -85,7 +85,12 @@ export default function SellerDashboard() {
   };
 
   const toggleProductActive = useMutation({
-    mutationFn: (product) => base44.entities.Product.update(product.id, { is_active: !product.is_active }),
+    mutationFn: async (product) => {
+      const nextActive = !product.is_active;
+      await base44.entities.Product.update(product.id, { is_active: nextActive });
+      // Al desactivar, el producto sale de todos los carritos
+      if (!nextActive) await base44.functions.invoke('removeProductFromCarts', { productId: product.id });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['seller-products'] });
       toast.success('Producto actualizado');
