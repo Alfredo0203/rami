@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Sparkles, Clock, ExternalLink, ShoppingBag, ChevronDown, Trash2, Mic, MicOff } from 'lucide-react';
+import { Send, Sparkles, Clock, ChevronDown, Trash2, Mic, MicOff } from 'lucide-react';
 import { useBackButtonClose } from '@/hooks/useBackButtonClose';
+import AgentProductCard from '@/components/shop/AgentProductCard';
 import { toast } from 'sonner';
 
 const APP_LOGO_URL = 'https://lh3.googleusercontent.com/d/1XvzxcscLVC00UVnvggpG1qTLTiyQ_6d0';
@@ -16,7 +17,7 @@ const LS_CONV_ID = 'rami_conversation_id';
 const LS_LAST_CONSULTED = 'rami_last_consulted';
 // Un hilo muy largo hace que el asistente responda cada vez más lento:
 // al pasar este límite se arranca una conversación nueva.
-const MAX_HISTORY = 20;
+const MAX_HISTORY = 12;
 
 const INITIAL_SUGGESTIONS = [
   { label: '🔥 Más vendidos', query: 'Muéstrame los productos más vendidos' },
@@ -76,42 +77,6 @@ function parseContent(content) {
   return parts;
 }
 
-function ProductCard({ product, onNavigate }) {
-  const hasDiscount = product.original_price && product.original_price > product.price;
-  const discount = hasDiscount ? Math.round((1 - product.price / product.original_price) * 100) : null;
-
-  return (
-    <button
-      onClick={() => onNavigate(product.id)}
-      className="flex items-center gap-3 bg-background border border-border rounded-xl p-2.5 hover:border-primary/40 hover:bg-primary/5 transition-colors text-left w-full"
-    >
-      <div className="w-14 h-14 rounded-lg bg-muted shrink-0 overflow-hidden">
-        {product.image ? (
-          <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <ShoppingBag className="w-5 h-5 text-muted-foreground" />
-          </div>
-        )}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground leading-tight line-clamp-2">{product.name}</p>
-        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{product.reason}</p>
-        <div className="flex items-center gap-2 mt-1">
-          <span className="text-sm font-bold text-primary">${product.price?.toFixed(2)}</span>
-          {hasDiscount && (
-            <>
-              <span className="text-xs text-muted-foreground line-through">${product.original_price?.toFixed(2)}</span>
-              <span className="text-xs font-semibold text-success bg-success/10 px-1.5 py-0.5 rounded-full">-{discount}%</span>
-            </>
-          )}
-        </div>
-      </div>
-      <ExternalLink className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-    </button>
-  );
-}
-
 function MessageBubble({ message, onNavigate }) {
   const isUser = message.role === 'user';
   if (isUser) {
@@ -135,7 +100,7 @@ function MessageBubble({ message, onNavigate }) {
             return (
               <div key={i} className="space-y-1.5">
                 {part.products.map((p, j) => (
-                  <ProductCard key={j} product={p} onNavigate={onNavigate} />
+                  <AgentProductCard key={j} product={p} onNavigate={onNavigate} />
                 ))}
               </div>
             );
