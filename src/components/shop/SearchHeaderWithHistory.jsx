@@ -7,14 +7,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-// Scoring helper: prioritize exact > starts-with > includes
+// Scoring tolerante a tildes y errores de escritura
+import { scoreText, productMatchScore, findAccentInsensitiveIndex } from '@/lib/search';
+
 function scoreMatch(text, query) {
-  const t = text.toLowerCase();
-  const q = query.toLowerCase();
-  if (t === q) return 3;
-  if (t.startsWith(q)) return 2;
-  if (t.includes(q)) return 1;
-  return 0;
+  return scoreText(text, query);
 }
 
 export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, cartCount = 0, onSearch }) {
@@ -163,9 +160,7 @@ export default function SearchHeaderWithHistory({ searchQuery, setSearchQuery, c
 
     // Product matches (name)
     products.forEach(p => {
-      const nameScore = scoreMatch(p.name, q);
-      const tagScore = p.tags?.some(t => t.toLowerCase().includes(q)) ? 1 : 0;
-      const score = Math.max(nameScore, tagScore);
+      const score = productMatchScore(p, q);
       if (score > 0) {
         items.push({
           type: 'product',
@@ -432,7 +427,7 @@ function SuggestionRow({ suggestion, query, onSelect, onDelete }) {
 
   // Highlight matching part of text
   const renderHighlighted = (text, query) => {
-    const idx = text.toLowerCase().indexOf(query.toLowerCase());
+    const idx = findAccentInsensitiveIndex(text, query);
     if (idx === -1 || !query) return <span>{text}</span>;
     return (
       <>

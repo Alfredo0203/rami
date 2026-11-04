@@ -9,6 +9,7 @@ import ProductCard from '../components/shop/ProductCard';
 import BottomNav from '../components/shop/BottomNav';
 import InfiniteScroll from '../components/shop/InfiniteScroll';
 import { productMatchesCategory } from '@/lib/productCategories';
+import { productMatchScore } from '@/lib/search';
 
 import { useTranslation } from '../components/i18n/useTranslation';
 import { AlertTriangle, Loader2 } from 'lucide-react';
@@ -59,11 +60,7 @@ export default function Home() {
     }
     
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(p =>
-        p.name?.toLowerCase().includes(q) ||
-        p.tags?.some(tag => tag.toLowerCase().includes(q))
-      );
+      filtered = filtered.filter(p => productMatchScore(p, searchQuery) > 0);
     }
     
     // Randomizar todos los productos en cada carga

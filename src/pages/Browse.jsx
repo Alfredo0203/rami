@@ -9,6 +9,7 @@ import { SlidersHorizontal, X, Loader2, Star, Tag, Package, Sparkles } from 'luc
 import { Link } from 'react-router-dom';
 import { localLogout } from '@/lib/authRedirect';
 import { productMatchesCategory } from '@/lib/productCategories';
+import { productMatchScore } from '@/lib/search';
 import RecommendationsModal from '../components/shop/RecommendationsModal';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -131,12 +132,7 @@ export default function Browse() {
     let filtered = products;
 
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(p =>
-        p.name?.toLowerCase().includes(q) ||
-        p.description?.toLowerCase().includes(q) ||
-        p.tags?.some(tag => tag.toLowerCase().includes(q))
-      );
+      filtered = filtered.filter(p => productMatchScore(p, searchQuery) > 0);
     }
 
     if (selectedCategory !== 'all') {
