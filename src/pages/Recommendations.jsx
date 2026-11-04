@@ -13,6 +13,9 @@ const LS_LAST_CONSULTED = 'rami_last_consulted';
 // Un hilo muy largo hace que el asistente responda cada vez más lento:
 // al pasar este límite se arranca una conversación nueva.
 const MAX_HISTORY = 12;
+// Un hilo que quedó abierto hace horas arrastra contexto que ya no sirve y
+// vuelve lenta la primera respuesta: pasado este tiempo se arranca limpio.
+const STALE_CONVERSATION_MS = 2 * 60 * 60 * 1000;
 
 const INITIAL_SUGGESTIONS = [
   { label: '🔥 Más vendidos', query: 'Muéstrame los productos más vendidos' },
@@ -100,7 +103,12 @@ export default function Recommendations() {
 
     const stored = localStorage.getItem(LS_LAST_CONSULTED);
     if (stored) setLastConsulted(new Date(stored));
-    const savedConvId = localStorage.getItem(LS_CONV_ID);
+    const isStale = stored && (Date.now() - new Date(stored).getTime()) > STALE_CONVERSATION_MS;
+    let savedConvId = localStorage.getItem(LS_CONV_ID);
+    if (savedConvId && isStale) {
+      localStorage.removeItem(LS_CONV_ID);
+      savedConvId = null;
+    }
     if (savedConvId) {
       base44.agents.getConversation(savedConvId)
         .then(conv => {
