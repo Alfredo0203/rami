@@ -62,27 +62,6 @@ export default function Cart() {
     }
   };
 
-  const unavailableIds = useMemo(
-    () => new Set(cartItems.filter(i => stockInfoMap[i.id]?.unavailable).map(i => i.id)),
-    [cartItems, stockInfoMap]
-  );
-  const hasUnavailable = unavailableIds.size > 0;
-
-  // Lo que ya no está disponible nunca entra al total ni al pago
-  const selectedItems = useMemo(
-    () => cartItems.filter(i => selectedIds.has(i.id) && !stockInfoMap[i.id]?.unavailable),
-    [cartItems, selectedIds, stockInfoMap]
-  );
-  const allSelected = cartItems.length > 0 && selectedIds.size === cartItems.length;
-
-  useEffect(() => {
-    if (!unavailableIds.size) return;
-    setSelectedIds(prev => {
-      const next = new Set([...prev].filter(id => !unavailableIds.has(id)));
-      return next.size === prev.size ? prev : next;
-    });
-  }, [unavailableIds]);
-
   const updateQtyMutation = useMutation({
     mutationFn: async ({ item, newQty }) => {
       if (newQty <= 0) return base44.entities.CartItem.delete(item.id);
@@ -156,6 +135,27 @@ export default function Cart() {
     }
     return map;
   }, [cartItems, catalogData, variantsData]);
+
+  const unavailableIds = useMemo(
+    () => new Set(cartItems.filter(i => stockInfoMap[i.id]?.unavailable).map(i => i.id)),
+    [cartItems, stockInfoMap]
+  );
+  const hasUnavailable = unavailableIds.size > 0;
+
+  // Lo que ya no está disponible nunca entra al total ni al pago
+  const selectedItems = useMemo(
+    () => cartItems.filter(i => selectedIds.has(i.id) && !stockInfoMap[i.id]?.unavailable),
+    [cartItems, selectedIds, stockInfoMap]
+  );
+  const allSelected = cartItems.length > 0 && selectedIds.size === cartItems.length;
+
+  useEffect(() => {
+    if (!unavailableIds.size) return;
+    setSelectedIds(prev => {
+      const next = new Set([...prev].filter(id => !unavailableIds.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [unavailableIds]);
 
   const hasStockIssues = selectedItems.some(item => {
     const info = stockInfoMap[item.id];
