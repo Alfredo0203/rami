@@ -13,6 +13,7 @@ import AdminSettingsTab from '../components/admin/AdminSettingsTab';
 import AdminReviewsTab from '../components/admin/AdminReviewsTab';
 import AdminCategoriesTab from '../components/admin/AdminCategoriesTab';
 import { getProductCategoryIds } from '@/lib/productCategories';
+import { normalizeText } from '@/lib/search';
 import AdminCouponsTab from '../components/admin/AdminCouponsTab';
 import AdminStoresTab from '../components/admin/AdminStoresTab';
 import AdminRefundsTab from '../components/admin/AdminRefundsTab';
@@ -363,7 +364,9 @@ export default function Admin() {
             (() => {
               let filtered = products.filter(p => {
                 const stock = getProductStock(p);
-                const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+                // Ignora tildes y mayúsculas ("pantalon" encuentra "Pantalón")
+                const searchTerm = normalizeText(searchQuery);
+                const matchesSearch = !searchTerm || normalizeText(p.name).includes(searchTerm);
                 const matchesStock = stockFilters.length === 0 || stockFilters.some(f =>
                   (f === 'low' && stock > 0 && stock < 5) ||
                   (f === 'out' && stock === 0) ||
