@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Loader2, Search, TrendingUp, Trash2 } from 'lucide-react';
+import { Loader2, Search, TrendingUp, Trash2, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -25,6 +25,7 @@ const RANGES = [
 export default function AdminSearchAnalyticsTab() {
   const [days, setDays] = useState(30);
   const [cleaning, setCleaning] = useState(false);
+  const [singlesOpen, setSinglesOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -38,8 +39,11 @@ export default function AdminSearchAnalyticsTab() {
   const allTerms = data?.terms || [];
   // Solo los términos que se repitieron; los de una sola búsqueda no aportan.
   const terms = allTerms.filter((t) => (t.searches || 0) > 1);
-  const singleTerms = allTerms.filter((t) => (t.searches || 0) <= 1).length;
+  const singleTerms = allTerms.filter((t) => (t.searches || 0) <= 1);
   const max = terms[0]?.searches || 1;
+  // Los totales se calculan sobre lo que realmente se muestra en la lista.
+  const repeatedSearches = terms.reduce((acc, t) => acc + (t.searches || 0), 0);
+  const singleSearches = singleTerms.reduce((acc, t) => acc + (t.searches || 0), 0);
 
   const cleanUniqueTerms = async () => {
     setCleaning(true);
@@ -79,7 +83,7 @@ export default function AdminSearchAnalyticsTab() {
           <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
             <Search className="w-3.5 h-3.5" /> Búsquedas
           </div>
-          <p className="text-xl font-bold text-foreground mt-1">{data?.totalSearches ?? 0}</p>
+          <p className="text-xl font-bold text-foreground mt-1">{repeatedSearches}</p>
         </div>
         <div className="bg-card border border-border rounded-xl p-3">
           <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
@@ -97,7 +101,7 @@ export default function AdminSearchAnalyticsTab() {
         <div className="text-center py-12 bg-card border border-border rounded-xl">
           <Search className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">
-            {singleTerms > 0
+            {singleTerms.length > 0
               ? 'Ningún término se ha buscado más de una vez en este período'
               : 'Sin búsquedas registradas en este período'}
           </p>
@@ -125,11 +129,33 @@ export default function AdminSearchAnalyticsTab() {
       )}
 
       <p className="text-[11px] text-muted-foreground px-1">
-        Solo se muestran los términos buscados más de una vez.{' '}
-        {singleTerms > 0
-          ? `Hay ${singleTerms} término${singleTerms === 1 ? '' : 's'} con una sola búsqueda en este período.`
+        Solo se cuentan los términos buscados más de una vez.
+        {singleTerms.length > 0
+          ? ` Quedan fuera ${singleTerms.length} término${singleTerms.length === 1 ? '' : 's'} con una sola búsqueda (${singleSearches} en total).`
           : ''}
       </p>
+
+      {singleTerms.length > 0 && (
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <button
+            onClick={() => setSinglesOpen((v) => !v)}
+            className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-xs text-muted-foreground"
+          >
+            <span>Ver búsquedas de un solo uso ({singleTerms.length})</span>
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${singlesOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {singlesOpen &&
+            singleTerms.map((t) => (
+              <div
+                key={t.term}
+                className="flex items-center justify-between gap-2 px-3 py-2 border-t border-border/40"
+              >
+                <span className="text-xs text-muted-foreground truncate">{t.term}</span>
+                <span className="text-xs text-muted-foreground flex-shrink-0">{t.searches}</span>
+              </div>
+            ))}
+        </div>
+      )}
 
       <div className="space-y-2">
         <h3 className="text-sm font-semibold text-foreground px-1">Productos más vistos</h3>
@@ -155,7 +181,7 @@ export default function AdminSearchAnalyticsTab() {
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <button
-            disabled={cleaning || singleTerms === 0}
+            disabled={cleaning || singleTerms.length === 0}
             className="flex items-center justify-center gap-1.5 w-full px-3 py-2.5 rounded-xl border border-border bg-card text-xs font-medium text-foreground disabled:opacity-50"
           >
             {cleaning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
