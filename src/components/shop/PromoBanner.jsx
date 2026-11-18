@@ -13,6 +13,38 @@ const DEFAULTS = {
   promo_banner_enabled: false,
 };
 
+// Dominios propios: si el enlace apunta aquí se navega dentro de la app.
+const APP_HOSTS = ['rami-shop.com', 'fractal-nova-cart-shop.base44.app'];
+
+// Clasifica el enlace del banner: interno (ruta de la app) o externo (otro sitio).
+function resolveLink(raw) {
+  const link = (raw || '').trim();
+  if (!link) return { kind: 'none' };
+
+  if (/^(mailto:|tel:)/i.test(link)) return { kind: 'external', url: link };
+
+  if (/^https?:\/\//i.test(link)) {
+    try {
+      const parsed = new URL(link);
+      const host = parsed.hostname.toLowerCase();
+      const isOwn = host === window.location.hostname.toLowerCase()
+        || APP_HOSTS.some(h => host === h || host.endsWith('.' + h));
+      return isOwn
+        ? { kind: 'internal', path: parsed.pathname + parsed.search + parsed.hash }
+        : { kind: 'external', url: link };
+    } catch {
+      return { kind: 'external', url: link };
+    }
+  }
+
+  // Dominio sin protocolo, por ejemplo "www.sitio.com/oferta"
+  if (!link.startsWith('/') && /^[a-z0-9-]+(\.[a-z0-9-]+)+([/?#]|$)/i.test(link)) {
+    return { kind: 'external', url: 'https://' + link };
+  }
+
+  return { kind: 'internal', path: link.startsWith('/') ? link : '/' + link };
+}
+
 function getSecondsUntil(isoDate) {
   if (!isoDate) return 0;
   return Math.max(Math.floor((new Date(isoDate) - Date.now()) / 1000), 0);
@@ -90,12 +122,17 @@ export default function PromoBanner() {
   const s = seconds % 60;
 
   const handleClick = () => {
-    if (!link) return;
-    if (link.startsWith('http')) {
-      window.open(link, '_blank');
-    } else {
-      navigate('/' + link.replace(/^\//, ''));
+    const target = resolveLink(link);
+    if (target.kind === 'none') return;
+
+    if (target.kind === 'external') {
+      // Si el navegador/webview bloquea la pestaña nueva, salimos en la misma.
+      const win = window.open(target.url, '_blank', 'noopener,noreferrer');
+      if (!win) window.location.assign(target.url);
+      return;
     }
+
+    navigate(target.path);
   };
 
   return (

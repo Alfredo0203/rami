@@ -287,7 +287,7 @@ export default function AdminSettingsTab({ currentUser }) {
               />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground mb-1">Enlace al tocar (página o URL)</p>
+              <p className="text-xs text-muted-foreground mb-1">Enlace al tocar (página de la app o sitio externo)</p>
               <Input
                 value={bannerForm.promo_banner_link}
                 onChange={e => setBannerForm(f => ({ ...f, promo_banner_link: e.target.value }))}
