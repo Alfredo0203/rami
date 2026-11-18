@@ -37,6 +37,9 @@ function resolveLink(raw) {
     }
   }
 
+  // Enlace sin protocolo pero con dos barras, por ejemplo "//www.sitio.com"
+  if (link.startsWith('//')) return { kind: 'external', url: 'https:' + link };
+
   // Dominio sin protocolo, por ejemplo "www.sitio.com/oferta"
   if (!link.startsWith('/') && /^[a-z0-9-]+(\.[a-z0-9-]+)+([/?#]|$)/i.test(link)) {
     return { kind: 'external', url: 'https://' + link };
@@ -126,9 +129,15 @@ export default function PromoBanner() {
     if (target.kind === 'none') return;
 
     if (target.kind === 'external') {
-      // Si el navegador/webview bloquea la pestaña nueva, salimos en la misma.
-      const win = window.open(target.url, '_blank', 'noopener,noreferrer');
-      if (!win) window.location.assign(target.url);
+      // Dentro del WebView de la app las pestañas nuevas se ignoran,
+      // así que se navega directo al sitio externo.
+      const isFramed = window.self !== window.top;
+      if (isFramed) {
+        const win = window.open(target.url, '_blank', 'noopener,noreferrer');
+        if (!win) window.location.href = target.url;
+      } else {
+        window.location.href = target.url;
+      }
       return;
     }
 
