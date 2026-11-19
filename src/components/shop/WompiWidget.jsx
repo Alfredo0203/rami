@@ -4,17 +4,15 @@ import { useBackButtonOverlay } from '@/hooks/useBackButtonClose';
 import { base44 } from '@/api/base44Client';
 
 /**
- * Pago con tarjeta (sin branding del proveedor).
+ * Pago con tarjeta dentro de la app (sin branding del proveedor).
  *
- * El formulario del proveedor no puede incrustarse de forma confiable dentro
- * de la app (bloquea iframes anidados), así que se abre el enlace de pago en
- * una ventana de primer nivel. Esta ventana mantiene el polling del estado de
- * la orden y avanza sola en cuanto el webhook la marca como pagada.
+ * El formulario se muestra incrustado en modo widget, que sí permite mostrarse
+ * dentro de la app. Esta ventana mantiene el polling del estado de la orden y
+ * avanza sola en cuanto el webhook la marca como pagada.
  */
-export default function WompiWidget({ urlPago, onClose, total, loading, orderId, onSuccess }) {
+export default function WompiWidget({ urlPago, fallbackUrl, onClose, total, loading, orderId, onSuccess }) {
   useBackButtonOverlay(true, onClose);
   const [verifying, setVerifying] = useState(false);
-  const [opened, setOpened] = useState(false);
 
   // Polling del estado de la orden: cuando el webhook de Wompi la marque
   // como pagada, navegamos a la confirmación.
@@ -42,21 +40,9 @@ export default function WompiWidget({ urlPago, onClose, total, loading, orderId,
     };
   }, [orderId, onSuccess]);
 
-  const handleContinue = () => {
-    if (!urlPago) return;
-    const tab = window.open(urlPago, '_blank');
-    if (!tab) {
-      // WebViews que bloquean ventanas nuevas: navegar en la misma ventana
-      window.location.assign(urlPago);
-      return;
-    }
-    tab.opener = null;
-    setOpened(true);
-  };
-
   return (
-    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4">
-      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[92vh] flex flex-col">
+    <div className="fixed inset-0 z-[9999] flex bg-black/60 p-0 sm:items-center sm:justify-center sm:p-4">
+      <div className="bg-white w-full h-full sm:h-[88vh] sm:max-w-md sm:rounded-2xl flex flex-col overflow-hidden">
         {/* Header — sin branding del proveedor */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
           <div className="flex items-center gap-2">
@@ -78,14 +64,14 @@ export default function WompiWidget({ urlPago, onClose, total, loading, orderId,
         </div>
 
         {verifying ? (
-          <div className="flex flex-col items-center justify-center py-16 px-6">
+          <div className="flex flex-col items-center justify-center flex-1 py-16 px-6">
             <CheckCircle2 className="w-12 h-12 text-green-500 mb-3" />
             <p className="text-sm font-semibold text-gray-800">¡Pago recibido!</p>
             <p className="text-xs text-gray-500 mt-1">Confirmando tu orden...</p>
             <Loader2 className="w-5 h-5 animate-spin text-primary mt-3" />
           </div>
         ) : loading || !urlPago ? (
-          <div className="flex flex-col items-center justify-center py-16 px-6">
+          <div className="flex flex-col items-center justify-center flex-1 py-16 px-6">
             <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
             <p className="text-sm text-gray-500">Preparando tu pago seguro...</p>
             <div className="flex items-center gap-1 mt-2 text-xs text-gray-400">
@@ -94,35 +80,31 @@ export default function WompiWidget({ urlPago, onClose, total, loading, orderId,
             </div>
           </div>
         ) : (
-          <div className="px-6 py-8 text-center">
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <CreditCard className="w-7 h-7 text-primary" />
-            </div>
-            <p className="text-sm font-semibold text-gray-800">Ingresa los datos de tu tarjeta</p>
-            <p className="text-xs text-gray-500 mt-2 leading-relaxed">
-              Abriremos la pasarela de pago segura en otra ventana. Al terminar, regresa aquí: esta pantalla se actualizará sola.
-            </p>
-
-            <button
-              onClick={handleContinue}
-              className="w-full h-11 mt-5 rounded-full bg-primary text-white font-bold text-sm flex items-center justify-center gap-2"
-            >
-              {opened ? 'Volver a abrir el pago' : 'Continuar al pago'}
-              <ExternalLink className="w-4 h-4" />
-            </button>
-
-            {opened && (
-              <div className="mt-4 flex items-center justify-center gap-2 text-xs text-gray-500">
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
-                <span>Esperando la confirmación del pago...</span>
+          <>
+            <iframe
+              title="Formulario de pago"
+              src={urlPago}
+              allow="payment"
+              className="flex-1 w-full min-h-0 border-0 bg-white"
+            />
+            <div className="flex items-center justify-between gap-2 px-4 py-2 border-t border-gray-100 flex-shrink-0">
+              <div className="flex items-center gap-1 text-[11px] text-gray-400">
+                <Shield className="w-3 h-3" />
+                <span>No guardamos los datos de tu tarjeta</span>
               </div>
-            )}
-
-            <div className="flex items-center justify-center gap-1 mt-4 text-[11px] text-gray-400">
-              <Shield className="w-3 h-3" />
-              <span>Pago cifrado SSL · No guardamos los datos de tu tarjeta</span>
+              {fallbackUrl && (
+                <a
+                  href={fallbackUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-[11px] text-gray-500 underline whitespace-nowrap"
+                >
+                  Abrir en otra ventana
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>

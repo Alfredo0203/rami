@@ -119,7 +119,27 @@ Deno.serve(async (req) => {
     const linkData = await linkRes.json();
     console.log('Wompi link created:', linkData);
 
-    return Response.json({ urlEnlace: linkData.urlEnlace });
+    // Modo widget: con esWidget=1 la página de pago sí permite incrustarse dentro
+    // de la app (no envía x-frame-options), así el cliente paga sin salir.
+    let urlWidget = null;
+    const longUrl = linkData.urlEnlaceLargo;
+    if (longUrl && longUrl.includes('/IntentoPago/Redirect')) {
+      urlWidget = `${longUrl}${longUrl.includes('?') ? '&' : '?'}esWidget=1`;
+    } else {
+      // Respaldo: resolver el enlace corto hasta la URL larga del intento
+      try {
+        const resolved = await fetch(linkData.urlEnlace, { redirect: 'manual' });
+        const location = resolved.headers.get('location') || (await fetch(linkData.urlEnlace)).url;
+        if (location && location.includes('/IntentoPago/Redirect')) {
+          urlWidget = `${location}${location.includes('?') ? '&' : '?'}esWidget=1`;
+        }
+      } catch (e) {
+        console.warn('No se pudo resolver la URL del widget:', e.message);
+      }
+    }
+    console.log('Wompi widget URL:', urlWidget);
+
+    return Response.json({ urlEnlace: linkData.urlEnlace, urlWidget });
   } catch (error) {
     console.error('createWompiPaymentLink error:', error);
     return Response.json({ error: error.message }, { status: 500 });

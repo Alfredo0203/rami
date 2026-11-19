@@ -33,6 +33,7 @@ export default function Checkout() {
   const [pendingOrderId, setPendingOrderId] = useState(null);
   const [wompiModalOpen, setWompiModalOpen] = useState(false);
   const [wompiUrl, setWompiUrl] = useState(null);
+  const [wompiFallbackUrl, setWompiFallbackUrl] = useState(null);
   const [wompiLoading, setWompiLoading] = useState(false);
   const [pendingWompiOrderId, setPendingWompiOrderId] = useState(null);
   const [requestingReactivation, setRequestingReactivation] = useState(false);
@@ -239,9 +240,10 @@ export default function Checkout() {
         orderNumber: order.order_number,
       });
       if (linkRes.data?.error) throw new Error(linkRes.data.error);
-      const url = linkRes.data?.urlEnlace;
+      const url = linkRes.data?.urlWidget || linkRes.data?.urlEnlace;
       if (!url) throw new Error('No se obtuvo enlace de pago');
 
+      setWompiFallbackUrl(linkRes.data?.urlEnlace || url);
       setWompiUrl(url);
     } catch (err) {
       toast.error(err.message || 'Error al iniciar pago con tarjeta');
@@ -610,6 +612,7 @@ export default function Checkout() {
       {wompiModalOpen && (
         <WompiWidget
           urlPago={wompiUrl}
+          fallbackUrl={wompiFallbackUrl}
           onClose={handleWompiClose}
           total={total.toFixed(2)}
           loading={!wompiUrl}
