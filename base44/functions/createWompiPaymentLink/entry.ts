@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 });
 
-    const { orderId, amount, orderNumber, appBaseUrl } = await req.json();
+    const { orderId, amount, orderNumber } = await req.json();
 
     if (!orderId || !amount) {
       return Response.json({ error: 'orderId y amount son requeridos' }, { status: 400 });
@@ -61,12 +61,13 @@ Deno.serve(async (req) => {
     const tokenData = await tokenRes.json();
     const accessToken = tokenData.access_token;
 
-    // Construir URL de retorno/redirect — usar la URL base de la app pasada desde el frontend
-    // (appBaseUrl), con fallback al origin del request, y finalmente a la URL publicada
+    // Construir URL de retorno/redirect con el origen real de la app publicado que
+    // el servidor de Base44 envía en el header x-base44-app-url (nunca con el
+    // origin del request, que en el editor apunta al sandbox de preview).
     // La tienda publicada no se puede mostrar dentro de la vista de Wompi
     // (x-frame-options: DENY), así que el regreso apunta a una página propia
     // servida por función, y sin parámetros que Wompi pueda corromper.
-    const appUrl = appBaseUrl || req.headers.get('origin') || 'https://fractal-nova-cart-shop.base44.app';
+    const appUrl = (req.headers.get('x-base44-app-url') || 'https://fractal-nova-cart-shop.base44.app').replace(/\/+$/, '');
     const returnUrl = `${appUrl}/functions/wompiReturn`;
     const redirectUrl = returnUrl;
     console.log('Wompi redirect URLs:', { redirectUrl, returnUrl });

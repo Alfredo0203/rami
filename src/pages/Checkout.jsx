@@ -233,12 +233,10 @@ export default function Checkout() {
 
       setPendingWompiOrderId(order.id);
 
-      const baseUrl = window.location.origin;
       const linkRes = await base44.functions.invoke('createWompiPaymentLink', {
         orderId: order.id,
         amount: total,
         orderNumber: order.order_number,
-        appBaseUrl: baseUrl,
       });
       if (linkRes.data?.error) throw new Error(linkRes.data.error);
       const url = linkRes.data?.urlEnlace;

@@ -11,7 +11,9 @@
  * navega solo, así que aquí no se necesita ninguna lógica de pago.
  */
 Deno.serve((req) => {
-  const origin = new URL(req.url).origin;
+  // Origen real de la app publicado (el servidor de Base44 lo envía en este header).
+  // No usar req.url: en el editor apunta al sandbox de preview.
+  const appUrl = (req.headers.get('x-base44-app-url') || 'https://fractal-nova-cart-shop.base44.app').replace(/\/+$/, '');
 
   const html = `<!doctype html>
 <html lang="es">
@@ -74,7 +76,7 @@ Deno.serve((req) => {
     </div>
     <h1>¡Pago recibido!</h1>
     <p>Estamos confirmando tu pedido. Vuelve a la tienda para ver el estado y el detalle de tu compra.</p>
-    <a href="${origin}/Orders" target="_top">Volver a la tienda</a>
+    <a href="${appUrl}/Orders" target="_top">Volver a la tienda</a>
   </div>
 </body>
 </html>`;
